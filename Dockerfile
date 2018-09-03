@@ -1,6 +1,6 @@
 FROM node:latest
 WORKDIR /usr/src/app
-RUN yarn global add parcel nodemon
+RUN yarn global add nodemon
 COPY . .
-RUN yarn
-RUN yarn build
+RUN npm i
+RUN npm run build
