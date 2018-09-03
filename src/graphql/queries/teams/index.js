@@ -81,14 +81,39 @@ const teams = async ({ filter }, { datastore }) => {
   }));
 };
 
+const nested = {
+  team: {
+    users: async ({ id }, { filter = {} }, { datastore }) => {
+      const { destroyed = false, offset = 0, limit = 100 } = filter;
+      const query = datastore.createQuery('user_teams')
+        .filter('team', id)
+        .filter('destroyed', destroyed)
+        .offset('offset', offset)
+        .limit('limit', limit);
+
+      const teamsEntity = await datastore.runQuery(query);
+
+      const users = await datastore.get(teamsEntity.shift().map(({ user }) => ({
+        kind: 'users',
+        path: ["users", user],
+        id: user
+      })));
+
+      return users.shift().map(entry => Object.assign({}, entry, {
+        id: entry[datastore.KEY].id
+      }));
+    }
+  }
+}
+
 const root = {
   team,
-  teams,
-  teamProjects,
+  teams
 };
 
 export {
   type,
   queries,
+  nested,
   root,
 };

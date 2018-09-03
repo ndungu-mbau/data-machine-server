@@ -1,0 +1,44 @@
+pipeline:
+  docker:
+    image: plugins/docker
+    repo: registry.braiven.io/data-machine-server
+    tags: latest
+    registry: registry.braiven.io
+    file: Dockerfile
+    username: mozart
+    password: password
+
+  rancher:
+    image: peloton/drone-rancher
+    url: https://ops.braiven.io/v2-beta
+    access_key: 2B452DA2BD3F853C6DDF
+    secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
+    service: public/data-machine-server
+    docker_image: registry.braiven.io/data-machine-server:latest
+    start_first: true
+    confirm: true
+    timeout: 1000
+
+  announce:
+    image: appleboy/drone-telegram
+    token: 572971694:AAFxccNJNhMcUIzQQIM9fCM6EUCnGs7WnHQ
+    to: 21649399
+    format: html
+    when:
+      status: [ success, failure ]
+    message: >
+      {{#success build.status}}
+
+      @{{commit.author}} <a href="{{build.Link}}">{{build.event}}ed</a> to <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}">{{repo.owner}}/{{repo.name}}</a>
+
+      {{commit.email}}: {{commit.message}}
+      
+      CI ✅ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
+      {{else}}
+        @{{commit.author}} <a href="{{build.Link}}">{{build.event}}ed</a> to <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}">{{repo.owner}}/{{repo.name}}</a>
+
+        {{commit.email}}: {{commit.message}}
+        
+        CI ❌ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
+      {{/success}}
+    

@@ -19,12 +19,14 @@ import {
 import {
   type as clientType,
   queries as clientQueries,
+  nested as clientQueriesNested,
   root as clientRoot,
 } from './clients';
 
 import {
   type as teamType,
   queries as teamQueries,
+  nested as teamUsersNested,
   root as teamRoot,
 } from './teams';
 
@@ -144,27 +146,34 @@ const Query = {
   hello: () => 'Hello world students!'
 };
 
-const Nested = {
+const Nested = {}
 
-}
 
-Object.assign(Query, projectRoot);
-Object.assign(Query, questionnaireRoot);
-Object.assign(Query, userRoot);
-Object.assign(Query, userGroupsRoot);
-Object.assign(Query, pageRoot);
-Object.assign(Query, groupRoot);
-Object.assign(Query, questionRoot);
-Object.assign(Query, optionsRoot);
-Object.assign(Query, clientRoot);
-Object.assign(Query, sentencesRoot);
-Object.assign(Query, dashboardsRoot);
-Object.assign(Query, dashboardsRoot);
-Object.assign(Query, layoutsRoot);
-Object.assign(Query, cpRoot);
-Object.assign(Query, chartsRoot);
-Object.assign(Query, constantsRoot);
-Object.assign(Query, aliasesRoot);
+Object.assign(
+  Nested
+  , clientQueriesNested
+  , teamUsersNested
+)
+
+
+Object.assign(
+  Query
+  , projectRoot
+  , userRoot
+  , userGroupsRoot
+  , pageRoot
+  , groupRoot
+  , questionRoot
+  , optionsRoot
+  , clientRoot
+  , sentencesRoot
+  , dashboardsRoot
+  , layoutsRoot
+  , cpRoot
+  , chartsRoot
+  , constantsRoot
+  , aliasesRoot
+);
 
 const queryRoot = { Query, Nested }
 

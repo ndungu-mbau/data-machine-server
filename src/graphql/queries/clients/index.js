@@ -64,7 +64,7 @@ const clientTeams = clientId => async (filter, { datastore }) => {
   }));
 };
 
-const clients = async (root, { filter }, { datastore }) => {
+const clients = async (_, { filter }, { datastore }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
   const query = datastore.createQuery('clients')
     .filter('destroyed', destroyed)
@@ -73,7 +73,7 @@ const clients = async (root, { filter }, { datastore }) => {
   const entities = await datastore.runQuery(query);
 
   entities[0].map(entity => Object.assign(entity, {
-    projects: clientProjects(entity[datastore.KEY].id),
+    // projects: clientProjects(entity[datastore.KEY].id),
     teams: clientTeams(entity[datastore.KEY].id),
   }));
 
@@ -81,6 +81,39 @@ const clients = async (root, { filter }, { datastore }) => {
     id: entry[datastore.KEY].id,
   }));
 };
+
+const nested = {
+  client: {
+    teams: async ({ id }, { filter = {} }, { datastore }) => {
+      const { destroyed = false, offset = 0, limit = 100 } = filter;
+      const query = datastore.createQuery('teams')
+        .filter('client', id)
+        .filter('destroyed', destroyed)
+        .offset('offset', offset)
+        .limit('limit', limit);
+
+      const entities = await datastore.runQuery(query);
+
+      return entities.shift().map(entry => Object.assign({}, entry, {
+        id: entry[datastore.KEY].id,
+      }));
+    },
+    projects: async ({ id }, { filter = {} }, { datastore }) => {
+      const { destroyed = false, offset = 0, limit = 100 } = filter;
+      const query = datastore.createQuery('projects')
+        .filter('client', id)
+        .filter('destroyed', destroyed)
+        .offset('offset', offset)
+        .limit('limit', limit);
+
+      const entities = await datastore.runQuery(query);
+
+      return entities.shift().map(entry => Object.assign({}, entry, {
+        id: entry[datastore.KEY].id,
+      }));
+    }
+  }
+}
 
 const root = {
   client,
@@ -90,5 +123,6 @@ const root = {
 export {
   type,
   queries,
+  nested,
   root,
 };

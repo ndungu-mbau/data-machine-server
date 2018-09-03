@@ -14,6 +14,20 @@ const create = async ({ team }, { datastore }) => {
 };
 
 const addUser = async ({ team, user }, { datastore }) => {
+  // check if user is part of that team already
+  const query = datastore.createQuery('user_teams')
+    .filter('team', team)
+    .filter('destroyed', false)
+    .limit('limit', 1);
+
+  const entities = await datastore.runQuery(query);
+
+  const existingRelationship = entities.shift()
+
+  console.log({ existingRelationship })
+  if (existingRelationship[0])
+    return existingRelationship[0][datastore.KEY].id
+
   const key = datastore.key('user_teams');
   await datastore.save({
     key,
@@ -24,6 +38,33 @@ const addUser = async ({ team, user }, { datastore }) => {
   });
   const { id } = key;
   return id
+};
+
+const removeUser = async ({ team, user }, { datastore }) => {
+  const query = datastore.createQuery('user_teams')
+    .filter('team', team)
+    .filter('destroyed', false)
+    .limit('limit', 1);
+
+  const entities = await datastore.runQuery(query);
+
+  const [existingRelationship] = entities.shift()
+
+  console.log(existingRelationship)
+
+  if (existingRelationship) {
+    const key = {
+      kind: 'user_teams',
+      path: ['user_teams', existingRelationship[datastore.KEY].id],
+      id: existingRelationship[datastore.KEY].id,
+    };
+
+    await datastore.delete(key);
+
+    return existingRelationship[datastore.KEY].id
+  }
+
+  return null
 };
 
 const update = async ({ team }, { datastore }) => {
@@ -85,6 +126,7 @@ const restore = async ({ team }, { datastore }) => {
 
 export {
   create,
+  removeUser,
   update,
   destroy,
   restore,
