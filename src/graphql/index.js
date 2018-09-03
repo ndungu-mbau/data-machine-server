@@ -27,15 +27,17 @@ const datastore = config[NODE_ENV].datastore;
 const myAuthenticationLookup = req => jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret);
 
 const context = ({ req }) => {
-    // const user = myAuthenticationLookup(req);
+    if(!req.headers.auth)
+        throw new Error("Please provide auth headers");
 
-    // // console.log({ user })
-    // if (!user) {
-    //     throw new Error("You need to be authenticated to access this schema!");
-    // }
+    const user = myAuthenticationLookup(req);
+
+    if (!user) {
+        throw new Error("Authentification failed, please log in");
+    }
 
     return {
-        user: "DUMMY",
+        user,
         datastore
     }
 };
