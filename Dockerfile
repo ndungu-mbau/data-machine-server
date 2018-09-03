@@ -1,7 +1,7 @@
-FROM node:latest
+FROM mhart/alpine-node
 WORKDIR /usr/src/app
 RUN apk update && apk upgrade && \
-apk add --no-cache python make g++
+    apk add --no-cache python make g++
 
 RUN yarn global add nodemon
 COPY . .
