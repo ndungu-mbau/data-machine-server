@@ -25,8 +25,8 @@ const multer = Multer({
     // }
 });
 
-const datastore = config[NODE_ENV].gcloud.datastore();
-const storage = config[NODE_ENV].gcloud.storage();
+const datastore = config[NODE_ENV].datastore;
+const storage = config[NODE_ENV].storage;
 
 // create reusable transporter object using the default SMTP transport
 var transporter = nodemailer.createTransport({
@@ -69,11 +69,7 @@ const sendMail = ({ to, subject, message }) => new Promise((resolve, reject) => 
 
 
 var expressMongoDb = require('express-mongo-db');
-app.use(expressMongoDb(config[NODE_ENV].dbUrl, { useNewUrlParser: true }));
-
-app.use(BodyParser.json());
-app.use(morgan('tiny'))
-
+app.use(expressMongoDb(config[NODE_ENV].dbUrl));
 
 app.use("/health", (req, res) => res.send())
 
@@ -124,7 +120,7 @@ app.use(
     bodyParser.urlencoded({ extended: false }),
     bodyParser.json(),
     multer.single('file'),
-    morgan('compact'),
+    morgan('combined'),
 );
 
 app.post('/submision', async (req, res) => {

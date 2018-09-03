@@ -22,7 +22,7 @@ const resolvers = Object.assign({}, queryRoot.Nested, {
     Mutation: mutationRoot
 })
 
-const datastore = config[NODE_ENV].gcloud.datastore();
+const datastore = config[NODE_ENV].datastore;
 
 const myAuthenticationLookup = req => jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret);
 
