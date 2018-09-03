@@ -20,7 +20,7 @@ const {
 const multer = Multer({
     dest: '/tmp',
     limits: {
-      fileSize: 30 * 1024 * 1024 // no larger than 5mb
+        fileSize: 30 * 1024 * 1024 // no larger than 5mb
     }
 });
 
@@ -67,27 +67,38 @@ const sendMail = ({ to, subject, message }) => new Promise((resolve, reject) => 
 
 const app = express()
 
-app.use(BodyParser.json())
-
-app.use(expressMongoDb(config[NODE_ENV].dbUrl));
+app.use(
+    cors(),
+    bodyParser.urlencoded({ extended: false }),
+    bodyParser.json(),
+    multer.single('file'),
+    morgan('combined'),
+    expressMongoDb(config[NODE_ENV].dbUrl)
+);
 
 app.use("/health", (req, res) => res.send())
 
 app.post("/auth/login", celebrate({
     body: Joi.object().keys({
-        email: Joi.string().required(),
-        password: Joi.string().min(8).required(),
+        phone: Joi.string().required(),
+        password: Joi.string().required(),
     })
 }), async (req, res) => {
-    const { email, password } = req.body
-    const collection = req.db.collection("Members")
-    const user = await collection.findOne({ email })
+    const { phone, password } = req.body
+
+    const query = datastore.createQuery('users').filter('phoneNumber', phone)
+
+    const userEntities = await datastore.runQuery(query);
+
+    const [user] = userEntities.shift().map(entry => Object.assign({}, entry, {
+        id: entry[datastore.KEY].id,
+    }));
 
     if (!user)
         return res.status(401).send({ message: "No user found for this account" })
 
     if (user.password === sha1(password)) {
-        const token = jwt.sign({ email }, config[NODE_ENV].hashingSecret);
+        const token = jwt.sign(user, config[NODE_ENV].hashingSecret);
         return res.send({ token })
     }
 
@@ -113,15 +124,6 @@ app.post("/auth/register", celebrate({
     const token = jwt.sign({ email }, config[NODE_ENV].hashingSecret);
     return res.send({ token })
 })
-
-
-app.use(
-    cors(),
-    bodyParser.urlencoded({ extended: false }),
-    bodyParser.json(),
-    multer.single('file'),
-    morgan('combined'),
-);
 
 app.post('/submision', async (req, res) => {
     const submission = req.body;

@@ -1,5 +1,9 @@
+import sha1 from 'sha1'
+
 const create = async ({ user }, { datastore }) => {
   const key = datastore.key('users');
+
+  user.password = sha1(user.password)
   await datastore.save({
     key,
     data: Object.assign({}, user, {
