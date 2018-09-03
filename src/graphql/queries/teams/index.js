@@ -5,7 +5,8 @@ const type = `
     id: String,
     name: String,
     description: String,
-    users:[user]
+    users:[user],
+    projects:[project]
   }
 `;
 
@@ -91,15 +92,42 @@ const nested = {
         .offset('offset', offset)
         .limit('limit', limit);
 
-      const teamsEntity = await datastore.runQuery(query);
+      const [relation] = await datastore.runQuery(query);
 
-      const users = await datastore.get(teamsEntity.shift().map(({ user }) => ({
+      if (relation.length == 0)
+        return []
+
+      const [users] = await datastore.get(relation.map(({ user }) => ({
         kind: 'users',
         path: ["users", user],
         id: user
       })));
 
-      return users.shift().map(entry => Object.assign({}, entry, {
+      return users.map(entry => Object.assign({}, entry, {
+        id: entry[datastore.KEY].id
+      }));
+    },
+    projects: async ({ id }, { filter = {} }, { datastore }) => {
+      const { destroyed = false, offset = 0, limit = 100 } = filter;
+      const query = datastore.createQuery('project_teams')
+        .filter('team', id)
+        .filter('destroyed', destroyed)
+        .offset('offset', offset)
+        .limit('limit', limit);
+
+      const [relation] = await datastore.runQuery(query);
+
+      // console.log(relation.shift())
+      if (relation.length == 0)
+        return []
+
+      const projects = await datastore.get(relation.map(({ project }) => ({
+        kind: 'projects',
+        path: ["projects", project],
+        id: project
+      })));
+
+      return projects.shift().map(entry => Object.assign({}, entry, {
         id: entry[datastore.KEY].id
       }));
     }

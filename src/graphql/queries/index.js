@@ -1,6 +1,7 @@
 import {
   type as projectType,
   queries as projectQueries,
+  nested as projectQueriesNested,
   root as projectRoot,
 } from './projects';
 
@@ -153,6 +154,7 @@ Object.assign(
   Nested
   , clientQueriesNested
   , teamUsersNested
+  , projectQueriesNested
 )
 
 

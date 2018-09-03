@@ -72,8 +72,7 @@ app.use(
     bodyParser.urlencoded({ extended: false }),
     bodyParser.json(),
     multer.single('file'),
-    morgan('combined'),
-    expressMongoDb(config[NODE_ENV].dbUrl)
+    morgan('combined')
 );
 
 app.use("/health", (req, res) => res.send())
