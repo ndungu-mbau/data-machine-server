@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "sails-970",
+  "private_key_id": "dacb6f37e2518fc7f67db7aade99a344bd2ac2ad",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCvUSrGHs0D81DM\n0weleVKXmoU9iP7ZPV8BiDEyLEu5GzT68R8lCADmbmT/QUn4YwQ6l4SWzuC+ePdE\nftrX7KN6RJkPHf/BCnOcgsXakVJtA7eQNA7p8IsYHwzZIerEDiBxqTkI5n0J4bEg\nf9+mFs0qx4SrzeOwawc6TyHKRWYPKjkxSrIXu/RY/HQuu9shyr2RnfviUP/QSpci\nl0bZEXOSzVSgNRqDKHrkHMiwfjfu8VPRe8qhMhvO/dXl/KU2x6A1yGZJtqCiO7vs\nYdztoCl5VKfILARRr3EpmtPx3vDi/SzoBlseRcFEVTuexJeIdcBoFF0gmYaCZWVw\nNAeCGEEHAgMBAAECggEAAr2ZlhRILy4gDrujzHXrkRwkxhP8q+e2Mv9uiXLA0kl3\nGA8p5fnMjc2e/ZCHN/9QQxw4QeVFBSU99E+pWyPDYHdvDxnwdBOWQBWZQzPvXm3m\n8jWmIAkXG47ss/5APcVcw3oaPqXfwYZKLxBgrieAGJGa5NaonwrlR4eSJyfTkxwW\nvIMlVECl9SrSQq8s15qCHbQbKWDTC0R+qn+fkoQSVgP/aihCsrZ1XWsgeGxK0lxF\nFB11Yt6RPU977eFr5YFmvrq9SHEpaLkYBQbcPapNvdRpErBFOZzF/bPPsLf1Ug/a\nTub+Y7F4B2zMzhdrbJcMK6ujgyFtMcr8YLkRFTDZXQKBgQDdX8DCW6AZ4CNm9h92\npFGooqkbJhnd1T29FhffwTZC6hJed6d+140IdKv0tzpXTr92F73hqu/dPpaU3eT4\nh1r0rHIq3rWCiv2KVQrTMZu1JAWIz107an6UIOnKaZslplS0FF+5AZXkNav/8D4z\nkcGFWEY++34UGkuH/7KzNbHB/QKBgQDKvTQEoADQZemPx+6YhSGxzcrOn3ueZZ0M\nRqWdyBvyCvlS0w0U/iccAh8FT+g8avKph6HMZNdk82yRBsFlvPfqGSVAvrowfFFf\nqdxn7ptHcmHC3fwowrWF1SQiA0rn18n88s9qV7GOn0IZ2bKdbucECLs00QnfzGHJ\nhaI8nuCMUwKBgHNthhjRpb1YPZ1mICnArEN97ScWys38bmC1sGUfXaeuXT2crl1Z\nD1SlYTQMhgMYMITnBD8y3jdCd0nQGZ/tE+QYNr9buNEEoAcNKMPOTh45Vhlr5nUg\npjeeocjFH/yVqfzr0q2owftocPLW1dgV3A4nZRlaEPdybofPL+J50OIRAoGABVet\nCj4pJ1S4LejH2c8QTz4sDPvY5xioZc1qydifG+a8ITmci6QS5cMMjDhJ12W+FUeU\ntO0nW+qqPrwd1o9/PPUCrU0ZXPO5tTqlqzt3bg+OkfMFlRFkdS1jsV3C2I8wLHE9\nlADRlf+OX14EPe/ROKL+Q+sKRpJ9NTFHUC+jnS8CgYEAyHF4NX5HNsjcebTfCRsI\nMUxXT6/gAhCBy51NNB3jZOcky6KoGV5nyILighHpa56KSdYmT9bUYRWb2AeLldmV\nEvFZavtax8ZCL6sJVcbt2sJ2ZmNU54YtNczutFm25f2BBP0Jw2SOVO9TWGDxs5xe\nQFHmQtobcDSK1pzeYY1vN6w=\n-----END PRIVATE KEY-----\n",
+  "client_email": "sails-owner@sails-970.iam.gserviceaccount.com",
+  "client_id": "104841713367860284164",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sails-owner%40sails-970.iam.gserviceaccount.com"
+}
