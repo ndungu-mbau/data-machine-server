@@ -124,7 +124,7 @@ app.use(
     bodyParser.urlencoded({ extended: false }),
     bodyParser.json(),
     multer.single('file'),
-    morgan('tiny'),
+    morgan('compact'),
 );
 
 app.post('/submision', async (req, res) => {
