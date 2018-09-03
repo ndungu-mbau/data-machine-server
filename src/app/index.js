@@ -1,16 +1,15 @@
 import express from 'express'
 import morgan from 'morgan'
 import sha1 from 'sha1'
-const app = express()
 import { celebrate, Joi, errors } from 'celebrate';
-const BodyParser = require('body-parser');
-var jwt = require('jsonwebtoken');
+import BodyParser from 'body-parser';
+import jwt from 'jsonwebtoken';
 import nodemailer from "nodemailer"
 import Multer from "multer"
 import config from "../config";
 import cors from 'cors'
 import bodyParser from 'body-parser'
-
+import expressMongoDb from 'express-mongo-db';
 
 const {
     NODE_ENV = 'development',
@@ -20,9 +19,9 @@ const {
 
 const multer = Multer({
     dest: '/tmp',
-    // limits: {
-    //   fileSize: 5 * 1024 * 1024 // no larger than 5mb
-    // }
+    limits: {
+      fileSize: 30 * 1024 * 1024 // no larger than 5mb
+    }
 });
 
 const datastore = config[NODE_ENV].datastore;
@@ -66,9 +65,10 @@ const sendMail = ({ to, subject, message }) => new Promise((resolve, reject) => 
     });
 })
 
+const app = express()
 
+app.use(BodyParser.json())
 
-var expressMongoDb = require('express-mongo-db');
 app.use(expressMongoDb(config[NODE_ENV].dbUrl));
 
 app.use("/health", (req, res) => res.send())
