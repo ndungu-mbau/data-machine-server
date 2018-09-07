@@ -2,14 +2,14 @@ import express from 'express'
 import morgan from 'morgan'
 import sha1 from 'sha1'
 import { celebrate, Joi, errors } from 'celebrate';
-import BodyParser from 'body-parser';
 import jwt from 'jsonwebtoken';
 import nodemailer from "nodemailer"
 import Multer from "multer"
 import config from "../config";
 import cors from 'cors'
 import bodyParser from 'body-parser'
-import expressMongoDb from 'express-mongo-db';
+import fs from 'fs'
+import parser from "./parser"
 
 const {
     NODE_ENV = 'development',
@@ -18,10 +18,7 @@ const {
 } = process.env
 
 const multer = Multer({
-    dest: '/tmp',
-    limits: {
-        fileSize: 30 * 1024 * 1024 // no larger than 5mb
-    }
+    dest: 'uploads/'
 });
 
 const datastore = config[NODE_ENV].datastore;
@@ -85,20 +82,18 @@ app.post("/auth/login", celebrate({
 }), async (req, res) => {
     const { phone, password } = req.body
 
-    const query = datastore.createQuery('users').filter('phoneNumber', phone)
+    const query = datastore
+        .createQuery('users')
+        .filter('phoneNumber', '=', phone);
 
-    const userEntities = await datastore.runQuery(query);
+    const [[userData]] = await datastore.runQuery(query);
 
-    const [user] = userEntities.shift().map(entry => Object.assign({}, entry, {
-        id: entry[datastore.KEY].id,
-    }));
-
-    if (!user)
-        return res.status(401).send({ message: "No user found for this account" })
-
-    if (user.password === sha1(password)) {
-        const token = jwt.sign(user, config[NODE_ENV].hashingSecret);
-        return res.send({ token })
+    if (userData) {
+        if (userData.password === sha1(password))
+            return res.send(Object.assign(userData, {
+                password: undefined,
+                token: jwt.sign(userData, config[NODE_ENV].hashingSecret)
+            }))
     }
 
     return res.status(401).send({ message: "Wrong username and password combination" })
@@ -106,23 +101,103 @@ app.post("/auth/login", celebrate({
 
 app.post("/auth/register", celebrate({
     body: Joi.object().keys({
+        password: Joi.string().required(),
         email: Joi.string().required(),
-        password: Joi.string().min(8).required(),
+        firstName: Joi.string().required(),
+        lastName: Joi.string().required(),
+        middleName: Joi.string().required(),
+        mobileMoneyNumber: Joi.string().required(),
+        password: Joi.string().required(),
+        phoneNumber: Joi.string().required(),
     })
 }), async (req, res) => {
-    const { email, password } = req.body
+    const { body: user } = req
 
-    const collection = req.db.collection("Members")
-    const user = await collection.findOne({ email })
+    // check if user already exists
+    const query = datastore
+        .createQuery('users')
+        .filter('phoneNumber', '=', user.phoneNumber);
 
-    if (user)
-        return res.status(401).send({ message: "Account already exists with this account" })
+    const [[userData]] = await datastore.runQuery(query);
 
-    await collection.insert({ email, password: sha1(password) })
+    if (userData) {
+        return res.send({ token: jwt.sign(userData, config[NODE_ENV].hashingSecret) })
+    }
 
-    const token = jwt.sign({ email }, config[NODE_ENV].hashingSecret);
-    return res.send({ token })
+    const key = datastore.key('users');
+
+    user.password = sha1(user.password)
+    await datastore.save({
+        key,
+        data: user
+    });
+    const { id } = key;
+
+    return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) })
 })
+
+app.post("/auth/admins/register", celebrate({
+    body: Joi.object().keys({
+        password: Joi.string().required(),
+        email: Joi.string().required(),
+        firstName: Joi.string().required(),
+        lastName: Joi.string().required(),
+        middleName: Joi.string().required(),
+        mobileMoneyNumber: Joi.string().required(),
+        password: Joi.string().required(),
+        phoneNumber: Joi.string().required(),
+    })
+}), async (req, res) => {
+    const { body: user } = req
+
+    // check if user already exists
+    const query = datastore
+        .createQuery('admins')
+        .filter('phoneNumber', '=', user.phoneNumber);
+
+    const [[userData]] = await datastore.runQuery(query);
+
+    if (userData) {
+        return res.send({ token: jwt.sign(userData, config[NODE_ENV].hashingSecret) })
+    }
+
+    const key = datastore.key('users');
+
+    user.password = sha1(user.password)
+    await datastore.save({
+        key,
+        data: user
+    });
+    const { id } = key;
+
+    return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) })
+})
+
+app.post("/auth/admins/login", celebrate({
+    body: Joi.object().keys({
+        phone: Joi.string().required(),
+        password: Joi.string().required(),
+    })
+}), async (req, res) => {
+    const { phone, password } = req.body
+
+    const query = datastore
+        .createQuery('admins')
+        .filter('phoneNumber', '=', phone);
+
+    const [[userData]] = await datastore.runQuery(query);
+
+    if (userData) {
+        if (userData.password === sha1(password))
+            return res.send(Object.assign(userData, {
+                password: undefined,
+                token: jwt.sign(userData, config[NODE_ENV].hashingSecret)
+            }))
+    }
+
+    return res.status(401).send({ message: "Wrong username and password combination" })
+})
+
 
 app.post('/submision', async (req, res) => {
     const submission = req.body;
@@ -216,29 +291,13 @@ const upload = (bucket, target) => {
     });
 };
 
-app.post('/upload', async (req, res) => {
-    // if there is a file in the body from the middleware ie when testing locally
-    let form = {}
-
-    if (req.file)
-        Object.assign(form, {
-            fields: req.body,
-            file: req.file.path
-        })
-
-    // on cloud function call the low level parser to get the contents
-    if (!req.file)
-        form = await lowLevelParser(req, res)
-
-    const { ext, interviewId } = form.fields
-
-    await rename(form.file, `/tmp/${interviewId}.${ext}`)
-
-    await upload(bucket, `/tmp/${interviewId}.${ext}`)
-    res.json(`https://storage.googleapis.com/questionnaire_submission_files/${interviewId}.${ext}`);
+app.post('/upload', multer.single('file'), async (req, res) => {
+    console.log(req.body)
+    console.log(req.file)
+    res.status(201).send('success')
 });
 
 
-
+app.use(errors());
 
 export default app
