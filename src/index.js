@@ -7,7 +7,6 @@ const {
 } = process.env
 
 import app from './app';
-import config from "./config";
 import http from 'http'
 
 import { ifError } from 'assert'

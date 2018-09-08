@@ -1,3 +1,4 @@
+import 'source-map-support/register'
 import express from 'express'
 import morgan from 'morgan'
 import sha1 from 'sha1'
@@ -10,6 +11,7 @@ import cors from 'cors'
 import bodyParser from 'body-parser'
 import fs from 'fs'
 import parser from "./parser"
+import { MongoClient, ObjectId } from "mongodb"
 
 const {
     NODE_ENV = 'development',
@@ -23,6 +25,13 @@ const multer = Multer({
 
 const datastore = config[NODE_ENV].datastore;
 const storage = config[NODE_ENV].storage;
+
+let db;
+
+MongoClient.connect(config[NODE_ENV].dbUrl, { useNewUrlParser: true }, function (err, client) {
+    if (err) throw err
+    db = client.db('besak')
+})
 
 // create reusable transporter object using the default SMTP transport
 var transporter = nodemailer.createTransport({
@@ -82,12 +91,9 @@ app.post("/auth/login", celebrate({
 }), async (req, res) => {
     const { phone, password } = req.body
 
-    const query = datastore
-        .createQuery('users')
-        .filter('phoneNumber', '=', phone);
+    const userData = await db.collection('users').findOne({ 'phoneNumber': phone })
 
-    const [[userData]] = await datastore.runQuery(query);
-
+    console.log(userData)
     if (userData) {
         if (userData.password === sha1(password))
             return res.send(Object.assign(userData, {
@@ -114,24 +120,19 @@ app.post("/auth/register", celebrate({
     const { body: user } = req
 
     // check if user already exists
-    const query = datastore
-        .createQuery('users')
-        .filter('phoneNumber', '=', user.phoneNumber);
+    const userData = await db.collection('users').findOne({ 'phoneNumber': user.phoneNumber })
 
-    const [[userData]] = await datastore.runQuery(query);
+    // console.log({ userData })
 
     if (userData) {
         return res.send({ token: jwt.sign(userData, config[NODE_ENV].hashingSecret) })
     }
 
-    const key = datastore.key('users');
+    user._id = new ObjectId();
 
     user.password = sha1(user.password)
-    await datastore.save({
-        key,
-        data: user
-    });
-    const { id } = key;
+
+    db.collection('users').insertOne(user)
 
     return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) })
 })

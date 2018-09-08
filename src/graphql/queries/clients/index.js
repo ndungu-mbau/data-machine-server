@@ -64,7 +64,7 @@ const clientTeams = clientId => async (filter, { datastore }) => {
   }));
 };
 
-const clients = async (_, { filter }, { datastore }) => {
+const clients = async (_, { filter = {} }, { datastore }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
   const query = datastore.createQuery('clients')
     .filter('destroyed', destroyed)

@@ -194,21 +194,21 @@ const QuestionnaireDashboards = questionnaireId => async (
     }),);
 };
 
-const questionnaire = async ({ id }, { datastore }) => {
+export const questionnaire = async ({questionnaire},{ id }, { datastore }) => {
   const entity = await datastore.get({
     kind: 'questionnaires',
-    path: ['questionnaires', id],
-    id,
+    path: ['questionnaires', id||questionnaire],
+    id:id||questionnaire,
   });
 
   return Object.assign({}, entity[0], {
     id,
-    pages: QuestionnairePages(id),
-    dashboards: QuestionnaireDashboards(id),
+    pages: QuestionnairePages(id||questionnaire),
+    dashboards: QuestionnaireDashboards(id||questionnaire),
   });
 };
 
-const questionnaires = async ({ filter }, { datastore }) => {
+const questionnaires = async ({ filter={} }, { datastore }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
   const query = datastore
     .createQuery('questionnaires')

@@ -43,6 +43,7 @@ const projects = async ({ filter }, { datastore }) => {
   }));
 };
 
+
 const nested = {
   project: {
     teams: async ({ id }, { filter = {} }, { datastore }) => {
@@ -68,7 +69,8 @@ const nested = {
       return teams.map(entry => Object.assign({}, entry, {
         id: entry[datastore.KEY].id
       }));
-    }
+    },
+    questionnaire:  require("../questionnaires").questionnaire
   }
 }
 
