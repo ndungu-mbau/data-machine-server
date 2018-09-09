@@ -35,21 +35,21 @@ const datastore = config[NODE_ENV].datastore;
 const myAuthenticationLookup = req => jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret);
 
 const context = ({ req }) => {
-    let user;
+    if (req.headers.auth) {
+        const user = myAuthenticationLookup(req);
 
-    if (!req.headers.auth)
-        user = myAuthenticationLookup(req);
+        if (!user) {
+            throw new Error("Authentification failed, please log in");
+        }
+
+        return {
+            user,
+            db,
+            ObjectId
+        }
+    }
+
     throw new Error("Please provide auth headers");
-
-    if (!user) {
-        throw new Error("Authentification failed, please log in");
-    }
-
-    return {
-        user,
-        db,
-        ObjectId
-    }
 };
 
 const server = new ApolloServer({ typeDefs, resolvers, context });
