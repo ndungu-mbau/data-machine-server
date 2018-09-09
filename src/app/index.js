@@ -1,4 +1,3 @@
-import 'source-map-support/register'
 import express from 'express'
 import morgan from 'morgan'
 import sha1 from 'sha1'
@@ -22,9 +21,6 @@ const {
 const multer = Multer({
     dest: 'uploads/'
 });
-
-const datastore = config[NODE_ENV].datastore;
-const storage = config[NODE_ENV].storage;
 
 let db;
 
@@ -125,7 +121,7 @@ app.post("/auth/register", celebrate({
     // console.log({ userData })
 
     if (userData) {
-        return res.send({ token: jwt.sign(userData, config[NODE_ENV].hashingSecret) })
+        return res.status(401).send({ message: "Phone number already used, trying to log in?" })
     }
 
     user._id = new ObjectId();
@@ -136,69 +132,6 @@ app.post("/auth/register", celebrate({
 
     return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) })
 })
-
-app.post("/auth/admins/register", celebrate({
-    body: Joi.object().keys({
-        password: Joi.string().required(),
-        email: Joi.string().required(),
-        firstName: Joi.string().required(),
-        lastName: Joi.string().required(),
-        middleName: Joi.string().required(),
-        mobileMoneyNumber: Joi.string().required(),
-        password: Joi.string().required(),
-        phoneNumber: Joi.string().required(),
-    })
-}), async (req, res) => {
-    const { body: user } = req
-
-    // check if user already exists
-    const query = datastore
-        .createQuery('admins')
-        .filter('phoneNumber', '=', user.phoneNumber);
-
-    const [[userData]] = await datastore.runQuery(query);
-
-    if (userData) {
-        return res.send({ token: jwt.sign(userData, config[NODE_ENV].hashingSecret) })
-    }
-
-    const key = datastore.key('users');
-
-    user.password = sha1(user.password)
-    await datastore.save({
-        key,
-        data: user
-    });
-    const { id } = key;
-
-    return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) })
-})
-
-app.post("/auth/admins/login", celebrate({
-    body: Joi.object().keys({
-        phone: Joi.string().required(),
-        password: Joi.string().required(),
-    })
-}), async (req, res) => {
-    const { phone, password } = req.body
-
-    const query = datastore
-        .createQuery('admins')
-        .filter('phoneNumber', '=', phone);
-
-    const [[userData]] = await datastore.runQuery(query);
-
-    if (userData) {
-        if (userData.password === sha1(password))
-            return res.send(Object.assign(userData, {
-                password: undefined,
-                token: jwt.sign(userData, config[NODE_ENV].hashingSecret)
-            }))
-    }
-
-    return res.status(401).send({ message: "Wrong username and password combination" })
-})
-
 
 app.post('/submision', async (req, res) => {
     const submission = req.body;
@@ -243,11 +176,6 @@ app.post('/submision', async (req, res) => {
         id,
     });
 });
-
-
-
-
-var bucket = storage.bucket('questionnaire_submission_files');
 
 app.get('/submision/:id', async (req, res) => {
     const submission = req.params;

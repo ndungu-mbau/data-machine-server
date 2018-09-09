@@ -28,7 +28,7 @@
   },
   "main": "build/index.bundle.js",
   "scripts": {
-    "dev": "parcel src/index.js --target=node & nodemon dist",
+    "dev": "parcel src/index.js --target=node & nodemon -r source-map-support/register dist",
     "build": "parcel build src/index.js --target=node",
     "deploy": "parcel build src/index.js --target=node && gcloud beta functions deploy orbitusQuesitonnaireMachineGraphql --stage-bucket sabek_test_001/ --trigger-http --entry-point default"
   },
