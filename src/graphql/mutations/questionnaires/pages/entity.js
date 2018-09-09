@@ -1,73 +1,29 @@
-const create = async ({ page }, { datastore }) => {
-  const key = datastore.key('pages');
-  await datastore.save({
-    key,
-    data: Object.assign({}, page, {
-      destroyed: false,
-      id: undefined,
-    }),
-  });
-  const { id } = key;
-  return Object.assign({}, page, {
-    id,
-  });
+const collection = "page"
+
+const create = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  Object.assign(entry, {
+    _id: new ObjectId(),
+    destroyed: false
+  })
+  db.collection(collection).insertOne(entry)
+  entry.id = entry._id
+  return entry
 };
 
-const update = async ({ page }, { datastore }) => {
-  const { id } = page;
-  const key = {
-    kind: 'pages',
-    path: ['pages', id],
-    id,
-  };
-
-  await datastore.save({
-    key,
-    data: Object.assign({}, page, {
-      id: undefined,
-      destroyed: false,
-    }),
-  });
-
-  return Object.assign(page, {
-    id,
-  });
+const update = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined }) })
 };
 
-const destroy = async ({ page }, { datastore }) => {
-  const { id } = page;
-  const key = {
-    kind: 'pages',
-    path: ['pages', id],
-    id,
-  };
-
-  await datastore.delete(key);
-
-  return Object.assign({}, page, {
-    id,
-  });
+const destroy = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } })
 };
 
-const restore = async ({ page }, { datastore }) => {
-  const { id } = page;
-  const key = {
-    kind: 'pages',
-    path: ['pages', id],
-    id,
-  };
-
-  await datastore.save({
-    key,
-    data: Object.assign({}, page, {
-      id: undefined,
-      destroyed: false,
-    }),
-  });
-
-  return Object.assign({}, page, {
-    id,
-  });
+const restore = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } })
 };
 
 export {

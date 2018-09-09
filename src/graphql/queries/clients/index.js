@@ -5,9 +5,7 @@ const type = `
     id: String,
     name: String,
     projects:[project],
-    teams:[team],
-    userGroups:[userGroup],
-    clients:[client]
+    teams:[team]
   }
 `;
 
@@ -28,88 +26,27 @@ const client = async ({ id }, { datastore }) => {
   });
 };
 
-const projectQuestionnaire = questionnaireId =>
-  async (attrs, { datastore }) =>
-    questionnaireRoot.questionnaire({ id: questionnaireId }, { datastore });
-
-const clientProjects = clientId => async (filter, { datastore }) => {
+const clients = async (_, { filter = {} }, { db }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore.createQuery('projects')
-    .filter('client', clientId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+  const data = await db.collection("client").find({destroyed:false}).toArray();
 
-  const entities = await datastore.runQuery(query);
-
-  return entities.shift().map(entry => Object.assign({}, entry, {
-    id: entry[datastore.KEY].id,
-  }, {
-      questionnaire: projectQuestionnaire(entry.questionnaire),
-    }));
-};
-
-const clientTeams = clientId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore.createQuery('teams')
-    .filter('client', clientId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
-
-  const entities = await datastore.runQuery(query);
-
-  return entities.shift().map(entry => Object.assign({}, entry, {
-    id: entry[datastore.KEY].id,
-  }));
-};
-
-const clients = async (_, { filter = {} }, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore.createQuery('clients')
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
-  const entities = await datastore.runQuery(query);
-
-  entities[0].map(entity => Object.assign(entity, {
-    // projects: clientProjects(entity[datastore.KEY].id),
-    teams: clientTeams(entity[datastore.KEY].id),
-  }));
-
-  return entities.shift().map(entry => Object.assign({}, entry, {
-    id: entry[datastore.KEY].id,
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
   }));
 };
 
 const nested = {
   client: {
-    teams: async ({ id }, { filter = {} }, { datastore }) => {
-      const { destroyed = false, offset = 0, limit = 100 } = filter;
-      const query = datastore.createQuery('teams')
-        .filter('client', id)
-        .filter('destroyed', destroyed)
-        .offset('offset', offset)
-        .limit('limit', limit);
-
-      const entities = await datastore.runQuery(query);
-
-      return entities.shift().map(entry => Object.assign({}, entry, {
-        id: entry[datastore.KEY].id,
+    teams: async ({ id }, { filter = {} }, { db }) => {
+      const data = await db.collection("team").find({ client: id.toString(),destroyed:false }).toArray();
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
       }));
     },
-    projects: async ({ id }, { filter = {} }, { datastore }) => {
-      const { destroyed = false, offset = 0, limit = 100 } = filter;
-      const query = datastore.createQuery('projects')
-        .filter('client', id)
-        .filter('destroyed', destroyed)
-        .offset('offset', offset)
-        .limit('limit', limit);
-
-      const entities = await datastore.runQuery(query);
-
-      return entities.shift().map(entry => Object.assign({}, entry, {
-        id: entry[datastore.KEY].id,
+    projects: async ({ id }, { filter = {} }, { db }) => {
+      const data = await db.collection("project").find({ client: id.toString(),destroyed:false }).toArray();
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
       }));
     }
   }

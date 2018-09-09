@@ -27,61 +27,38 @@ const QuestionOptions = questionId => async (filter, { datastore }) => {
   return entities.shift().map(entry =>
     Object.assign({}, entry, {
       id: entry[datastore.KEY].id,
-    }),);
+    }));
 };
 
-const GroupQuestions = groupId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('questions')
-    .filter('group', groupId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+const GroupQuestions = groupId => async (filter, { db }) => {
+  console.log(groupId)
+  const data = await db.collection("question").find({ group: groupId.toString() }).toArray()
 
-  const entities = await datastore.runQuery(query);
-
-  return entities.shift().map(entry =>
+  return data.map(entry =>
     Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
+      id: entry._id,
       options: entry.options ? JSON.parse(JSON.stringify(entry.options)) : null,
-    }),);
+    }));
 };
 
-const PageGroups = pageId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('groups')
-    .filter('page', pageId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+const PageGroups = pageId => async (filter, { db }) => {
+  const data = await db.collection("group").find({ page: pageId.toString() }).toArray()
 
-  const entities = await datastore.runQuery(query);
-
-  return entities.shift().map(entry =>
+  return data.map(entry =>
     Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
-      questions: GroupQuestions(entry[datastore.KEY].id),
-    }),);
+      id: entry._id,
+      questions: GroupQuestions(entry._id),
+    }));
 };
 
-const QuestionnairePages = questionnaireId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('pages')
-    .filter('questionnaire', questionnaireId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+const QuestionnairePages = questionnaireId => async (filter, { db }) => {
+  const data = await db.collection("page").find({ questionnaire: questionnaireId }).toArray()
 
-  const entities = await datastore.runQuery(query);
-
-  return entities.shift().map(entry =>
+  return data.map(entry =>
     Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
-      groups: PageGroups(entry[datastore.KEY].id),
-    }),);
+      id: entry._id,
+      groups: PageGroups(entry._id),
+    }));
 };
 
 const dashboardLayouts = dashboardId => async (filter, { datastore }) => {
@@ -115,7 +92,7 @@ const dashboardCps = dashboardId => async (filter, { datastore }) => {
   return entities.shift().map(entry =>
     Object.assign({}, entry, {
       id: entry[datastore.KEY].id,
-    }),);
+    }));
 };
 
 const dashboardAliases = dashboardId => async (filter, { datastore }) => {
@@ -132,7 +109,7 @@ const dashboardAliases = dashboardId => async (filter, { datastore }) => {
   return entities.shift().map(entry =>
     Object.assign({}, entry, {
       id: entry[datastore.KEY].id,
-    }),);
+    }));
 };
 
 const dashboardCharts = dashboardId => async (filter, { datastore }) => {
@@ -149,7 +126,7 @@ const dashboardCharts = dashboardId => async (filter, { datastore }) => {
   return entities.shift().map(entry =>
     Object.assign({}, entry, {
       id: entry[datastore.KEY].id,
-    }),);
+    }));
 };
 
 const dashboardConstants = dashboardId => async (filter, { datastore }) => {
@@ -166,7 +143,7 @@ const dashboardConstants = dashboardId => async (filter, { datastore }) => {
   return entities.shift().map(entry =>
     Object.assign({}, entry, {
       id: entry[datastore.KEY].id,
-    }),);
+    }));
 };
 
 const QuestionnaireDashboards = questionnaireId => async (
@@ -191,24 +168,20 @@ const QuestionnaireDashboards = questionnaireId => async (
       aliases: dashboardAliases(entry[datastore.KEY].id),
       charts: dashboardCharts(entry[datastore.KEY].id),
       constants: dashboardConstants(entry[datastore.KEY].id),
-    }),);
+    }));
 };
 
-export const questionnaire = async ({questionnaire},{ id }, { datastore }) => {
-  const entity = await datastore.get({
-    kind: 'questionnaires',
-    path: ['questionnaires', id||questionnaire],
-    id:id||questionnaire,
-  });
+export const questionnaire = async ({ questionnaire } = {}, { id }, { db, ObjectId }) => {
+  const data = await db.collection("questionnaire").findOne({ _id: new ObjectId(id) })
 
-  return Object.assign({}, entity[0], {
+  return Object.assign({}, data, {
     id,
-    pages: QuestionnairePages(id||questionnaire),
-    dashboards: QuestionnaireDashboards(id||questionnaire),
+    pages: QuestionnairePages(id || questionnaire),
+    dashboards: QuestionnaireDashboards(id || questionnaire),
   });
 };
 
-const questionnaires = async ({ filter={} }, { datastore }) => {
+const questionnaires = async ({ filter = {} }, { datastore }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
   const query = datastore
     .createQuery('questionnaires')
@@ -220,7 +193,7 @@ const questionnaires = async ({ filter={} }, { datastore }) => {
     Object.assign({}, entry, {
       id: entry[datastore.KEY].id,
       pages: QuestionnairePages(entry.questionnaire),
-    }),);
+    }));
 };
 
 const root = {

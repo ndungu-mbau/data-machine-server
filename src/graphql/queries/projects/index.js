@@ -46,31 +46,15 @@ const projects = async ({ filter }, { datastore }) => {
 
 const nested = {
   project: {
-    teams: async ({ id }, { filter = {} }, { datastore }) => {
-      const { destroyed = false, offset = 0, limit = 100 } = filter;
-      const query = datastore.createQuery('project_teams')
-        .filter('project', id)
-        .filter('destroyed', destroyed)
-        .offset('offset', offset)
-        .limit('limit', limit);
+    teams: async ({ id }, { filter = {} }, { db, ObjectId }) => {
+      const data = await db.collection("team_user").find({ client: id.toString(), destroyed: false }).toArray();
 
-      const [relation] = await datastore.runQuery(query);
-
-      if (relation.length == 0) {
-        return []
-      }
-
-      const [teams] = await datastore.get(relation.map(({ team }) => ({
-        kind: 'teams',
-        path: ["teams", team],
-        id: team
-      })));
-
-      return teams.map(entry => Object.assign({}, entry, {
-        id: entry[datastore.KEY].id
-      }));
     },
-    questionnaire:  require("../questionnaires").questionnaire
+    questionnaire: async ({ questionnaire }, { filter = {} }, { db, ObjectId }) => {
+      const data = await db.collection("questionnaire").findOne({ _id: questionnaire, destroyed: false });
+      data.id = data._id
+      return data
+    },
   }
 }
 

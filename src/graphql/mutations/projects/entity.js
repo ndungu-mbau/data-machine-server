@@ -1,139 +1,43 @@
-const create = async ({ project }, { datastore }) => {
-  const questionnaireKey = datastore.key('questionnaires');
-  const key = datastore.key('projects');
+const collection = "project"
 
-  await datastore.save({
-    key: questionnaireKey,
-    data: Object.assign({}, {
-      destroyed: false,
-      id: undefined,
-      name: `${project.name} Questionnaire V1`
-    }),
-  });
+const create = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  Object.assign(entry, {
+    _id: new ObjectId(),
+    destroyed: false
+  })
 
-  await datastore.save({
-    key,
-    data: Object.assign({}, project, {
-      destroyed: false,
-      id: undefined,
-      questionnaire: questionnaireKey.id
-    }),
-  });
-
-  const { id } = key;
-  return Object.assign({}, project, {
-    id,
-  });
-};
-
-const addTeam = async ({ project, team }, { datastore }) => {
-  // check if user is part of that team already
-  const query = datastore.createQuery('project_teams')
-    .filter('team', team)
-    .filter('project', project)
-    .limit('limit', 1);
-
-  const entities = await datastore.runQuery(query);
-
-  const existingRelationship = entities.shift()
-
-  console.log({ existingRelationship })
-  if (existingRelationship[0])
-    return existingRelationship[0][datastore.KEY].id
-
-  const key = datastore.key('project_teams');
-  await datastore.save({
-    key,
-    data: Object.assign({}, { project, team }, {
-      destroyed: false,
-      id: undefined,
-    }),
-  });
-  const { id } = key;
-  return id
-};
-
-const removeTeam = async ({ project, team }, { datastore }) => {
-  const query = datastore.createQuery('project_teams')
-    .filter('team', team)
-    .filter('project', project)
-    .limit('limit', 1);
-
-  const entities = await datastore.runQuery(query);
-
-  const [existingRelationship] = entities.shift()
-
-  if (existingRelationship) {
-    const key = {
-      kind: 'project_teams',
-      path: ['project_teams', existingRelationship[datastore.KEY].id],
-      id: existingRelationship[datastore.KEY].id,
-    };
-
-    await datastore.delete(key);
-
-    return existingRelationship[datastore.KEY].id
-  }
-
-  return null
-};
-
-const update = async ({ project }, { datastore }) => {
-  const { id } = project;
-
-  const key = {
-    kind: 'projects',
-    path: ['projects', id],
-    id,
-  };
-
-  await datastore.save({
-    key,
-    data: Object.assign({}, project, {
-      id: undefined,
+  if (entry.questionnaire === 'new') {
+    const questionnaire = {
+      _id: new ObjectId,
+      name: entry.name,
+      project: entry._id.toString(),
       destroyed: false
-    }),
-  });
+    }
 
-  return Object.assign(project, {
-    id,
-  });
+    console.log(questionnaire)
+
+    await db.collection('questionnaire').insertOne(questionnaire)
+    entry.questionnaire = questionnaire._id
+  }
+  db.collection(collection).insertOne(entry)
+  entry.id = entry._id
+  return entry
 };
 
-const destroy = async ({ project }, { datastore }) => {
-  const { id } = project;
-  const key = {
-    kind: 'projects',
-    path: ['projects', id],
-    id,
-  };
-
-  await datastore.delete(key);
-
-  return Object.assign({}, project, {
-    id,
-  });
+const update = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined }) })
 };
 
-const restore = async ({ project }, { datastore }) => {
-  const { id } = project;
-  const key = {
-    kind: 'projects',
-    path: ['projects', id],
-    id,
-  };
+const destroy = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } })
+};
 
-  await datastore.save({
-    key,
-    data: Object.assign({}, project, {
-      id: undefined,
-      destroyed: false,
-    }),
-  });
-
-  return Object.assign({}, project, {
-    id,
-  });
+const restore = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } })
 };
 
 export {
@@ -141,6 +45,4 @@ export {
   update,
   destroy,
   restore,
-  addTeam,
-  removeTeam
 };

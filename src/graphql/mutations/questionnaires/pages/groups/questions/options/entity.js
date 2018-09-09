@@ -1,72 +1,26 @@
-const create = async ({ option }, { datastore }) => {
-  const key = datastore.key('options');
-  await datastore.save({
-    key,
-    data: Object.assign({}, option, {
-      destroyed: false,
-      id: undefined,
-    }),
-  });
-  const { id } = key;
-  return Object.assign({}, option, {
-    id,
-  });
+const collection = "option"
+
+const create = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  entry._id = new ObjectId();
+  db.collection(collection).insertOne(entry)
+  entry.id = entry._id
+  return entry
 };
 
-const update = async ({ option }, { datastore }) => {
-  const { id } = option;
-  const key = {
-    kind: 'options',
-    path: ['options', id],
-    id,
-  };
-
-  await datastore.save({
-    key,
-    data: Object.assign({}, option, {
-      id: undefined,
-    }),
-  });
-
-  return Object.assign(option, {
-    id,
-  });
+const update = async (args, { db, ObjectId }) => {
+  const entry = args[collection]
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined }) })
 };
 
-const destroy = async ({ option }, { datastore }) => {
-  const { id } = option;
-  const key = {
-    kind: 'options',
-    path: ['options', id],
-    id,
-  };
-
-  await datastore.delete(key);
-
-  return Object.assign({}, option, {
-    id,
-  });
+const destroy = async (args, { datastore }) => {
+  const entry = args[collection]
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined, destroyed: true }) })
 };
 
-const restore = async ({ option }, { datastore }) => {
-  const { id } = option;
-  const key = {
-    kind: 'options',
-    path: ['options', id],
-    id,
-  };
-
-  await datastore.save({
-    key,
-    data: Object.assign({}, option, {
-      id: undefined,
-      destroyed: false,
-    }),
-  });
-
-  return Object.assign({}, option, {
-    id,
-  });
+const restore = async (args, { datastore }) => {
+  const entry = args[collection]
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined, destroyed: false }) })
 };
 
 export {

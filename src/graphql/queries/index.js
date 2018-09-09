@@ -12,12 +12,6 @@ import {
 } from './users';
 
 import {
-  type as userGroupsType,
-  queries as userGroupsQueries,
-  root as userGroupsRoot,
-} from './userGroups';
-
-import {
   type as clientType,
   queries as clientQueries,
   nested as clientQueriesNested,
@@ -115,7 +109,6 @@ const typeQueries = `
   ${userType},
   ${projectType},
   ${questionnaireType},
-  ${userGroupsType},
   ${pageType},
   ${groupType},
   ${questionType},
@@ -135,7 +128,6 @@ const typeQueries = `
       ${userQueries},
       ${clientQueries},
       ${questionnaireQueries},
-      ${userGroupsQueries},
       ${pageQueries}
       ${questionQueries}
       ${groupQueries}
@@ -162,7 +154,6 @@ Object.assign(
   Query
   , projectRoot
   , userRoot
-  , userGroupsRoot
   , pageRoot
   , groupRoot
   , questionRoot
@@ -175,6 +166,7 @@ Object.assign(
   , chartsRoot
   , constantsRoot
   , aliasesRoot
+  , questionnaireRoot
 );
 
 const queryRoot = { Query, Nested }

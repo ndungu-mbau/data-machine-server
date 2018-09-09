@@ -23,12 +23,6 @@ import {
 } from './users';
 
 import {
-  type as userGroupsType,
-  queries as userGroupsMutations,
-  root as userGroupsRoot,
-} from './userGroups';
-
-import {
   type as questionnaireType,
   queries as questionnaireMutations,
   root as questionnaireRoot,
@@ -106,7 +100,6 @@ ${teamsType},
 ${projectType},
 ${dashboardType},
 ${userType},
-${userGroupsType},
 ${questionnaireType},
 ${pageType},
 ${groupType},
@@ -130,7 +123,6 @@ type Mutation {
     ${layoutMutations}
     ${chartMutations}
     ${constantMutations}
-    ${userGroupsMutations}
     ${questionnaireMutations}
     ${groupMutations},
     ${pageMutations},
@@ -144,7 +136,6 @@ const mutationRoot = { honk: () => 'Hello world students!' };
 
 Object.assign(mutationRoot, projectRoot);
 Object.assign(mutationRoot, userRoot);
-Object.assign(mutationRoot, userGroupsRoot);
 Object.assign(mutationRoot, questionnaireRoot);
 Object.assign(mutationRoot, pageRoot);
 Object.assign(mutationRoot, groupRoot);
