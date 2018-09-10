@@ -1,3 +1,5 @@
+import sha1 from 'sha1'
+
 const collection = "user"
 
 const create = async (args, { db, ObjectId }) => {
@@ -6,6 +8,7 @@ const create = async (args, { db, ObjectId }) => {
     _id: new ObjectId(),
     destroyed: false
   })
+  entry.password = sha1(password)
   db.collection(collection).insertOne(entry)
   entry.id = entry._id
   return entry
