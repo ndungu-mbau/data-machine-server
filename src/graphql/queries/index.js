@@ -8,6 +8,7 @@ import {
 import {
   type as userType,
   queries as userQueries,
+  nested as userNested,
   root as userRoot,
 } from './users';
 
@@ -147,6 +148,7 @@ Object.assign(
   , clientQueriesNested
   , teamUsersNested
   , projectQueriesNested
+  , userNested
 )
 
 
