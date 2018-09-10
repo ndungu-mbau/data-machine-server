@@ -87,7 +87,7 @@ app.post("/auth/login", celebrate({
 }), async (req, res) => {
     const { phone, password } = req.body
 
-    const userData = await db.collection('users').findOne({ 'phoneNumber': phone })
+    const userData = await db.collection('user').findOne({ 'phoneNumber': phone })
 
     console.log(userData)
     if (userData) {
@@ -116,7 +116,7 @@ app.post("/auth/register", celebrate({
     const { body: user } = req
 
     // check if user already exists
-    const userData = await db.collection('users').findOne({ 'phoneNumber': user.phoneNumber })
+    const userData = await db.collection('user').findOne({ 'phoneNumber': user.phoneNumber })
 
     // console.log({ userData })
 
@@ -128,7 +128,8 @@ app.post("/auth/register", celebrate({
 
     user.password = sha1(user.password)
 
-    db.collection('users').insertOne(user)
+    user.destroyed = false
+    db.collection('user').insertOne(user)
 
     return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) })
 })
