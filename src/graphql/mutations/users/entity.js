@@ -2,7 +2,10 @@ const collection = "user"
 
 const create = async (args, { db, ObjectId }) => {
   const entry = args[collection]
-  entry._id = new ObjectId();
+  Object.assign(entry, {
+    _id: new ObjectId(),
+    destroyed: false
+  })
   db.collection(collection).insertOne(entry)
   entry.id = entry._id
   return entry
@@ -13,14 +16,14 @@ const update = async (args, { db, ObjectId }) => {
   return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined }) })
 };
 
-const destroy = async (args, { datastore }) => {
+const destroy = async (args, { db, ObjectId }) => {
   const entry = args[collection]
-  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined, destroyed: true }) })
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } })
 };
 
-const restore = async (args, { datastore }) => {
+const restore = async (args, { db, ObjectId }) => {
   const entry = args[collection]
-  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined, destroyed: false }) })
+  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } })
 };
 
 export {

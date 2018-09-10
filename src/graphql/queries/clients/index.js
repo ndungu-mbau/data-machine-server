@@ -28,7 +28,7 @@ const client = async ({ id }, { datastore }) => {
 
 const clients = async (_, { filter = {} }, { db }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const data = await db.collection("client").find({destroyed:false}).toArray();
+  const data = await db.collection("client").find({ destroyed: false }).toArray();
 
   return data.map(entry => Object.assign({}, entry, {
     id: entry._id,
@@ -38,13 +38,14 @@ const clients = async (_, { filter = {} }, { db }) => {
 const nested = {
   client: {
     teams: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("team").find({ client: id.toString(),destroyed:false }).toArray();
+      console.log({ id })
+      const data = await db.collection("team").find({ client: id.toString(), destroyed: false }).toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
     },
     projects: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("project").find({ client: id.toString(),destroyed:false }).toArray();
+      const data = await db.collection("project").find({ client: id.toString(), destroyed: false }).toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));

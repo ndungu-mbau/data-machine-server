@@ -10,9 +10,9 @@ import {
 const type = `
   input newteam {
     id: String,
-    name: String!,
+    name: String,
     description: String,
-    client: String!
+    client: String
   }
 
   type teamMutations {
