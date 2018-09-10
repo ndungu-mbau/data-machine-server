@@ -25,9 +25,9 @@ const resolvers = Object.assign({}, queryRoot.Nested, {
 
 let db;
 
-MongoClient.connect(config[NODE_ENV].dbUrl, { useNewUrlParser: true }, function (err, client) {
+MongoClient.connect(config[NODE_ENV].db.url, { useNewUrlParser: true }, function (err, client) {
     if (err) throw err
-    db = client.db('besak')
+    db = client.db(config[NODE_ENV].db.name)
 })
 
 const datastore = config[NODE_ENV].datastore;

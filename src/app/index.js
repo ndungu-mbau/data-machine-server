@@ -24,9 +24,9 @@ const multer = Multer({
 
 let db;
 
-MongoClient.connect(config[NODE_ENV].dbUrl, { useNewUrlParser: true }, function (err, client) {
+MongoClient.connect(config[NODE_ENV].db.url, { useNewUrlParser: true }, function (err, client) {
     if (err) throw err
-    db = client.db('databank')
+    db = client.db(config[NODE_ENV].db.name)
 })
 
 // create reusable transporter object using the default SMTP transport
