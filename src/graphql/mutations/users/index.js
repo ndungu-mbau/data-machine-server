@@ -8,13 +8,13 @@ import {
 const type = `
   input newUser {
     id: String,
-    firstName: String!,
-    middleName: String!,
-    lastName: String!,
-    email: String!,
-    phoneNumber: String!,
-    mobileMoneyNumber: String!,
-    password: String!
+    firstName: String,
+    middleName: String,
+    lastName: String,
+    email: String,
+    phoneNumber: String,
+    mobileMoneyNumber: String,
+    password: String
   }
 
   type userMutations {
