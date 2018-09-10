@@ -26,7 +26,7 @@ let db;
 
 MongoClient.connect(config[NODE_ENV].dbUrl, { useNewUrlParser: true }, function (err, client) {
     if (err) throw err
-    db = client.db('besak')
+    db = client.db('databank')
 })
 
 // create reusable transporter object using the default SMTP transport
