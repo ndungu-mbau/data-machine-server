@@ -84,51 +84,24 @@ const teams = async ({ filter }, { datastore }) => {
 
 const nested = {
   team: {
-    users: async ({ id }, { filter = {} }, { datastore }) => {
+    users: async ({ id }, { filter = {} }, { db, ObjectId }) => {
       const { destroyed = false, offset = 0, limit = 100 } = filter;
-      const query = datastore.createQuery('user_teams')
-        .filter('team', id)
-        .filter('destroyed', destroyed)
-        .offset('offset', offset)
-        .limit('limit', limit);
+      const relations = await db.collection('user_teams').find({ team: id.toString() }).toArray()
 
-      const [relation] = await datastore.runQuery(query);
-
-      if (relation.length == 0)
-        return []
-
-      const [users] = await datastore.get(relation.map(({ user }) => ({
-        kind: 'users',
-        path: ["users", user],
-        id: user
-      })));
+      const users = await db.collection('user').find({ _id: { $in: relations.map(relation => ObjectId(relation.user)) } }).toArray()
 
       return users.map(entry => Object.assign({}, entry, {
-        id: entry[datastore.KEY].id
+        id: entry._id
       }));
     },
-    projects: async ({ id }, { filter = {} }, { datastore }) => {
+    projects: async ({ id }, { filter = {} }, { db, ObjectId }) => {
       const { destroyed = false, offset = 0, limit = 100 } = filter;
-      const query = datastore.createQuery('project_teams')
-        .filter('team', id)
-        .filter('destroyed', destroyed)
-        .offset('offset', offset)
-        .limit('limit', limit);
+      const relations = await db.collection('project_teams').find({ team: id.toString() }).toArray()
 
-      const [relation] = await datastore.runQuery(query);
+      const projects = await db.collection('project').find({ _id: { $in: relations.map(relation => ObjectId(relation.project)) } }).toArray()
 
-      // console.log(relation.shift())
-      if (relation.length == 0)
-        return []
-
-      const projects = await datastore.get(relation.map(({ project }) => ({
-        kind: 'projects',
-        path: ["projects", project],
-        id: project
-      })));
-
-      return projects.shift().map(entry => Object.assign({}, entry, {
-        id: entry[datastore.KEY].id
+      return projects.map(entry => Object.assign({}, entry, {
+        id: entry._id
       }));
     }
   }

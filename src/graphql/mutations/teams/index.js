@@ -4,7 +4,9 @@ import {
   destroy,
   restore,
   addUser,
-  removeUser
+  removeUser,
+  addProject,
+  removeProject
 } from './entity';
 
 const type = `
@@ -21,7 +23,9 @@ const type = `
     destroy (team:newteam):team,
     restore (team:newteam):team,
     addUser (user:String,team:String):String
-    removeUser (user:String,team:String):String
+    removeUser (user:String,team:String):String,
+    addProject(project:String,team:String):String,,
+    removeProject(project:String,team:String):String,
   }
 `;
 
@@ -37,7 +41,9 @@ const root = {
     destroy,
     restore,
     addUser,
-    removeUser
+    removeUser,
+    addProject,
+    removeProject
   }),
 };
 

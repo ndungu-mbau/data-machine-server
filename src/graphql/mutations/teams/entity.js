@@ -26,9 +26,21 @@ const restore = async (args, { db, ObjectId }) => {
   return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } })
 };
 
+const addUser = async (args, { db }) => await db.collection("user_teams").insertOne(args)
+
+const removeUser = async (args, { db }) => await db.collection('user_teams').deleteOne(args)
+
+const addProject = async (args, { db }) => await db.collection("project_teams").insertOne(args)
+
+const removeProject = async (args, { db }) => await db.collection('project_teams').deleteOne(args)
+
 export {
   create,
   update,
   destroy,
   restore,
+  addUser,
+  removeUser,
+  addProject,
+  removeProject
 };
