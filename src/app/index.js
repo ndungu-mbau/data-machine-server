@@ -137,60 +137,51 @@ app.post("/auth/register", celebrate({
 app.post('/submision', async (req, res) => {
     const submission = req.body;
 
-    const query = datastore
-        .createQuery('submission')
-        .filter('compleationId', '=', submission.compleationId);
+    // const query = datastore
+    //     .createQuery('submission')
+    //     .filter('compleationId', '=', submission.compleationId);
 
-    const existingSubmission = await datastore.runQuery(query);
+    // const existingSubmission = await datastore.runQuery(query);
+    console.log({submission})
+    const [existingSubmission] = await db.collection('submision').find({ completionId: submission.completionId }).toArray();
 
-    if (existingSubmission[0].length > 0) {
-        return res.status(409).send({
-            error:
-                'A submission with that compleationId already exists, are you sure this compleation has not already been submitted to the server before?',
+    console.log(existingSubmission)
+    if (existingSubmission) {
+        return res.status(200).send({
+            exists:true,
+            _id:existingSubmission._id
         });
     }
 
-    const key = datastore.key('submission');
-    await datastore.save({
-        key,
-        data: Object.assign({}, submission, {
-            createdAt: new Date().toISOString(),
-            destroyed: false,
-            id: undefined,
-        }),
-    });
-
-    const { id } = key;
+     await db.collection('submision').insertOne(Object.assign({}, submission, {
+        createdAt: new Date().toISOString(),
+        destroyed: false,
+        id: undefined,
+    }))
 
     // send the emails here
-    sendMail({
-        to: "credistart@gmail.com",
-        subject: `Notification of a completed interview ${id} at ${new Date().toLocaleString()}`,
-        message: `
-        A new interview has been completed, please view at <a href="http://sabekinstitute.co.ke/dashboard.html#!/interview=${id}">view</a>
-        <hr>
-        <pre>${JSON.stringify(submission, null, "\t")}</pre>
-      `
-    }).then(console.log).catch(console.log)
+    // sendMail({
+    //     to: "credistart@gmail.com",
+    //     subject: `Notification of a completed interview ${id} at ${new Date().toLocaleString()}`,
+    //     message: `
+    //     A new interview has been completed, please view at <a href="http://sabekinstitute.co.ke/dashboard.html#!/interview=${id}">view</a>
+    //     <hr>
+    //     <pre>${JSON.stringify(submission, null, "\t")}</pre>
+    //   `
+    // }).then(console.log).catch(console.log)
 
-    return res.send({
-        id,
-    });
+    const [submited] = await db.collection('submision').find({ completionId: submission.completionId }).toArray();
+
+    return res.send({_id:submited._id});
 });
 
 app.get('/submision/:id', async (req, res) => {
     const submission = req.params;
     const { id } = submission;
 
-    const key = {
-        kind: 'submission',
-        path: ['submission', id],
-        id,
-    };
+    const [submision] = await db.collection('submision').find({ _id: ObjectId(id) }).toArray();
 
-    const results = await datastore.get(key);
-
-    res.send(results.pop());
+    res.send(submision);
 });
 
 const lowLevelParser = (req, res) => new Promise((resolve, rej) => {
