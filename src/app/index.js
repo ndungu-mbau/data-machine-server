@@ -195,7 +195,7 @@ app.get('/submisions/:questionnaireid', async (req, res) => {
   const submission = req.params;
   const { questionnaireid } = submission;
 
-  const submisions = await db.collection('submision').find({ questionnaireid }).toArray();
+  const submisions = await db.collection('submision').find({ questionnaireId }).toArray();
 
   res.send(submisions);
 });
