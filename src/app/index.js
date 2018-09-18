@@ -153,7 +153,7 @@ app.post('/submision', async (req, res) => {
       if (value.toString().includes('file://')) {
         const [, ext] = value.split('.');
 
-        submission[key] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${submission.questionnaireId}_${key}.${ext}`;
+        submission[key] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${submission.questionnaireId}_${key}_${submission.interviewId}${ext ? `.${ext}` : ''}`;
       }
     }
   });
@@ -233,10 +233,10 @@ app.post(
     console.log(req.body);
     console.log(req.file);
 
-    const { questionnaire = '', tag = '' } = req.body;
+    const { questionnaire = '', tag = '', interviewId = '' } = req.body;
     const [, ext] = req.file.originalname.split('.');
 
-    res.status(201).send({ uri: `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${questionnaire}_${tag}${ext ? `.${ext}` : ''}` });
+    res.status(201).send({ uri: `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${questionnaire}_${tag}_${interviewId}${ext ? `.${ext}` : ''}` });
 
     // upload and save link in db, accessible via /questionnaireId/id
     const s3 = new AWS.S3();
