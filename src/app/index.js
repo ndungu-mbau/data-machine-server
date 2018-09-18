@@ -153,7 +153,7 @@ app.post('/submision', async (req, res) => {
       if (value.toString().includes('file://')) {
         const [, ext] = value.split('.');
 
-        submission[key] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${submission.questionnaireid}_${key}.${ext}`;
+        submission[key] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${submission.questionnaireId}_${key}.${ext}`;
       }
     }
   });
