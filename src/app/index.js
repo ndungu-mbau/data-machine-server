@@ -184,6 +184,16 @@ app.get('/submision/:id', async (req, res) => {
     res.send(submision);
 });
 
+
+app.get('/submisions/:questionnaireid', async (req, res) => {
+    const submission = req.params;
+    const { questionnaireid } = submission;
+
+    const submisions = await db.collection('submision').find({ questionnaireid }).toArray();
+
+    res.send(submisions);
+});
+
 const lowLevelParser = (req, res) => new Promise((resolve, rej) => {
     parser.parse(req, res, { dir: "/tmp" }, function (fields, file) {
         resolve({ fields, file })
