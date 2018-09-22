@@ -18,17 +18,17 @@ const queries = `
 
 const user = async (_, { filter = {} } = {}, { db, user }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
-  console.log(user)
-  const [userDetails] = await db.collection("user").find({ phoneNumber: user.phoneNumber }).toArray();
+  console.log(user);
+  const [userDetails] = await db.collection('user').find({ phoneNumber: user.phoneNumber }).toArray();
 
-  console.log({ userDetails })
-  userDetails.id = userDetails._id
-  return userDetails
+  console.log({ userDetails });
+  userDetails.id = userDetails._id;
+  return userDetails;
 };
 
 const users = async (_, { filter = {} } = {}, { db }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const data = await db.collection("user").find({ destroyed: false }).toArray();
+  const data = await db.collection('user').find({ destroyed: false }).toArray();
 
   return data.map(entry => Object.assign({}, entry, {
     id: entry._id,
@@ -38,17 +38,17 @@ const users = async (_, { filter = {} } = {}, { db }) => {
 const nested = {
   user: {
     teams: async ({ id }, { filter = {} }, { db, ObjectId }) => {
-      console.log(id)
+      console.log(id);
       const { destroyed = false, offset = 0, limit = 100 } = filter;
-      const relations = await db.collection('user_teams').find({ user: id.toString() }).toArray()
-      const teams = await db.collection('team').find({ _id: { $in: relations.map(relation => ObjectId(relation.team)) } }).toArray()
+      const relations = await db.collection('user_teams').find({ user: id.toString() }).toArray();
+      const teams = await db.collection('team').find({ _id: { $in: relations.map(relation => ObjectId(relation.team)) } }).toArray();
 
       return teams.map(entry => Object.assign({}, entry, {
-        id: entry._id
+        id: entry._id,
       }));
-    }
-  }
-}
+    },
+  },
+};
 
 const root = {
   user,

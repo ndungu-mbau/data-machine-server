@@ -44,8 +44,8 @@ const teamProjects = teamId => async (filter, { datastore }) => {
   return entities.shift().map(entry => Object.assign({}, entry, {
     id: entry[datastore.KEY].id,
   }, {
-      questionnaire: projectQuestionnaire(entry.questionnaire),
-    }));
+    questionnaire: projectQuestionnaire(entry.questionnaire),
+  }));
 };
 
 const teamUsers = teamId => async (filter, { datastore }) => {
@@ -61,8 +61,8 @@ const teamUsers = teamId => async (filter, { datastore }) => {
   return entities.shift().map(entry => Object.assign({}, entry, {
     id: entry[datastore.KEY].id,
   }, {
-      questionnaire: projectQuestionnaire(entry.questionnaire),
-    }));
+    questionnaire: projectQuestionnaire(entry.questionnaire),
+  }));
 };
 
 const teams = async ({ filter }, { datastore }) => {
@@ -86,30 +86,30 @@ const nested = {
   team: {
     users: async ({ id }, { filter = {} }, { db, ObjectId }) => {
       const { destroyed = false, offset = 0, limit = 100 } = filter;
-      const relations = await db.collection('user_teams').find({ team: id.toString() }).toArray()
+      const relations = await db.collection('user_teams').find({ team: id.toString() }).toArray();
 
-      const users = await db.collection('user').find({ _id: { $in: relations.map(relation => ObjectId(relation.user)) } }).toArray()
+      const users = await db.collection('user').find({ _id: { $in: relations.map(relation => ObjectId(relation.user)) } }).toArray();
 
       return users.map(entry => Object.assign({}, entry, {
-        id: entry._id
+        id: entry._id,
       }));
     },
     projects: async ({ id }, { filter = {} }, { db, ObjectId }) => {
       const { destroyed = false, offset = 0, limit = 100 } = filter;
-      const relations = await db.collection('project_teams').find({ team: id.toString() }).toArray()
+      const relations = await db.collection('project_teams').find({ team: id.toString() }).toArray();
 
-      const projects = await db.collection('project').find({ _id: { $in: relations.map(relation => ObjectId(relation.project)) } }).toArray()
+      const projects = await db.collection('project').find({ _id: { $in: relations.map(relation => ObjectId(relation.project)) } }).toArray();
 
       return projects.map(entry => Object.assign({}, entry, {
-        id: entry._id
+        id: entry._id,
       }));
-    }
-  }
-}
+    },
+  },
+};
 
 const root = {
   team,
-  teams
+  teams,
 };
 
 export {

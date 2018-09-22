@@ -31,8 +31,8 @@ const QuestionOptions = questionId => async (filter, { datastore }) => {
 };
 
 const GroupQuestions = groupId => async (filter, { db }) => {
-  console.log(groupId)
-  const data = await db.collection("question").find({ group: groupId.toString() }).toArray()
+  console.log(groupId);
+  const data = await db.collection('question').find({ group: groupId.toString(), destroyed: false }).toArray();
 
   return data.map(entry =>
     Object.assign({}, entry, {
@@ -42,7 +42,7 @@ const GroupQuestions = groupId => async (filter, { db }) => {
 };
 
 const PageGroups = pageId => async (filter, { db }) => {
-  const data = await db.collection("group").find({ page: pageId.toString() }).toArray()
+  const data = await db.collection('group').find({ page: pageId.toString(), destroyed: false }).toArray();
 
   return data.map(entry =>
     Object.assign({}, entry, {
@@ -52,7 +52,7 @@ const PageGroups = pageId => async (filter, { db }) => {
 };
 
 const QuestionnairePages = questionnaireId => async (filter, { db }) => {
-  const data = await db.collection("page").find({ questionnaire: questionnaireId }).toArray()
+  const data = await db.collection('page').find({ questionnaire: questionnaireId, destroyed: false }).toArray();
 
   return data.map(entry =>
     Object.assign({}, entry, {
@@ -172,7 +172,7 @@ const QuestionnaireDashboards = questionnaireId => async (
 };
 
 export const questionnaire = async ({ questionnaire } = {}, { id }, { db, ObjectId }) => {
-  const data = await db.collection("questionnaire").findOne({ _id: new ObjectId(id) })
+  const data = await db.collection('questionnaire').findOne({ _id: new ObjectId(id), destroyed: false });
 
   return Object.assign({}, data, {
     id,
