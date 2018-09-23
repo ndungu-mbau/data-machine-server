@@ -17,8 +17,6 @@ AWS.config.loadFromPath('aws_config.json');
 
 const {
   NODE_ENV = 'development',
-  PORT = 4000,
-  HOST = '0.0.0.0',
 } = process.env;
 
 const multer = Multer({
@@ -236,7 +234,8 @@ app.post(
     const { questionnaire = '', tag = '', interviewId = '' } = req.body;
     const [, ext] = req.file.originalname.split('.');
 
-    res.status(201).send({ uri: `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${questionnaire}_${tag}_${interviewId}${ext ? `.${ext}` : ''}` });
+    const Key = `${questionnaire}_${tag}_${interviewId}${ext ? `.${ext}` : ''}`;
+    res.status(201).send({ uri: `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${Key}` });
 
     // upload and save link in db, accessible via /questionnaireId/id
     const s3 = new AWS.S3();
@@ -244,7 +243,7 @@ app.post(
 
     const params = {
       Bucket: 'questionnaireuploads',
-      Key: `${questionnaire}_${tag}.${ext}`,
+      Key,
       Body: fileData,
       ACL: 'public-read',
     };
