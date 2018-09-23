@@ -153,6 +153,10 @@ app.post('/submision', async (req, res) => {
 
         submission[key] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${submission.questionnaireId}_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
       }
+
+      if (value === false) {
+        submission[key] = 0;
+      }
     }
   });
 
@@ -160,10 +164,9 @@ app.post('/submision', async (req, res) => {
   await db.collection('submision').insertOne(Object.assign({}, submission, {
     createdAt: new Date().toISOString(),
     destroyed: false,
-    id: undefined,
   }));
 
-  // send the emails here
+  // send the emails here and other realtime stuff for the dashboards
   // sendMail({
   //     to: "credistart@gmail.com",
   //     subject: `Notification of a completed interview ${id} at ${new Date().toLocaleString()}`,
