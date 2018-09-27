@@ -13,25 +13,7 @@ const queries = `
   questionnaires(filter:filter):[questionnaire]
 `;
 
-const QuestionOptions = questionId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('options')
-    .filter('question', questionId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
-
-  const entities = await datastore.runQuery(query);
-
-  return entities.shift().map(entry =>
-    Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
-    }));
-};
-
 const GroupQuestions = groupId => async (filter, { db }) => {
-  console.log(groupId);
   const data = await db.collection('question').find({ group: groupId.toString(), destroyed: false }).toArray();
 
   return data.map(entry =>
@@ -61,113 +43,78 @@ const QuestionnairePages = questionnaireId => async (filter, { db }) => {
     }));
 };
 
-const dashboardLayouts = dashboardId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('layouts')
-    .filter('dashboard', dashboardId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+const dashboardLayouts = dashboardId => async (filter, { db }) => {
+  const data = await db.collection('cp').find({ dashboard: dashboardId, destroyed: false }).toArray();
 
-  const entities = await datastore.runQuery(query);
+  if (!data) { return null; }
 
-  const layout = entities.shift().shift();
+  const layout = data.shift();
   return Object.assign({}, layout, {
-    id: layout[datastore.KEY].id,
+    id: layout._id,
   });
 };
 
-const dashboardCps = dashboardId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('cps')
-    .filter('dashboard', dashboardId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+const dashboardCps = dashboardId => async (filter, { db }) => {
+  const data = await db.collection('cp').find({ dashboard: dashboardId, destroyed: false }).toArray();
 
-  const entities = await datastore.runQuery(query);
+  if (!data) { return []; }
 
-  return entities.shift().map(entry =>
+  return data.map(entry =>
     Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
+      id: entry._id,
     }));
 };
 
-const dashboardAliases = dashboardId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('aliases')
-    .filter('dashboard', dashboardId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+const dashboardAliases = dashboardId => async (filter, { db }) => {
+  const data = await db.collection('alias').find({ dashboard: dashboardId, destroyed: false }).toArray();
 
-  const entities = await datastore.runQuery(query);
+  if (!data) { return []; }
 
-  return entities.shift().map(entry =>
+  return data.map(entry =>
     Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
+      id: entry._id,
     }));
 };
 
-const dashboardCharts = dashboardId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('charts')
-    .filter('dashboard', dashboardId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+const dashboardCharts = dashboardId => async (filter, { db }) => {
+  const data = await db.collection('chart').find({ dashboard: dashboardId, destroyed: false }).toArray();
 
-  const entities = await datastore.runQuery(query);
+  if (!data) { return []; }
 
-  return entities.shift().map(entry =>
+  return data.map(entry =>
     Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
+      id: entry._id,
     }));
 };
 
-const dashboardConstants = dashboardId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('constants')
-    .filter('dashboard', dashboardId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+const dashboardConstants = dashboardId => async (filter, { db }) => {
+  const data = await db.collection('constant').find({ dashboard: dashboardId, destroyed: false }).toArray();
 
-  const entities = await datastore.runQuery(query);
+  if (!data) { return []; }
 
-  return entities.shift().map(entry =>
+  return data.map(entry =>
     Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
+      id: entry._id,
     }));
 };
 
 const QuestionnaireDashboards = questionnaireId => async (
   filter,
-  { datastore },
+  { db },
 ) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('dashboards')
-    .filter('questionnaire', questionnaireId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
+  console.log({ questionnaireId });
+  const data = await db.collection('dashboard').find({ questionnaire: questionnaireId, destroyed: false }).toArray();
 
-  const entities = await datastore.runQuery(query);
+  if (!data) { return []; }
 
-  return entities.shift().map(entry =>
+  return data.map(entry =>
     Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
-      layout: dashboardLayouts(entry[datastore.KEY].id),
-      cps: dashboardCps(entry[datastore.KEY].id),
-      aliases: dashboardAliases(entry[datastore.KEY].id),
-      charts: dashboardCharts(entry[datastore.KEY].id),
-      constants: dashboardConstants(entry[datastore.KEY].id),
+      id: entry._id,
+      layout: dashboardLayouts(entry._id.toString()),
+      cps: dashboardCps(entry._id.toString()),
+      aliases: dashboardAliases(entry._id.toString()),
+      charts: dashboardCharts(entry._id.toString()),
+      constants: dashboardConstants(entry._id.toString()),
     }));
 };
 

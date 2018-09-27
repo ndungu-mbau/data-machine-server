@@ -1,79 +1,35 @@
-const create = async ({ chart }, { datastore }) => {
-  const key = datastore.key('charts');
-  await datastore.save({
-    key,
-    data: Object.assign({}, chart, {
-      destroyed: false,
-      id: undefined,
-    }),
-    excludeFromIndexes: [
-      'html'
-    ]
+const collection = 'chart';
+
+const create = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  Object.assign(entry, {
+    _id: new ObjectId(),
+    destroyed: false,
   });
-  const { id } = key;
-  return Object.assign({}, chart, {
-    id,
-  });
+  db.collection(collection).insertOne(entry);
+  entry.id = entry._id;
+  return entry;
 };
 
-const update = async ({ chart }, { datastore }) => {
-  const { id } = chart;
-  const key = {
-    kind: 'charts',
-    path: ['charts', id],
-    id,
-  };
-
-  await datastore.save({
-    key,
-    data: Object.assign({}, chart, {
-      id: undefined,
-      destroyed: false,
-    }),
-    excludeFromIndexes: [
-      'html'
-    ]
-  });
-
-  return Object.assign(chart, {
-    id,
-  });
+const update = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      { $set: Object.assign({}, entry, { id: undefined }) },
+    );
 };
 
-const destroy = async ({ chart }, { datastore }) => {
-  const { id } = chart;
-  const key = {
-    kind: 'charts',
-    path: ['charts', id],
-    id,
-  };
-
-  await datastore.delete(key);
-
-  return Object.assign({}, chart, {
-    id,
-  });
+const destroy = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } });
 };
 
-const restore = async ({ chart }, { datastore }) => {
-  const { id } = chart;
-  const key = {
-    kind: 'charts',
-    path: ['charts', id],
-    id,
-  };
-
-  await datastore.save({
-    key,
-    data: Object.assign({}, chart, {
-      id: undefined,
-      destroyed: false,
-    }),
-  });
-
-  return Object.assign({}, chart, {
-    id,
-  });
+const restore = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } });
 };
 
 export {

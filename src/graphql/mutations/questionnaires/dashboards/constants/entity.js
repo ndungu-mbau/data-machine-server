@@ -1,73 +1,40 @@
-const create = async ({ constant }, { datastore }) => {
-  const key = datastore.key('constants');
-  await datastore.save({
-    key,
-    data: Object.assign({}, constant, {
-      destroyed: false,
-      id: undefined,
-    }),
+const collection = 'constant';
+
+const create = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  Object.assign(entry, {
+    _id: new ObjectId(),
+    destroyed: false,
   });
-  const { id } = key;
-  return Object.assign({}, constant, {
-    id,
-  });
+  db.collection(collection).insertOne(entry);
+  entry.id = entry._id;
+  return entry;
 };
 
-const update = async ({ constant }, { datastore }) => {
-  const { id } = constant;
-  const key = {
-    kind: 'constants',
-    path: ['constants', id],
-    id,
-  };
-
-  await datastore.save({
-    key,
-    data: Object.assign({}, constant, {
-      id: undefined,
-      destroyed: false,
-    }),
-  });
-
-  return Object.assign(constant, {
-    id,
-  });
+const update = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      { $set: Object.assign({}, entry, { id: undefined }) },
+    );
 };
 
-const destroy = async ({ constant }, { datastore }) => {
-  const { id } = constant;
-  const key = {
-    kind: 'constants',
-    path: ['constants', id],
-    id,
-  };
-
-  await datastore.delete(key);
-
-  return Object.assign({}, constant, {
-    id,
-  });
+const destroy = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } });
 };
 
-const restore = async ({ constant }, { datastore }) => {
-  const { id } = constant;
-  const key = {
-    kind: 'constants',
-    path: ['constants', id],
-    id,
-  };
-
-  await datastore.save({
-    key,
-    data: Object.assign({}, constant, {
-      id: undefined,
-      destroyed: false,
-    }),
-  });
-
-  return Object.assign({}, constant, {
-    id,
-  });
+const restore = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } });
 };
 
-export { create, update, destroy, restore };
+export {
+  create,
+  update,
+  destroy,
+  restore,
+};
