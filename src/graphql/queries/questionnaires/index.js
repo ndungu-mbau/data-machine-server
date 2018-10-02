@@ -44,7 +44,7 @@ const QuestionnairePages = questionnaireId => async (filter, { db }) => {
 };
 
 const dashboardLayouts = dashboardId => async (filter, { db }) => {
-  const data = await db.collection('cp').find({ dashboard: dashboardId, destroyed: false }).toArray();
+  const data = await db.collection('layout').find({ dashboard: dashboardId, destroyed: false }).toArray();
 
   if (!data) { return null; }
 
