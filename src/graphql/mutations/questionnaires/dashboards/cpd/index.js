@@ -1,14 +1,19 @@
 import { create, update, destroy, restore } from './entity';
 
 const type = `
-  input newcp {
+  input newcpd {
     id: String,
     name: String,
     dashboard: String,
-    formular: String
+    numerator:String,
+    sum: [String],
+    difference: [String],
+    division: [String],
+    multiply: [String],
+    average: [String],
   }
 
-  type cpMutations {
+  type cpdMutations {
     create (cp:newcp!):cp,
     update (cp:newcp):cp,
     destroy (cp:newcp):cp,
@@ -17,7 +22,7 @@ const type = `
 `;
 
 const queries = `
-  cpMutations:cpMutations
+  cpdMutations:cpdMutations
 `;
 
 const root = {

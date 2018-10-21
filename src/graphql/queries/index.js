@@ -57,6 +57,12 @@ import {
 } from './questionnaires/dashboards/cps';
 
 import {
+  type as cpdType,
+  queries as cpdQueries,
+  root as cpdRoot,
+} from './questionnaires/dashboards/cpd';
+
+import {
   type as chartsType,
   queries as chartsQueries,
   root as chartsRoot,
@@ -104,6 +110,7 @@ const typeQueries = `
   ${dashboardsType},
   ${layoutsType},
   ${cpType},
+  ${cpdType},
   ${chartsType},
   ${constantsType},
   ${aliasesType},
@@ -122,6 +129,7 @@ const typeQueries = `
       ${dashboardsQueries},
       ${layoutsQueries},
       ${cpQueries},
+      ${cpdQueries},
       ${chartsQueries},
       ${constantsQueries},
       ${aliasesQueries},
@@ -165,6 +173,7 @@ Object.assign(
   , dashboardsRoot
   , layoutsRoot
   , cpRoot
+  , cpdRoot
   , chartsRoot
   , constantsRoot
   , aliasesRoot

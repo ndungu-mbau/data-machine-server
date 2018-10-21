@@ -1,15 +1,19 @@
 const type = `
-  type cp {
+  type cpd {
     id: String,
     dashboard: String,
     name: String,
-    formular: String,
+    numerator:String,
+    sum: [String],
+    difference: [String],
+    division: [String],
+    multiply: [String],
   }
 `;
 
 const queries = `
-  cp(id:String!):cp,
-  cps(filter:filter!):[cp]
+  cpd(id:String!):cp,
+  cpds(filter:filter!):[cp]
 `;
 
 const cp = async ({ id }, { datastore }) => {

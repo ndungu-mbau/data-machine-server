@@ -53,6 +53,13 @@ import {
 } from './questionnaires/dashboards/cps';
 
 import {
+  type as cpdType,
+  queries as cpdMutations,
+  root as cpdRoot,
+} from './questionnaires/dashboards/cpd';
+
+
+import {
   type as chartType,
   queries as chartMutations,
   root as chartRoot,
@@ -105,6 +112,7 @@ ${pageType},
 ${groupType},
 ${aliasType},
 ${cpType},
+${cpdType},
 ${layoutType},
 ${chartType},
 ${constantType},
@@ -120,6 +128,7 @@ type Mutation {
     ${userMutations}
     ${aliasMutations}
     ${cpMutations}
+    ${cpdMutations}
     ${layoutMutations}
     ${chartMutations}
     ${constantMutations}
@@ -146,6 +155,7 @@ Object.assign(mutationRoot, teamsRoot);
 Object.assign(mutationRoot, sentenceRoot);
 Object.assign(mutationRoot, aliasRoot);
 Object.assign(mutationRoot, cpRoot);
+Object.assign(mutationRoot, cpdRoot);
 Object.assign(mutationRoot, chartRoot);
 Object.assign(mutationRoot, constantRoot);
 Object.assign(mutationRoot, layoutRoot);

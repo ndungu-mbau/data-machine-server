@@ -6,6 +6,7 @@ const type = `
 
     layout:layout,
     cps:[cp],
+    cpds:[cpd],
     aliases:[alias],
     constants:[constant],
     charts:[chart]
