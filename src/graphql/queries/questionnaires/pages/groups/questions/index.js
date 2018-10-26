@@ -8,6 +8,12 @@ const type = `
     extentions:String
   }
 
+  type conditional {
+    parent:String,
+    parentValue:String,
+    parentValues:[String],
+  }
+
   type question {
     id: String,
     tag: String,
@@ -17,7 +23,8 @@ const type = `
     contentType: String,
     options:[option],
     sentences:[sentence],
-    validations:[validation]
+    validations:[validation],
+    conditional:conditional
   }
 `;
 

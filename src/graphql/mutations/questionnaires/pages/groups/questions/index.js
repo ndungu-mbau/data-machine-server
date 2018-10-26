@@ -15,6 +15,12 @@ const type = `
     extentions:String
   }
 
+  input input_conditional {
+    parent:String,
+    parentValue:String,
+    parentValues:[String],
+  }
+
   input newquestion {
     id: String,
     tag: String,
@@ -24,6 +30,7 @@ const type = `
     placeholder: String,
     contentType: String,
     icon: String,
+    conditional:input_conditional,
     options:[newoption],
     validations:[newvalidation],
     sentences:[newsentence]
