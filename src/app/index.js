@@ -202,10 +202,10 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   const compoundedProps = []
   const computedProps = []
 
-  const dashboards = await db.collection('dashboard').find({ questionnaire: questionnaireId }).toArray();
+  const dashboards = await db.collection('dashboard').find({ questionnaire: questionnaireId, destroyed: false }).toArray();
 
   const data = await Promise.all(dashboards.map(async dashboard => {
-    console.log(dashboard)
+
     return [
       await db.collection('cpd').find({ dashboard: dashboard._id.toString(), destroyed: false }).toArray(),
       await db.collection('cp').find({ dashboard: dashboard._id.toString(), destroyed: false }).toArray()
@@ -225,7 +225,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     const copyRecord = {}
     computedProps.map(form => {
       Object.assign(copyRecord, row)
-      var tempFn = doT.template(form.formular);
+      var tempFn = doT.template(form.formular || "");
       var resultFormular = tempFn(row);
 
       copyRecord[form.name] = math.eval(resultFormular)
