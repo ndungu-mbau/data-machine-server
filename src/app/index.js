@@ -12,6 +12,9 @@ import fs from 'fs';
 import AWS from 'aws-sdk';
 import parser from './parser';
 import { MongoClient, ObjectId } from 'mongodb';
+var doT = require("dot")
+const math = require("mathjs")
+
 
 AWS.config.loadFromPath('aws_config.json');
 
@@ -196,9 +199,60 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   const submission = req.params;
   const { questionnaireId } = submission;
 
+  const compoundedProps = []
+  const computedProps = []
+
+  const dashboards = await db.collection('dashboard').find({ questionnaire: questionnaireId }).toArray();
+
+  const data = await Promise.all(dashboards.map(async dashboard => {
+    console.log(dashboard)
+    return [
+      await db.collection('cpd').find({ dashboard: dashboard._id.toString(), destroyed: false }).toArray(),
+      await db.collection('cp').find({ dashboard: dashboard._id.toString(), destroyed: false }).toArray()
+    ]
+  }))
+
+  // extract all the cps'd and cpds
+  data.map(dashboard => {
+    const [cpds, cps] = dashboard
+    compoundedProps.push(...cpds)
+    computedProps.push(...cps)
+  })
+
   const submisions = await db.collection('submision').find({ questionnaireId }).toArray();
 
-  res.send(submisions);
+  const computed = submisions.map(row => {
+    const copyRecord = {}
+    computedProps.map(form => {
+      Object.assign(copyRecord, row)
+      var tempFn = doT.template(form.formular);
+      var resultFormular = tempFn(row);
+
+      copyRecord[form.name] = math.eval(resultFormular)
+    })
+    return copyRecord
+  })
+
+  const compounded = {}
+
+  compoundedProps.map((c => {
+    if (c.type === 'formular') {
+      var tempFn = doT.template(c.formular);
+      var resultFormular = tempFn(compounded);
+      const compiled = math.eval(resultFormular)
+      compounded[c.name] = compiled
+      return;
+    }
+
+    const values = computed.map(row => row[c.field])
+    const result = math[c.type](values)
+    compounded[c.name] = typeof result === 'object' ? result[0] : result
+  }))
+
+  res.send({
+    computed,
+    compounded
+  });
 });
 
 const lowLevelParser = (req, res) => new Promise((resolve, rej) => {
