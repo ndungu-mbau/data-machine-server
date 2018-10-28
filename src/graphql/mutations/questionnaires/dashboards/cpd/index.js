@@ -5,19 +5,16 @@ const type = `
     id: String,
     name: String,
     dashboard: String,
-    numerator:String,
-    sum: [String],
-    difference: [String],
-    division: [String],
-    multiply: [String],
-    average: [String],
+    field:String,
+    formular:String,
+    type:String,
   }
 
   type cpdMutations {
-    create (cp:newcp!):cp,
-    update (cp:newcp):cp,
-    destroy (cp:newcp):cp,
-    restore (cp:newcp):cp
+    create (cpd:newcpd!):cpd,
+    update (cpd:newcpd):cpd,
+    destroy (cpd:newcpd):cpd,
+    restore (cpd:newcpd):cp
   }
 `;
 
@@ -26,7 +23,7 @@ const queries = `
 `;
 
 const root = {
-  cpMutations: () => ({
+  cpdMutations: () => ({
     create,
     update,
     destroy,

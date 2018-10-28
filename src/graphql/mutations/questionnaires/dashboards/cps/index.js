@@ -5,7 +5,9 @@ const type = `
     id: String,
     name: String,
     dashboard: String,
-    formular: String
+    formular: String,
+    field: String,
+    type: String
   }
 
   type cpMutations {

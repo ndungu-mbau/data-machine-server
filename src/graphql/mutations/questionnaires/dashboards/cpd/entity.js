@@ -1,6 +1,7 @@
 const collection = 'cpd';
 
 const create = async (args, { db, ObjectId }) => {
+  console.log(args)
   const entry = args[collection];
   Object.assign(entry, {
     _id: new ObjectId(),

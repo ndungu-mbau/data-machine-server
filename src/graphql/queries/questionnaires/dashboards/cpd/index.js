@@ -3,11 +3,9 @@ const type = `
     id: String,
     dashboard: String,
     name: String,
-    numerator:String,
-    sum: [String],
-    difference: [String],
-    division: [String],
-    multiply: [String],
+    formular: String,
+    type: String,
+    field: String,
   }
 `;
 

@@ -65,6 +65,17 @@ const dashboardCps = dashboardId => async (filter, { db }) => {
     }));
 };
 
+const dashboardCpds = dashboardId => async (filter, { db }) => {
+  const data = await db.collection('cpd').find({ dashboard: dashboardId, destroyed: false }).toArray();
+
+  if (!data) { return []; }
+
+  return data.map(entry =>
+    Object.assign({}, entry, {
+      id: entry._id,
+    }));
+};
+
 const dashboardAliases = dashboardId => async (filter, { db }) => {
   const data = await db.collection('alias').find({ dashboard: dashboardId, destroyed: false }).toArray();
 
@@ -112,6 +123,7 @@ const QuestionnaireDashboards = questionnaireId => async (
       id: entry._id,
       layout: dashboardLayouts(entry._id.toString()),
       cps: dashboardCps(entry._id.toString()),
+      cpds:dashboardCpds(entry._id.toString()),
       aliases: dashboardAliases(entry._id.toString()),
       charts: dashboardCharts(entry._id.toString()),
       constants: dashboardConstants(entry._id.toString()),
