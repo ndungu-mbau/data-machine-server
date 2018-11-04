@@ -223,7 +223,6 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   const computed = submisions.map(row => {
     const copyRecord = {}
     computedProps.map(form => {
-      Object.assign(copyRecord, row)
       var tempFn = doT.template(form.formular || "");
       console.log("computed", { formular: form.formular })
       var resultFormular = tempFn(row);
@@ -232,31 +231,32 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
 
       copyRecord[form.name] = math.eval(resultFormular)
     })
+    Object.assign(copyRecord, row)
     return copyRecord
   })
 
   const compounded = {}
-  console.log({ compoundedProps })
+  // console.log({ compoundedProps })
   compoundedProps.map((c => {
     if (c.type === 'formular') {
-      console.log("compoundedProps", { formular: c.formular })
+      // console.log("compoundedProps", { formular: c.formular })
       var tempFn = doT.template(c.formular);
       var resultFormular = tempFn(compounded);
-      console.log("compoundedProps", { resultFormular })
+      // console.log("compoundedProps", { resultFormular })
       const compiled = math.eval(resultFormular)
-      console.log("compoundedProps", { compiled })
+      // console.log("compoundedProps", { compiled })
       compounded[c.name] = compiled
       return;
     }
 
-    console.log("compoundedProps", { field: c.field, computed })
+    // console.log("compoundedProps", { field: c.field, computed })
     const values = computed.filter(row => row[c.field]).map(row => row[c.field])
-    console.log("compoundedProps", { values })
+    // console.log("compoundedProps", { values })
     const result = math[c.type](values)
-    console.log("compoundedProps", { result })
+    // console.log("compoundedProps", { result })
     compounded[c.name] = typeof result === 'object' ? result[0] : result
   }))
-
+  console.log({computed})
   res.send({
     computed,
     compounded
