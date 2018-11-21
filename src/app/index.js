@@ -83,8 +83,8 @@ app.use('/health', (req, res) => res.send());
 
 app.post('/auth/login', celebrate({
   body: Joi.object().keys({
-    phone: Joi.string().required(),
-    password: Joi.string().required(),
+    phone: Joi.string().required().error(new Error('Please provide a phone number')),
+    password: Joi.string().required().error(new Error('Please provide a password')),
   }),
 }), async (req, res) => {
   const { phone, password } = req.body;
