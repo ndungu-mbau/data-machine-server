@@ -55,7 +55,7 @@ const sendMail = ({ to, subject, message }) => new Promise((resolve, reject) => 
   mailOptions.html = message;
   // send mail with defined transport object
   transporter.sendMail(mailOptions, async (error, info) => {
-    console.log({ error, info });
+    // console.log({ error, info });
     // async save the email send to our collection on google
     const emailSends = datastore.key('emailSends');
 
@@ -91,7 +91,7 @@ app.post('/auth/login', celebrate({
 
   const userData = await db.collection('user').findOne({ phoneNumber: phone });
 
-  console.log(userData);
+  // console.log(userData);
   if (userData) {
     if (userData.password === sha1(password)) {
       return res.send(Object.assign(userData, {
@@ -219,7 +219,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
 
   const submisions = await db.collection('submision').find({ questionnaireId }).toArray();
 
-  console.log({ submisions })
+  // console.log({ submisions })
   const computed = submisions.map(row => {
     const copyRecord = {}
     computedProps.map(form => {
@@ -231,7 +231,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
 
       copyRecord[form.name] = math.eval(resultFormular)
     })
-    Object.assign(copyRecord, row)
+    // Object.assign(copyRecord, row)
     return copyRecord
   })
 
@@ -281,10 +281,10 @@ const rename = (source, target) => new Promise((resolve, reject) => {
 const upload = (bucket, target) => new Promise((resolve, reject) => {
   bucket.upload(target, (err, file) => {
     if (!err) {
-      console.log('upload successfull');
+      // console.log('upload successfull');
       resolve(file);
     } else {
-      console.log(err);
+      // console.log(err);
       reject(err);
     }
   });
@@ -296,8 +296,8 @@ app.post(
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
   async (req, res) => {
-    console.log(req.body);
-    console.log(req.file);
+    // console.log(req.body);
+    // console.log(req.file);
 
     const { questionnaire = '', tag = '', interviewId = '' } = req.body;
     const [, ext] = req.file.originalname.split('.');
