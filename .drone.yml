@@ -7,6 +7,9 @@ pipeline:
     file: Dockerfile
     username: mozart
     password: password
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
 
   rancher:
     image: peloton/drone-rancher
