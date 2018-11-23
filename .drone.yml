@@ -2,8 +2,7 @@ pipeline:
   docker:
     image: plugins/docker
     repo: registry.braiven.io/data-kit-gateway
-    tag:
-      - $$COMMIT
+    tags: "${DRONE_COMMIT_SHA}"
     registry: registry.braiven.io
     file: Dockerfile
     username: mozart
@@ -18,7 +17,7 @@ pipeline:
     access_key: 2B452DA2BD3F853C6DDF
     secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
     service: public/data-kit-gateway
-    docker_image: registry.braiven.io/data-kit-gateway:$$COMMIT
+    docker_image: registry.braiven.io/data-kit-gateway:${DRONE_COMMIT_SHA}
     start_first: true
     confirm: true
     timeout: 10000
