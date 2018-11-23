@@ -328,7 +328,8 @@ app.get("/submision/:id", async (req, res) => {
 });
 
 app.get("/submision/breakDown/:days", async (req, res) => {
-  const weeks = getWeekBreakDown(30);
+  const {days=30} = req.params
+  const weeks = getWeekBreakDown(days);
 
   const promises = [];
   Object.keys(weeks).map(async weekKey => {
