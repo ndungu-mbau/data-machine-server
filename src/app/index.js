@@ -94,8 +94,7 @@ app.use(
   cors(),
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
-  morgan("combined"),
-  auth
+  morgan("combined")
 );
 
 const getWeekBreakDown = daysBack => {
