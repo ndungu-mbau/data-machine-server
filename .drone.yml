@@ -20,7 +20,7 @@ pipeline:
     docker_image: registry.braiven.io/data-kit-gateway:latest
     start_first: true
     confirm: true
-    timeout: 1000
+    timeout: 10000
 
   announce:
     image: appleboy/drone-telegram

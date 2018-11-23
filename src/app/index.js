@@ -283,8 +283,8 @@ app.post("/submision", async (req, res) => {
       }
     }
 
-    if(moment(value,moment.ISO_8601, true).isValid()){
-      submission[key] = moment(value).toDate()
+    if (moment(value, moment.ISO_8601, true).isValid()) {
+      submission[key] = moment(value).toDate();
     }
   });
 
@@ -292,7 +292,7 @@ app.post("/submision", async (req, res) => {
     Object.assign({}, submission, {
       createdAt: new Date(),
       destroyed: false,
-      userId:req.user? req.user._id : undefined
+      userId: req.user ? req.user._id : undefined
     })
   );
 
@@ -327,8 +327,8 @@ app.get("/submision/:id", async (req, res) => {
   res.send(submision);
 });
 
-app.get("/submision/breakDown/:days", async (req, res) => {
-  const {days=30} = req.params
+app.get("/submision/breakDown/:days", auth, async (req, res) => {
+  const { days = 30 } = req.params;
   const weeks = getWeekBreakDown(days);
 
   const promises = [];
@@ -339,14 +339,21 @@ app.get("/submision/breakDown/:days", async (req, res) => {
           const testDate = "2018-10-20T00:15:20.442Z";
           const testDate2 = "2018-10-22T00:15:20.442Z";
 
-          const {start,end} = weeks[weekKey].daysInWeek[day]
+          const { start, end } = weeks[weekKey].daysInWeek[day];
 
           const submisions = await db
             .collection("submision")
-            .find({
-              phoneNumber: req.user.phoneNumber,
-              completedAt: { $gte: start.toISOString(), $lte: end.toISOString() }
-            })
+            .find(
+              Object.assign(
+                {
+                  completedAt: {
+                    $gte: start.toISOString(),
+                    $lte: end.toISOString()
+                  }
+                },
+                req.user ? { phoneNumber: req.user.phoneNumber } : {}
+              )
+            )
             .count();
 
           resolve({
