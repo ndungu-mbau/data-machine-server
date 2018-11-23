@@ -1,24 +1,27 @@
 pipeline:
   docker:
     image: plugins/docker
-    repo: registry.braiven.io/data-machine-server
+    repo: registry.braiven.io/data-kit-gateway
     tag:
       - $$COMMIT
     registry: registry.braiven.io
     file: Dockerfile
     username: mozart
     password: password
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
 
   rancher:
     image: peloton/drone-rancher
     url: https://ops.braiven.io/v2-beta
     access_key: 2B452DA2BD3F853C6DDF
     secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
-    service: public/data-machine-server
-    docker_image: registry.braiven.io/data-machine-server:$$COMMIT
+    service: public/data-kit-gateway
+    docker_image: registry.braiven.io/data-kit-gateway:$$COMMIT
     start_first: true
     confirm: true
-    timeout: 1000
+    timeout: 10000
 
   announce:
     image: appleboy/drone-telegram
