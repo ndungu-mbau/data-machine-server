@@ -99,12 +99,6 @@ app.use(
 );
 
 const getWeekBreakDown = daysBack => {
-  var startOfMonth = moment().startOf("month"); //end of actober
-
-  var endOfWeek = moment().endOf("week");
-
-  var startOfWeek = moment().startOf("week");
-
   var today = moment().toDate();
 
   function weeksBetween(d1, d2) {
@@ -119,46 +113,45 @@ const getWeekBreakDown = daysBack => {
   // loop by number of times subtracting date by 6 each time to get the dates that start and end the weeks between
   const weeks = {};
 
-  let currentCtxDate;
-  let count;
-  for (count = 1; count < weekNumber + 1; count++) {
+  let ctx = {};
+  for (let count = 1; count < weekNumber + 1; count++) {
     let start;
     let end;
     let daysInWeek = {};
-    if (count === 1) {
-      (start = moment()), (end = startOfWeek);
 
-      currentCtxDate = moment(end).subtract(1, "day");
-      let currentCtxDayDate;
-
-      // get number of days between start and end, then lop backwards and build the map for them
-      var duration = Math.round(moment.duration(start.diff(end)).asDays());
-      let count2;
-      for (count2 = 1; count2 < duration + 2; count2++) {
-        daysInWeek[count2] = {
-          start: moment(currentCtxDayDate || start).startOf("day"),
-          end: moment(currentCtxDayDate || start).endOf("day")
-        };
-
-        currentCtxDayDate = moment(currentCtxDayDate).subtract(1, "day");
-      }
+    if (!ctx.start) {
+      start = moment().endOf('day');
     } else {
-      start = currentCtxDate;
-      end = moment(currentCtxDate).subtract(6, "day");
+      start = ctx.end;
+    }
 
-      currentCtxDate = moment(end).subtract(1, "day");
-      let currentCtxDayDate;
+    end = moment(start).subtract(6, "day").startOf('day');
 
-      var duration = Math.round(moment.duration(start.diff(end)).asDays());
+    ctx = {
+      start,
+      end
+    };
 
-      let count2;
-      for (count2 = 1; count2 < duration + 2; count2++) {
-        daysInWeek[count2] = {
-          start: moment(currentCtxDayDate).startOf("day"),
-          end: moment(currentCtxDayDate).endOf("day")
-        };
+    // get days between start and end
+    let daysCtx = {};
+    for (let dayCount = 1; dayCount < 6; dayCount++) {
+      let dayStart;
 
-        currentCtxDayDate = moment(currentCtxDayDate).subtract(1, "day");
+      if (!daysCtx.start) {
+        dayStart = start;
+      } else {
+        dayStart = daysCtx.start;
+      }
+
+      dayStart = moment(dayStart).subtract(1, "day").startOf('day');
+
+      daysCtx = {
+        start: dayStart
+      };
+
+      daysInWeek[dayCount] = {
+        start:moment(dayStart).startOf('day'),
+        end:moment(dayStart).endOf('day')
       }
     }
 
@@ -168,8 +161,11 @@ const getWeekBreakDown = daysBack => {
       daysInWeek
     };
   }
+
   return weeks;
-};
+}
+
+getWeekBreakDown(14)
 
 app.use("/health", (req, res) => res.send());
 
