@@ -2,7 +2,8 @@ pipeline:
   docker:
     image: plugins/docker
     repo: registry.braiven.io/data-machine-server
-    tags: latest
+    tag:
+      - $$COMMIT
     registry: registry.braiven.io
     file: Dockerfile
     username: mozart
@@ -14,7 +15,7 @@ pipeline:
     access_key: 2B452DA2BD3F853C6DDF
     secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
     service: public/data-machine-server
-    docker_image: registry.braiven.io/data-machine-server:latest
+    docker_image: registry.braiven.io/data-machine-server:$$COMMIT
     start_first: true
     confirm: true
     timeout: 1000
