@@ -1,7 +1,7 @@
 pipeline:
   docker:
     image: plugins/docker
-    repo: registry.braiven.io/data-machine-server
+    repo: registry.braiven.io/data-kit-gateway
     tags: latest
     registry: registry.braiven.io
     file: Dockerfile
@@ -16,8 +16,8 @@ pipeline:
     url: https://ops.braiven.io/v2-beta
     access_key: 2B452DA2BD3F853C6DDF
     secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
-    service: public/data-machine-server
-    docker_image: registry.braiven.io/data-machine-server:latest
+    service: public/data-kit-gateway
+    docker_image: registry.braiven.io/data-kit-gateway:latest
     start_first: true
     confirm: true
     timeout: 1000
