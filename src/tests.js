@@ -16,18 +16,20 @@ const getWeekBreakDown = daysBack => {
   const weeks = {};
 
   let ctx = {};
-  for (count = 1; count < weekNumber + 1; count++) {
+  for (let count = 1; count < weekNumber + 1; count++) {
     let start;
     let end;
     let daysInWeek = {};
 
     if (!ctx.start) {
-      start = moment().endOf('day');
+      start = moment().endOf("day");
     } else {
       start = ctx.end;
     }
 
-    end = moment(start).subtract(6, "day").startOf('day');
+    end = moment(start)
+      .subtract(6, "day")
+      .startOf("day");
 
     ctx = {
       start,
@@ -36,7 +38,7 @@ const getWeekBreakDown = daysBack => {
 
     // get days between start and end
     let daysCtx = {};
-    for (dayCount = 1; dayCount < 6; dayCount++) {
+    for (let dayCount = 1; dayCount < 6; dayCount++) {
       let dayStart;
 
       if (!daysCtx.start) {
@@ -45,16 +47,18 @@ const getWeekBreakDown = daysBack => {
         dayStart = daysCtx.start;
       }
 
-      dayStart = moment(dayStart).subtract(1, "day").startOf('day');
+      daysInWeek[dayCount] = {
+        start: moment(dayStart).startOf("day"),
+        end: moment(dayStart).endOf("day")
+      };
+
+      dayStart = moment(dayStart)
+        .subtract(1, "day")
+        .startOf("day");
 
       daysCtx = {
         start: dayStart
       };
-
-      daysInWeek[dayCount] = {
-        start:moment(dayStart).startOf('day'),
-        end:moment(dayStart).endOf('day')
-      }
     }
 
     weeks[count] = {

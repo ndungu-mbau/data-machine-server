@@ -119,12 +119,14 @@ const getWeekBreakDown = daysBack => {
     let daysInWeek = {};
 
     if (!ctx.start) {
-      start = moment().endOf('day');
+      start = moment().endOf("day");
     } else {
       start = ctx.end;
     }
 
-    end = moment(start).subtract(6, "day").startOf('day');
+    end = moment(start)
+      .subtract(6, "day")
+      .startOf("day");
 
     ctx = {
       start,
@@ -142,16 +144,18 @@ const getWeekBreakDown = daysBack => {
         dayStart = daysCtx.start;
       }
 
-      dayStart = moment(dayStart).subtract(1, "day").startOf('day');
+      daysInWeek[dayCount] = {
+        start: moment(dayStart).startOf("day"),
+        end: moment(dayStart).endOf("day")
+      };
+
+      dayStart = moment(dayStart)
+        .subtract(1, "day")
+        .startOf("day");
 
       daysCtx = {
         start: dayStart
       };
-
-      daysInWeek[dayCount] = {
-        start:moment(dayStart).startOf('day'),
-        end:moment(dayStart).endOf('day')
-      }
     }
 
     weeks[count] = {
@@ -162,9 +166,9 @@ const getWeekBreakDown = daysBack => {
   }
 
   return weeks;
-}
+};
 
-getWeekBreakDown(14)
+getWeekBreakDown(14);
 
 app.use("/health", (req, res) => res.send());
 
@@ -342,8 +346,8 @@ app.get("/submision/breakDown/:days", auth, async (req, res) => {
               Object.assign(
                 {
                   completedAt: {
-                    $gte: start.toISOString(),
-                    $lte: end.toISOString()
+                    $gte: start.toDate(),
+                    $lte: end.toDate()
                   }
                 },
                 req.user ? { phoneNumber: req.user.phoneNumber } : {}
