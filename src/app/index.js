@@ -338,17 +338,18 @@ app.get("/submision/breakDown/:days", auth, async (req, res) => {
         new Promise(async (resolve, reject) => {
           const { start, end } = weeks[weekKey].daysInWeek[day];
 
+          console.log({ start, end })
           const submisions = await db
             .collection("submision")
             .find(
               Object.assign(
                 {
                   completedAt: {
-                    $gte: start.toISOString(),
-                    $lte: end.toISOString()
-                  }
+                    $gte: start.toDate(),
+                    $lte: end.toDate()
+                  },
+                  phoneNumber: req.user.phoneNumber
                 },
-                req.user ? { phoneNumber: req.user.phoneNumber } : {}
               )
             )
             .count();
