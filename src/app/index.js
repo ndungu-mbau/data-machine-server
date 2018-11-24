@@ -12,7 +12,8 @@ import fs from "fs";
 import AWS from "aws-sdk";
 import parser from "./parser";
 import { MongoClient, ObjectId } from "mongodb";
-const moment = require("moment");
+import moment from "moment";
+import "moment-timezone";
 var doT = require("dot");
 const math = require("mathjs");
 
@@ -97,7 +98,9 @@ app.use(
   morgan("combined")
 );
 
-const getWeekBreakDown = daysBack => {
+const getWeekBreakDown = (daysBack, timezone = "Africa/Nairobi") => {
+  moment.tz.add(moment.tz._zones[timezone.replace("/", "_").toLowerCase()]);
+
   var today = moment().toDate();
 
   function weeksBetween(d1, d2) {
@@ -105,7 +108,9 @@ const getWeekBreakDown = daysBack => {
   }
 
   const weekNumber = weeksBetween(
-    moment(today).subtract(daysBack, "day"),
+    moment(today)
+      .tz(timezone)
+      .subtract(daysBack, "day"),
     today
   );
 
@@ -119,12 +124,15 @@ const getWeekBreakDown = daysBack => {
     let daysInWeek = {};
 
     if (!ctx.start) {
-      start = moment().endOf("day");
+      start = moment()
+        .tz(timezone)
+        .endOf("day");
     } else {
       start = ctx.end;
     }
 
     end = moment(start)
+      .tz(timezone)
       .subtract(6, "day")
       .startOf("day");
 
@@ -145,11 +153,16 @@ const getWeekBreakDown = daysBack => {
       }
 
       daysInWeek[dayCount] = {
-        start: moment(dayStart).startOf("day"),
-        end: moment(dayStart).endOf("day")
+        start: moment(dayStart)
+          .tz(timezone)
+          .startOf("day"),
+        end: moment(dayStart)
+          .tz(timezone)
+          .endOf("day")
       };
 
       dayStart = moment(dayStart)
+        .tz(timezone)
         .subtract(1, "day")
         .startOf("day");
 
@@ -168,7 +181,7 @@ const getWeekBreakDown = daysBack => {
   return weeks;
 };
 
-getWeekBreakDown(14);
+getWeekBreakDown(14), "Africa/Nairobi";
 
 app.use("/health", (req, res) => res.send());
 
@@ -326,18 +339,15 @@ app.get("/submision/:id", async (req, res) => {
   res.send(submision);
 });
 
-app.get("/submision/breakDown/:days", auth, async (req, res) => {
+app.get("/submision/breakDown/:days/timezone", auth, async (req, res) => {
   const { days = 30 } = req.params;
-  const weeks = getWeekBreakDown(days);
+  const weeks = getWeekBreakDown(days, timezone);
 
   const promises = [];
   Object.keys(weeks).map(async weekKey => {
     return Object.keys(weeks[weekKey].daysInWeek).map(async day => {
       promises.push(
         new Promise(async (resolve, reject) => {
-          const testDate = "2018-10-20T00:15:20.442Z";
-          const testDate2 = "2018-10-22T00:15:20.442Z";
-
           const { start, end } = weeks[weekKey].daysInWeek[day];
 
           const submisions = await db
@@ -412,7 +422,7 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
     .find({ questionnaireId })
     .toArray();
 
-  // console.log({ submisions })
+  console.log({ submisions, questionnaireId });
   const computed = submisions.map(row => {
     const copyRecord = {};
     computedProps.map(form => {
@@ -424,7 +434,7 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
 
       copyRecord[form.name] = math.eval(resultFormular);
     });
-    // Object.assign(copyRecord, row)
+    Object.assign(copyRecord, row)
     return copyRecord;
   });
 
@@ -451,7 +461,7 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
     // console.log("compoundedProps", { result })
     compounded[c.name] = typeof result === "object" ? result[0] : result;
   });
-  console.log({ computed });
+  // console.log({ computed });
   res.send({
     computed,
     compounded
