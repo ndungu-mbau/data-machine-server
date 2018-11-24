@@ -12,8 +12,7 @@ import fs from "fs";
 import AWS from "aws-sdk";
 import parser from "./parser";
 import { MongoClient, ObjectId } from "mongodb";
-import moment from "moment";
-import "moment-timezone";
+const moment = require("moment");
 var doT = require("dot");
 const math = require("mathjs");
 
@@ -98,7 +97,7 @@ app.use(
   morgan("combined")
 );
 
-const getWeekBreakDown = (daysBack) => {
+const getWeekBreakDown = daysBack => {
   var today = moment().toDate();
 
   function weeksBetween(d1, d2) {
@@ -106,8 +105,7 @@ const getWeekBreakDown = (daysBack) => {
   }
 
   const weekNumber = weeksBetween(
-    moment(today)
-      .subtract(daysBack, "day"),
+    moment(today).subtract(daysBack, "day"),
     today
   );
 
@@ -121,15 +119,12 @@ const getWeekBreakDown = (daysBack) => {
     let daysInWeek = {};
 
     if (!ctx.start) {
-      start = moment()
-        .endOf("day");
+      start = moment().endOf('day');
     } else {
       start = ctx.end;
     }
 
-    end = moment(start)
-      .subtract(6, "day")
-      .startOf("day");
+    end = moment(start).subtract(6, "day").startOf('day');
 
     ctx = {
       start,
@@ -147,20 +142,16 @@ const getWeekBreakDown = (daysBack) => {
         dayStart = daysCtx.start;
       }
 
-      daysInWeek[dayCount] = {
-        start: moment(dayStart)
-          .startOf("day"),
-        end: moment(dayStart)
-          .endOf("day")
-      };
-
-      dayStart = moment(dayStart)
-        .subtract(1, "day")
-        .startOf("day");
+      dayStart = moment(dayStart).subtract(1, "day").startOf('day');
 
       daysCtx = {
         start: dayStart
       };
+
+      daysInWeek[dayCount] = {
+        start: moment(dayStart).startOf('day'),
+        end: moment(dayStart).endOf('day')
+      }
     }
 
     weeks[count] = {
@@ -171,7 +162,7 @@ const getWeekBreakDown = (daysBack) => {
   }
 
   return weeks;
-};
+}
 
 app.use("/health", (req, res) => res.send());
 
@@ -267,35 +258,42 @@ app.post("/submision", async (req, res) => {
     });
   }
 
+  const cleanCopy = {}
   // find the files and use they data in the url to generate the url
   Object.entries(submission).map(([key, value]) => {
     if (value) {
       if (value.toString().includes("file://")) {
         const [, ext] = value.split(".");
 
-        submission[
+        cleanCopy[
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ""}`;
+          }_${key}_${submission.completionId}${ext ? `.${ext}` : ""}`;
       }
 
       if (value === false) {
-        submission[key] = 0;
+        cleanCopy[key] = 0;
+        return;
       }
-    }
 
-    if (moment(value, moment.ISO_8601, true).isValid()) {
-      submission[key] = moment(value).toDate();
+      if (moment(value, moment.ISO_8601, true).isValid()) {
+        cleanCopy[key] = moment(value).toDate();
+        return;
+      }
+
+      cleanCopy[key.replace(/\s+/g, '_').split('.').join('_')] = value
     }
   });
 
+  const entry = Object.assign({}, cleanCopy, {
+    createdAt: new Date(),
+    destroyed: false,
+    userId: req.user ? req.user._id : undefined
+  })
+
   await db.collection("submision").insertOne(
-    Object.assign({}, submission, {
-      createdAt: new Date(),
-      destroyed: false,
-      userId: req.user ? req.user._id : undefined
-    })
+    entry
   );
 
   // send the emails here and other realtime stuff for the dashboards
@@ -451,7 +449,6 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
     // console.log("compoundedProps", { result })
     compounded[c.name] = typeof result === "object" ? result[0] : result;
   });
-  // console.log({ computed });
   res.send({
     computed,
     compounded
