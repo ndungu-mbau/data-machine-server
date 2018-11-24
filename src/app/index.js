@@ -344,8 +344,8 @@ app.get("/submision/breakDown/:days", auth, async (req, res) => {
               Object.assign(
                 {
                   completedAt: {
-                    $gte: start.toDate(),
-                    $lte: end.toDate()
+                    $gte: start.toISOString(),
+                    $lte: end.toISOString()
                   }
                 },
                 req.user ? { phoneNumber: req.user.phoneNumber } : {}
