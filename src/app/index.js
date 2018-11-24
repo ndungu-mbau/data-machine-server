@@ -98,9 +98,7 @@ app.use(
   morgan("combined")
 );
 
-const getWeekBreakDown = (daysBack, timezone = "Africa/Nairobi") => {
-  moment.tz.add(moment.tz._zones[timezone.replace("/", "_").toLowerCase()]);
-
+const getWeekBreakDown = (daysBack) => {
   var today = moment().toDate();
 
   function weeksBetween(d1, d2) {
@@ -109,7 +107,6 @@ const getWeekBreakDown = (daysBack, timezone = "Africa/Nairobi") => {
 
   const weekNumber = weeksBetween(
     moment(today)
-      .tz(timezone)
       .subtract(daysBack, "day"),
     today
   );
@@ -125,14 +122,12 @@ const getWeekBreakDown = (daysBack, timezone = "Africa/Nairobi") => {
 
     if (!ctx.start) {
       start = moment()
-        .tz(timezone)
         .endOf("day");
     } else {
       start = ctx.end;
     }
 
     end = moment(start)
-      .tz(timezone)
       .subtract(6, "day")
       .startOf("day");
 
@@ -154,15 +149,12 @@ const getWeekBreakDown = (daysBack, timezone = "Africa/Nairobi") => {
 
       daysInWeek[dayCount] = {
         start: moment(dayStart)
-          .tz(timezone)
           .startOf("day"),
         end: moment(dayStart)
-          .tz(timezone)
           .endOf("day")
       };
 
       dayStart = moment(dayStart)
-        .tz(timezone)
         .subtract(1, "day")
         .startOf("day");
 
@@ -180,8 +172,6 @@ const getWeekBreakDown = (daysBack, timezone = "Africa/Nairobi") => {
 
   return weeks;
 };
-
-getWeekBreakDown(14), "Africa/Nairobi";
 
 app.use("/health", (req, res) => res.send());
 
@@ -339,9 +329,9 @@ app.get("/submision/:id", async (req, res) => {
   res.send(submision);
 });
 
-app.get("/submision/breakDown/:days/timezone", auth, async (req, res) => {
+app.get("/submision/breakDown/:days", auth, async (req, res) => {
   const { days = 30 } = req.params;
-  const weeks = getWeekBreakDown(days, timezone);
+  const weeks = getWeekBreakDown(days);
 
   const promises = [];
   Object.keys(weeks).map(async weekKey => {
