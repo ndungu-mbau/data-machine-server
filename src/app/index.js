@@ -133,7 +133,7 @@ const getWeekBreakDown = daysBack => {
 
     // get days between start and end
     let daysCtx = {};
-    for (let dayCount = 1; dayCount < 6; dayCount++) {
+    for (let dayCount = 1; dayCount < 8; dayCount++) {
       let dayStart;
 
       if (!daysCtx.start) {
@@ -142,7 +142,7 @@ const getWeekBreakDown = daysBack => {
         dayStart = daysCtx.start;
       }
 
-      dayStart = moment(dayStart).subtract(1, "day").startOf('day');
+
 
       daysCtx = {
         start: dayStart
@@ -152,6 +152,8 @@ const getWeekBreakDown = daysBack => {
         start: moment(dayStart).startOf('day'),
         end: moment(dayStart).endOf('day')
       }
+
+      daysCtx.start = moment(dayStart).subtract(1, "day").startOf('day');
     }
 
     weeks[count] = {
@@ -161,6 +163,7 @@ const getWeekBreakDown = daysBack => {
     };
   }
 
+  // console.log(JSON.stringify({ weeks }, null, '\t'))
   return weeks;
 }
 
@@ -337,8 +340,6 @@ app.get("/submision/breakDown/:days", auth, async (req, res) => {
       promises.push(
         new Promise(async (resolve, reject) => {
           const { start, end } = weeks[weekKey].daysInWeek[day];
-
-          console.log({ start, end })
           const submisions = await db
             .collection("submision")
             .find(
@@ -369,7 +370,6 @@ app.get("/submision/breakDown/:days", auth, async (req, res) => {
   residue.map(x => {
     weeks[x.weekKey].daysInWeek[x.day].completions = x.submisions;
   });
-
   res.send(weeks);
 });
 
