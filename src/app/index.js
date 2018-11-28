@@ -84,10 +84,12 @@ const sendMail = ({ to, subject, message }) =>
 const app = express();
 
 const auth = (req, res, next) => {
-  if (req.headers.auth)
+  if (req.headers.auth) {
     req.user = jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret);
-
-  next();
+    next()
+  } else {
+    res.status(401).send({ message: "You are not authorized" })
+  }
 };
 
 app.use(
@@ -334,6 +336,10 @@ app.get("/submision/breakDown/:days", auth, async (req, res) => {
   const { days = 30 } = req.params;
   const weeks = getWeekBreakDown(days);
 
+  const { user: { phoneNumber = '' } = { phoneNumber: '' } } = req
+
+  console.log({ phoneNumber })
+
   const promises = [];
   Object.keys(weeks).map(async weekKey => {
     return Object.keys(weeks[weekKey].daysInWeek).map(async day => {
@@ -349,7 +355,7 @@ app.get("/submision/breakDown/:days", auth, async (req, res) => {
                     $gte: start.toDate(),
                     $lte: end.toDate()
                   },
-                  phoneNumber: req.user.phoneNumber
+                  phoneNumber
                 },
               )
             )
