@@ -331,7 +331,32 @@ app.post("/submision", async (req, res) => {
     .find({ completionId: submission.completionId })
     .toArray();
 
-  return res.send({ _id: submited._id });
+
+
+  res.send({ _id: submited._id });
+
+  const [questionnaire] = await db
+    .collection("questionnaire")
+    .find({ _id: ObjectId(submission.questionnaireId) })
+    .toArray();
+
+  const action = {
+    topic: 'exec',
+    cmd: questionnaire.name.replace(/\s/g, "_"),
+    data: submited
+  }
+
+  hemera.act(
+    action,
+    function (err, resp) {
+      if (err) {
+        console.log("ERROR RUNNING SCRIPT")
+      } else {
+        console.log("SUCCESSFULY RUN SCRIPT for " + submited._id)
+      }
+      
+    }
+  )
 });
 
 app.get("/submision/:id", async (req, res) => {
