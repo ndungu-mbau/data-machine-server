@@ -16,6 +16,16 @@ const moment = require("moment");
 var doT = require("dot");
 const math = require("mathjs");
 
+const Hemera = require('nats-hemera')
+const nats = require('nats').connect({
+  url: process.env.NATS_URL
+})
+
+const hemera = new Hemera(nats, {
+  logLevel: 'info'
+})
+
+
 AWS.config.loadFromPath("aws_config.json");
 
 const { NODE_ENV = "development" } = process.env;
@@ -34,6 +44,10 @@ MongoClient.connect(
     db = client.db(config[NODE_ENV].db.name);
   }
 );
+
+hemera.ready(() => {
+  console.log('hemera is for use')
+})
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
@@ -330,6 +344,24 @@ app.get("/submision/:id", async (req, res) => {
     .toArray();
 
   res.send(submision);
+});
+
+app.post("/query/:name", async (req, res) => {
+  const action = {
+    topic: 'exec',
+    cmd: req.params.name,
+    data: req.body
+  }
+  hemera.act(
+    action,
+    function (err, resp) {
+      if (err) {
+        return res.status(500).send({ name: err.name, message: err.message });
+        // return res.status(500).send(err)
+      }
+      res.send(resp);
+    }
+  )
 });
 
 app.get("/submision/breakDown/:days", auth, async (req, res) => {
