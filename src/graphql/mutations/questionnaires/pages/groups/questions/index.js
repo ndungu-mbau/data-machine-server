@@ -33,6 +33,7 @@ const type = `
     conditional:input_conditional,
     options:[newoption],
     validations:[newvalidation],
+    validation:String,
     sentences:[newsentence]
   }
 

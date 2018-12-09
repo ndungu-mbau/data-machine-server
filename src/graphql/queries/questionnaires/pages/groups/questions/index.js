@@ -24,6 +24,7 @@ const type = `
     options:[option],
     sentences:[sentence],
     validations:[validation],
+    validation:String,
     conditional:conditional
   }
 `;
