@@ -15,16 +15,16 @@ import { MongoClient, ObjectId } from "mongodb";
 const moment = require("moment");
 var doT = require("dot");
 const math = require("mathjs");
+const { ObjectID } = require("mongodb");
 
-const Hemera = require('nats-hemera')
-const nats = require('nats').connect({
+const Hemera = require("nats-hemera");
+const nats = require("nats").connect({
   url: process.env.NATS_URL
-})
+});
 
 const hemera = new Hemera(nats, {
-  logLevel: 'info'
-})
-
+  logLevel: "info"
+});
 
 AWS.config.loadFromPath("aws_config.json");
 
@@ -46,8 +46,8 @@ MongoClient.connect(
 );
 
 hemera.ready(() => {
-  console.log('hemera is for use')
-})
+  console.log("hemera is for use");
+});
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
@@ -100,9 +100,9 @@ const app = express();
 const auth = (req, res, next) => {
   if (req.headers.auth) {
     req.user = jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret);
-    next()
+    next();
   } else {
-    res.status(401).send({ message: "You are not authorized" })
+    res.status(401).send({ message: "You are not authorized" });
   }
 };
 
@@ -135,12 +135,14 @@ const getWeekBreakDown = daysBack => {
     let daysInWeek = {};
 
     if (!ctx.start) {
-      start = moment().endOf('day');
+      start = moment().endOf("day");
     } else {
       start = ctx.end;
     }
 
-    end = moment(start).subtract(6, "day").startOf('day');
+    end = moment(start)
+      .subtract(6, "day")
+      .startOf("day");
 
     ctx = {
       start,
@@ -158,18 +160,18 @@ const getWeekBreakDown = daysBack => {
         dayStart = daysCtx.start;
       }
 
-
-
       daysCtx = {
         start: dayStart
       };
 
       daysInWeek[dayCount] = {
-        start: moment(dayStart).startOf('day'),
-        end: moment(dayStart).endOf('day')
-      }
+        start: moment(dayStart).startOf("day"),
+        end: moment(dayStart).endOf("day")
+      };
 
-      daysCtx.start = moment(dayStart).subtract(1, "day").startOf('day');
+      daysCtx.start = moment(dayStart)
+        .subtract(1, "day")
+        .startOf("day");
     }
 
     weeks[count] = {
@@ -181,7 +183,7 @@ const getWeekBreakDown = daysBack => {
 
   // console.log(JSON.stringify({ weeks }, null, '\t'))
   return weeks;
-}
+};
 
 app.use("/health", (req, res) => res.send());
 
@@ -262,6 +264,8 @@ app.post(
   }
 );
 
+// a  dd hemera action for saas registration
+
 app.post("/submision", async (req, res) => {
   const submission = req.body;
 
@@ -277,7 +281,7 @@ app.post("/submision", async (req, res) => {
     });
   }
 
-  const cleanCopy = {}
+  const cleanCopy = {};
   // find the files and use they data in the url to generate the url
   Object.entries(submission).map(([key, value]) => {
     if (value) {
@@ -288,7 +292,7 @@ app.post("/submision", async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-          }_${key}_${submission.completionId}${ext ? `.${ext}` : ""}`;
+        }_${key}_${submission.completionId}${ext ? `.${ext}` : ""}`;
       }
 
       if (value === false) {
@@ -301,7 +305,12 @@ app.post("/submision", async (req, res) => {
         return;
       }
 
-      cleanCopy[key.replace(/\s+/g, '_').split('.').join('_')] = value
+      cleanCopy[
+        key
+          .replace(/\s+/g, "_")
+          .split(".")
+          .join("_")
+      ] = value;
     }
   });
 
@@ -309,11 +318,9 @@ app.post("/submision", async (req, res) => {
     createdAt: new Date(),
     destroyed: false,
     userId: req.user ? req.user._id : undefined
-  })
+  });
 
-  await db.collection("submision").insertOne(
-    entry
-  );
+  await db.collection("submision").insertOne(entry);
 
   // send the emails here and other realtime stuff for the dashboards
   // sendMail({
@@ -331,8 +338,6 @@ app.post("/submision", async (req, res) => {
     .find({ completionId: submission.completionId })
     .toArray();
 
-
-
   res.send({ _id: submited._id });
 
   const [questionnaire] = await db
@@ -341,22 +346,147 @@ app.post("/submision", async (req, res) => {
     .toArray();
 
   const action = {
-    topic: 'exec',
+    topic: "exec",
     cmd: questionnaire.name.replace(/\s/g, "_"),
     data: submited
-  }
+  };
 
-  hemera.act(
-    action,
-    function (err, resp) {
-      if (err) {
-        console.log("ERROR RUNNING SCRIPT")
-      } else {
-        console.log("SUCCESSFULY RUN SCRIPT for " + submited._id)
-      }
-      
+  hemera.act(action, function(err, resp) {
+    if (err) {
+      console.log("ERROR RUNNING SCRIPT");
+    } else {
+      console.log("SUCCESSFULY RUN SCRIPT for " + submited._id);
     }
-  )
+  });
+});
+
+const action = {
+  topic: "registratin",
+  cmd: "saas"
+};
+
+hemera.add(action, async args => {
+  const {
+    username,
+    password,
+
+    membership,
+    promotions,
+    accept,
+
+    card_holder_name,
+    card_number,
+    billing_card_exp_month,
+    billing_card_exp_year,
+    cvv,
+    address_line_1,
+    address_line_2,
+    zip_code,
+    billing_country,
+
+    email,
+    name,
+    address_1,
+    address_2,
+    city,
+    state,
+    zip,
+    country,
+
+    company_name,
+    company_registration_id,
+    company_email,
+    company_contact,
+    communications_email,
+    communications_sms,
+    contact
+  } = args.data;
+
+  const user = {
+    _id: new ObjectID(),
+    email,
+    name,
+    address_1,
+    city,
+    state,
+    address_2,
+    zip,
+    country
+  };
+
+  const company = {
+    _id: new ObjectID(),
+    company_name,
+    company_registration_id,
+    company_email,
+    company_contact,
+    communications_email,
+    communications_sms,
+    contact,
+    createdBy: user._id
+  };
+
+  const sample = {
+    _id: new ObjectID(),
+    username,
+    password:sha1(password)
+  };
+
+  const settings = {
+    _id: new ObjectID(),
+    user: user._id,
+    membership,
+    promotions,
+    accept
+  };
+
+  const billing = {
+    _id: new ObjectID(),
+    company: company._id,
+    user: user._id,
+    card_holder_name,
+    card_number,
+    billing_card_exp_month,
+    billing_card_exp_year,
+    cvv,
+    address_line_1,
+    address_line_2,
+    zip_code,
+    billing_country
+  };
+
+  const legacyUser = {
+    _id: user._id,
+    firstName: user.name,
+    phoneNumber: company.contact,
+    password: sha1(sample.password),
+    email: user.email
+  };
+
+  // create base data
+  await db.collection("saasAuth").insertOne(sample);
+  await db.collection("settings").insertOne(settings);
+  await db.collection("billing").insertOne(billing);
+  await db.collection("saasUser").insertOne(user);
+  await db.collection("user").insertOne(legacyUser);
+  await db.collection("company").insertOne(company);
+
+  // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
+  // and stitch them together to create a login setupp experience for the user
+
+  console.log({
+    user: user._id,
+    company: company._id,
+    billing: billing._id,
+    settings: settings._id
+  });
+
+  return {
+    user: user.id,
+    company: company.id,
+    billing: billing.id,
+    settings: settings.id
+  };
 });
 
 app.get("/submision/:id", async (req, res) => {
@@ -373,29 +503,26 @@ app.get("/submision/:id", async (req, res) => {
 
 app.post("/query/:name", async (req, res) => {
   const action = {
-    topic: 'exec',
+    topic: "exec",
     cmd: req.params.name,
     data: req.body
-  }
-  hemera.act(
-    action,
-    function (err, resp) {
-      if (err) {
-        return res.status(500).send({ name: err.name, message: err.message });
-        // return res.status(500).send(err)
-      }
-      res.send(resp);
+  };
+  hemera.act(action, function(err, resp) {
+    if (err) {
+      return res.status(500).send({ name: err.name, message: err.message });
+      // return res.status(500).send(err)
     }
-  )
+    res.send(resp);
+  });
 });
 
 app.get("/submision/breakDown/:days", auth, async (req, res) => {
   const { days = 30 } = req.params;
   const weeks = getWeekBreakDown(days);
 
-  const { user: { phoneNumber = '' } = { phoneNumber: '' } } = req
+  const { user: { phoneNumber = "" } = { phoneNumber: "" } } = req;
 
-  console.log({ phoneNumber })
+  console.log({ phoneNumber });
 
   const promises = [];
   Object.keys(weeks).map(async weekKey => {
@@ -406,15 +533,13 @@ app.get("/submision/breakDown/:days", auth, async (req, res) => {
           const submisions = await db
             .collection("submision")
             .find(
-              Object.assign(
-                {
-                  completedAt: {
-                    $gte: start.toDate(),
-                    $lte: end.toDate()
-                  },
-                  phoneNumber
+              Object.assign({
+                completedAt: {
+                  $gte: start.toDate(),
+                  $lte: end.toDate()
                 },
-              )
+                phoneNumber
+              })
             )
             .count();
 
@@ -486,7 +611,7 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
 
       copyRecord[form.name] = math.eval(resultFormular);
     });
-    Object.assign(copyRecord, row)
+    Object.assign(copyRecord, row);
     return copyRecord;
   });
 
