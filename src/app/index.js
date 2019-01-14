@@ -1,37 +1,38 @@
-import express from "express";
-import morgan from "morgan";
-import sha1 from "sha1";
-import { celebrate, Joi, errors } from "celebrate";
-import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
-import Multer from "multer";
-import config from "../config";
-import cors from "cors";
-import bodyParser from "body-parser";
-import fs from "fs";
-import AWS from "aws-sdk";
-import parser from "./parser";
-import { MongoClient, ObjectId } from "mongodb";
-const moment = require("moment");
-var doT = require("dot");
-const math = require("mathjs");
-const { ObjectID } = require("mongodb");
+import express from 'express';
+import morgan from 'morgan';
+import sha1 from 'sha1';
+import { celebrate, Joi, errors } from 'celebrate';
+import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
+import Multer from 'multer';
+import config from '../config';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import fs from 'fs';
+import AWS from 'aws-sdk';
+import parser from './parser';
+import { MongoClient, ObjectId } from 'mongodb';
 
-const Hemera = require("nats-hemera");
-const nats = require("nats").connect({
-  url: process.env.NATS_URL
+const moment = require('moment');
+const doT = require('dot');
+const math = require('mathjs');
+const { ObjectID } = require('mongodb');
+
+const Hemera = require('nats-hemera');
+const nats = require('nats').connect({
+  url: process.env.NATS_URL,
 });
 
 const hemera = new Hemera(nats, {
-  logLevel: "info"
+  logLevel: 'info',
 });
 
-AWS.config.loadFromPath("aws_config.json");
+AWS.config.loadFromPath('aws_config.json');
 
-const { NODE_ENV = "development" } = process.env;
+const { NODE_ENV = 'development' } = process.env;
 
 const multer = Multer({
-  dest: "uploads/"
+  dest: 'uploads/',
 });
 
 let db;
@@ -42,27 +43,27 @@ MongoClient.connect(
   (err, client) => {
     if (err) throw err;
     db = client.db(config[NODE_ENV].db.name);
-  }
+  },
 );
 
 hemera.ready(() => {
-  console.log("hemera is for use");
+  console.log('hemera is for use');
 });
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
-  host: "smtp.zoho.com",
+  host: 'smtp.zoho.com',
   port: 465,
   secure: true, // use SSL
   auth: {
-    user: "info@braiven.io",
-    pass: "a32357377"
-  }
+    user: 'info@braiven.io',
+    pass: 'a32357377',
+  },
 });
 
 // setup e-mail data, even with unicode symbols
 const mailOptions = {
-  from: '"Credistat " <info@braiven.io>' // sender address (who sends)
+  from: '"Credistat " <info@braiven.io>', // sender address (who sends)
 };
 
 const sendMail = ({ to, subject, message }) =>
@@ -74,7 +75,7 @@ const sendMail = ({ to, subject, message }) =>
     transporter.sendMail(mailOptions, async (error, info) => {
       // console.log({ error, info });
       // async save the email send to our collection on google
-      const emailSends = datastore.key("emailSends");
+      const emailSends = datastore.key('emailSends');
 
       await datastore.save({
         key: emailSends,
@@ -83,8 +84,8 @@ const sendMail = ({ to, subject, message }) =>
           { error },
           info,
           { subject },
-          { message, triggedAt: new Date().toISOString() }
-        )
+          { message, triggedAt: new Date().toISOString() },
+        ),
       });
 
       if (error) {
@@ -102,7 +103,7 @@ const auth = (req, res, next) => {
     req.user = jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret);
     next();
   } else {
-    res.status(401).send({ message: "You are not authorized" });
+    res.status(401).send({ message: 'You are not authorized' });
   }
 };
 
@@ -110,43 +111,44 @@ app.use(
   cors(),
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
-  morgan("combined")
+  morgan('combined'),
 );
 
-const getWeekBreakDown = daysBack => {
-  var today = moment().toDate();
+const getWeekBreakDown = (daysBack) => {
+  const today = moment().toDate();
 
   function weeksBetween(d1, d2) {
     return Math.round((d2 - d1) / (7 * 24 * 60 * 60 * 1000));
   }
 
   const weekNumber = weeksBetween(
-    moment(today).subtract(daysBack, "day"),
-    today
+    moment(today).subtract(daysBack, 'day'),
+    today,
   );
 
-  // loop by number of times subtracting date by 6 each time to get the dates that start and end the weeks between
+  // loop by number of times subtracting date by
+  // 6 each time to get the dates that start and end
+  // the weeks between
   const weeks = {};
 
   let ctx = {};
   for (let count = 1; count < weekNumber + 1; count++) {
     let start;
-    let end;
-    let daysInWeek = {};
+    const daysInWeek = {};
 
     if (!ctx.start) {
-      start = moment().endOf("day");
+      start = moment().endOf('day');
     } else {
       start = ctx.end;
     }
 
-    end = moment(start)
-      .subtract(6, "day")
-      .startOf("day");
+    const end = moment(start)
+      .subtract(6, 'day')
+      .startOf('day');
 
     ctx = {
       start,
-      end
+      end,
     };
 
     // get days between start and end
@@ -161,23 +163,23 @@ const getWeekBreakDown = daysBack => {
       }
 
       daysCtx = {
-        start: dayStart
+        start: dayStart,
       };
 
       daysInWeek[dayCount] = {
-        start: moment(dayStart).startOf("day"),
-        end: moment(dayStart).endOf("day")
+        start: moment(dayStart).startOf('day'),
+        end: moment(dayStart).endOf('day'),
       };
 
       daysCtx.start = moment(dayStart)
-        .subtract(1, "day")
-        .startOf("day");
+        .subtract(1, 'day')
+        .startOf('day');
     }
 
     weeks[count] = {
       start,
       end,
-      daysInWeek
+      daysInWeek,
     };
   }
 
@@ -185,47 +187,91 @@ const getWeekBreakDown = daysBack => {
   return weeks;
 };
 
-app.use("/health", (req, res) => res.send());
+app.use('/health', (req, res) => res.send());
 
 app.post(
-  "/auth/login",
+  '/auth/login',
   celebrate({
     body: Joi.object().keys({
       phone: Joi.string()
         .required()
-        .error(new Error("Please provide a phone number")),
+        .error(new Error('Please provide a phone number')),
       password: Joi.string()
         .required()
-        .error(new Error("Please provide a password"))
-    })
+        .error(new Error('Please provide a password')),
+    }),
   }),
   async (req, res) => {
     const { phone, password } = req.body;
 
     const userData = await db
-      .collection("user")
+      .collection('user')
       .findOne({ phoneNumber: phone });
 
     // console.log(userData);
     if (userData) {
       if (userData.password === sha1(password)) {
-        return res.send(
-          Object.assign(userData, {
-            password: undefined,
-            token: jwt.sign(userData, config[NODE_ENV].hashingSecret)
-          })
-        );
+        return res.send(Object.assign(userData, {
+          password: undefined,
+          token: jwt.sign(userData, config[NODE_ENV].hashingSecret),
+        }));
       }
     }
 
     return res
       .status(401)
-      .send({ message: "Wrong username and password combination" });
-  }
+      .send({ message: 'Wrong username and password combination' });
+  },
 );
 
 app.post(
-  "/auth/register",
+  '/saasAuth/login',
+  celebrate({
+    body: Joi.object().keys({
+      email: Joi
+        .string()
+        .email()
+        .required()
+        .error(new Error('Please provide an valid email')),
+      password: Joi
+        .string()
+        .required()
+        .error(new Error('Please provide a password')),
+    }),
+  }),
+  async (req, res) => {
+    const { email, password } = req.body;
+
+    const userData = await db
+      .collection('saasAuth')
+      .findOne({ username: email });
+
+    // console.log(userData);
+    if (userData) {
+      const saasUserData = await db
+        .collection('saasAuth')
+        .findOne({ _id: userData._id });
+
+      console.log(saasUserData);
+      if (userData.password === sha1(password)) {
+        return res.send(Object.assign(userData, {
+          password: undefined,
+          token: jwt.sign(
+            saasUserData
+            , config[NODE_ENV].hashingSecret,
+          ),
+        }));
+      }
+    }
+
+    return res
+      .status(401)
+      .send({ message: 'Wrong username and password combination' });
+  },
+);
+
+app.post(
+  '/auth/register',
   celebrate({
     body: Joi.object().keys({
       password: Joi.string().required(),
@@ -234,50 +280,50 @@ app.post(
       lastName: Joi.string().required(),
       middleName: Joi.string().required(),
       mobileMoneyNumber: Joi.string().required(),
-      phoneNumber: Joi.string().required()
-    })
+      phoneNumber: Joi.string().required(),
+    }),
   }),
   async (req, res) => {
     const { body: user } = req;
 
     // check if user already exists
     const userData = await db
-      .collection("user")
+      .collection('user')
       .findOne({ phoneNumber: user.phoneNumber });
 
     // console.log({ userData })
     if (userData) {
       return res
         .status(401)
-        .send({ message: "Phone number already used, trying to log in?" });
+        .send({ message: 'Phone number already used, trying to log in?' });
     }
 
     Object.assign(user, {
       _id: new ObjectId(),
       password: sha1(user.password),
-      destroyed: false
+      destroyed: false,
     });
 
-    await db.collection("user").insertOne(user);
+    await db.collection('user').insertOne(user);
 
     return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) });
-  }
+  },
 );
 
 // a  dd hemera action for saas registration
 
-app.post("/submision", async (req, res) => {
+app.post('/submision', async (req, res) => {
   const submission = req.body;
 
   const [existingSubmission] = await db
-    .collection("submision")
+    .collection('submision')
     .find({ completionId: submission.completionId })
     .toArray();
 
   if (existingSubmission) {
     return res.status(200).send({
       exists: true,
-      _id: existingSubmission._id
+      _id: existingSubmission._id,
     });
   }
 
@@ -285,14 +331,14 @@ app.post("/submision", async (req, res) => {
   // find the files and use they data in the url to generate the url
   Object.entries(submission).map(([key, value]) => {
     if (value) {
-      if (value.toString().includes("file://")) {
-        const [, ext] = value.split(".");
+      if (value.toString().includes('file://')) {
+        const [, ext] = value.split('.');
 
         cleanCopy[
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ""}`;
+        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
       }
 
       if (value === false) {
@@ -307,9 +353,9 @@ app.post("/submision", async (req, res) => {
 
       cleanCopy[
         key
-          .replace(/\s+/g, "_")
-          .split(".")
-          .join("_")
+          .replace(/\s+/g, '_')
+          .split('.')
+          .join('_')
       ] = value;
     }
   });
@@ -317,10 +363,10 @@ app.post("/submision", async (req, res) => {
   const entry = Object.assign({}, cleanCopy, {
     createdAt: new Date(),
     destroyed: false,
-    userId: req.user ? req.user._id : undefined
+    userId: req.user ? req.user._id : undefined,
   });
 
-  await db.collection("submision").insertOne(entry);
+  await db.collection('submision').insertOne(entry);
 
   // send the emails here and other realtime stuff for the dashboards
   // sendMail({
@@ -334,38 +380,38 @@ app.post("/submision", async (req, res) => {
   // }).then(console.log).catch(console.log)
 
   const [submited] = await db
-    .collection("submision")
+    .collection('submision')
     .find({ completionId: submission.completionId })
     .toArray();
 
   res.send({ _id: submited._id });
 
   const [questionnaire] = await db
-    .collection("questionnaire")
+    .collection('questionnaire')
     .find({ _id: ObjectId(submission.questionnaireId) })
     .toArray();
 
   const action = {
-    topic: "exec",
-    cmd: questionnaire.name.replace(/\s/g, "_"),
-    data: submited
+    topic: 'exec',
+    cmd: questionnaire.name.replace(/\s/g, '_'),
+    data: submited,
   };
 
-  hemera.act(action, function(err, resp) {
+  hemera.act(action, (err, resp) => {
     if (err) {
-      console.log("ERROR RUNNING SCRIPT");
+      console.log('ERROR RUNNING SCRIPT');
     } else {
-      console.log("SUCCESSFULY RUN SCRIPT for " + submited._id);
+      console.log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
     }
   });
 });
 
 const action = {
-  topic: "registratin",
-  cmd: "saas"
+  topic: 'registratin',
+  cmd: 'saas',
 };
 
-hemera.add(action, async args => {
+hemera.add(action, async (args) => {
   const {
     username,
     password,
@@ -399,7 +445,7 @@ hemera.add(action, async args => {
     company_contact,
     communications_email,
     communications_sms,
-    contact
+    contact,
   } = args.data;
 
   const user = {
@@ -411,7 +457,7 @@ hemera.add(action, async args => {
     state,
     address_2,
     zip,
-    country
+    country,
   };
 
   const company = {
@@ -423,21 +469,21 @@ hemera.add(action, async args => {
     communications_email,
     communications_sms,
     contact,
-    createdBy: user._id
+    createdBy: user._id,
   };
 
   const sample = {
-    _id: new ObjectID(),
+    _id: user._id,
     username,
-    password:sha1(password)
+    password: sha1(password),
   };
 
   const settings = {
-    _id: new ObjectID(),
+    _id: user._id,
     user: user._id,
     membership,
     promotions,
-    accept
+    accept,
   };
 
   const billing = {
@@ -452,7 +498,7 @@ hemera.add(action, async args => {
     address_line_1,
     address_line_2,
     zip_code,
-    billing_country
+    billing_country,
   };
 
   const legacyUser = {
@@ -460,16 +506,16 @@ hemera.add(action, async args => {
     firstName: user.name,
     phoneNumber: company.contact,
     password: sha1(sample.password),
-    email: user.email
+    email: user.email,
   };
 
   // create base data
-  await db.collection("saasAuth").insertOne(sample);
-  await db.collection("settings").insertOne(settings);
-  await db.collection("billing").insertOne(billing);
-  await db.collection("saasUser").insertOne(user);
-  await db.collection("user").insertOne(legacyUser);
-  await db.collection("company").insertOne(company);
+  await db.collection('saasAuth').insertOne(sample);
+  await db.collection('settings').insertOne(settings);
+  await db.collection('billing').insertOne(billing);
+  await db.collection('saasUser').insertOne(user);
+  await db.collection('user').insertOne(legacyUser);
+  await db.collection('company').insertOne(company);
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user
@@ -485,29 +531,29 @@ hemera.add(action, async args => {
     user: user.id,
     company: company.id,
     billing: billing.id,
-    settings: settings.id
+    settings: settings.id,
   };
 });
 
-app.get("/submision/:id", async (req, res) => {
+app.get('/submision/:id', async (req, res) => {
   const submission = req.params;
   const { id } = submission;
 
   const [submision] = await db
-    .collection("submision")
+    .collection('submision')
     .find({ _id: ObjectId(id) })
     .toArray();
 
   res.send(submision);
 });
 
-app.post("/query/:name", async (req, res) => {
+app.post('/query/:name', async (req, res) => {
   const action = {
-    topic: "exec",
+    topic: 'exec',
     cmd: req.params.name,
-    data: req.body
+    data: req.body,
   };
-  hemera.act(action, function(err, resp) {
+  hemera.act(action, (err, resp) => {
     if (err) {
       return res.status(500).send({ name: err.name, message: err.message });
       // return res.status(500).send(err)
@@ -516,52 +562,46 @@ app.post("/query/:name", async (req, res) => {
   });
 });
 
-app.get("/submision/breakDown/:days", auth, async (req, res) => {
+app.get('/submision/breakDown/:days', auth, async (req, res) => {
   const { days = 30 } = req.params;
   const weeks = getWeekBreakDown(days);
 
-  const { user: { phoneNumber = "" } = { phoneNumber: "" } } = req;
+  const { user: { phoneNumber = '' } = { phoneNumber: '' } } = req;
 
   console.log({ phoneNumber });
 
   const promises = [];
-  Object.keys(weeks).map(async weekKey => {
-    return Object.keys(weeks[weekKey].daysInWeek).map(async day => {
-      promises.push(
-        new Promise(async (resolve, reject) => {
-          const { start, end } = weeks[weekKey].daysInWeek[day];
-          const submisions = await db
-            .collection("submision")
-            .find(
-              Object.assign({
-                completedAt: {
-                  $gte: start.toDate(),
-                  $lte: end.toDate()
-                },
-                phoneNumber
-              })
-            )
-            .count();
+  Object.keys(weeks).map(async weekKey => Object.keys(weeks[weekKey].daysInWeek).map(async (day) => {
+    promises.push(new Promise(async (resolve, reject) => {
+      const { start, end } = weeks[weekKey].daysInWeek[day];
+      const submisions = await db
+        .collection('submision')
+        .find(Object.assign({
+          completedAt: {
+            $gte: start.toDate(),
+            $lte: end.toDate(),
+          },
+          phoneNumber,
+        }))
+        .count();
 
-          resolve({
-            submisions,
-            weekKey,
-            day
-          });
-        })
-      );
-    });
-  });
+      resolve({
+        submisions,
+        weekKey,
+        day,
+      });
+    }));
+  }));
 
   const residue = await Promise.all(promises);
 
-  residue.map(x => {
+  residue.map((x) => {
     weeks[x.weekKey].daysInWeek[x.day].completions = x.submisions;
   });
   res.send(weeks);
 });
 
-app.get("/submisions/:questionnaireId", async (req, res) => {
+app.get('/submisions/:questionnaireId', async (req, res) => {
   // try {
   const submission = req.params;
   const { questionnaireId } = submission;
@@ -570,44 +610,42 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
   const computedProps = [];
 
   const dashboards = await db
-    .collection("dashboard")
+    .collection('dashboard')
     .find({ questionnaire: questionnaireId, destroyed: false })
     .toArray();
 
-  const data = await Promise.all(
-    dashboards.map(async dashboard => [
-      await db
-        .collection("cpd")
-        .find({ dashboard: dashboard._id.toString(), destroyed: false })
-        .toArray(),
-      await db
-        .collection("cp")
-        .find({ dashboard: dashboard._id.toString(), destroyed: false })
-        .toArray()
-    ])
-  );
+  const data = await Promise.all(dashboards.map(async dashboard => [
+    await db
+      .collection('cpd')
+      .find({ dashboard: dashboard._id.toString(), destroyed: false })
+      .toArray(),
+    await db
+      .collection('cp')
+      .find({ dashboard: dashboard._id.toString(), destroyed: false })
+      .toArray(),
+  ]));
 
   // extract all the cps'd and cpds
-  data.map(dashboard => {
+  data.map((dashboard) => {
     const [cpds, cps] = dashboard;
     compoundedProps.push(...cpds);
     computedProps.push(...cps);
   });
 
   const submisions = await db
-    .collection("submision")
+    .collection('submision')
     .find({ questionnaireId })
     .toArray();
 
   console.log({ submisions, questionnaireId });
-  const computed = submisions.map(row => {
+  const computed = submisions.map((row) => {
     const copyRecord = {};
-    computedProps.map(form => {
-      var tempFn = doT.template(form.formular || "");
-      console.log("computed", { formular: form.formular });
-      var resultFormular = tempFn(row);
+    computedProps.map((form) => {
+      const tempFn = doT.template(form.formular || '');
+      console.log('computed', { formular: form.formular });
+      const resultFormular = tempFn(row);
 
-      console.log("computed", { resultFormular });
+      console.log('computed', { resultFormular });
 
       copyRecord[form.name] = math.eval(resultFormular);
     });
@@ -617,11 +655,11 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
 
   const compounded = {};
   // console.log({ compoundedProps })
-  compoundedProps.map(c => {
-    if (c.type === "formular") {
+  compoundedProps.map((c) => {
+    if (c.type === 'formular') {
       // console.log("compoundedProps", { formular: c.formular })
-      var tempFn = doT.template(c.formular);
-      var resultFormular = tempFn(compounded);
+      const tempFn = doT.template(c.formular);
+      const resultFormular = tempFn(compounded);
       // console.log("compoundedProps", { resultFormular })
       const compiled = math.eval(resultFormular);
       // console.log("compoundedProps", { compiled })
@@ -636,11 +674,11 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
     // console.log("compoundedProps", { values })
     const result = math[c.type](values);
     // console.log("compoundedProps", { result })
-    compounded[c.name] = typeof result === "object" ? result[0] : result;
+    compounded[c.name] = typeof result === 'object' ? result[0] : result;
   });
   res.send({
     computed,
-    compounded
+    compounded,
   });
   // } catch (err) {
   //   res.status(500).send({ err })
@@ -649,7 +687,7 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
 
 const lowLevelParser = (req, res) =>
   new Promise((resolve, rej) => {
-    parser.parse(req, res, { dir: "/tmp" }, (fields, file) => {
+    parser.parse(req, res, { dir: '/tmp' }, (fields, file) => {
       resolve({ fields, file });
     });
   });
@@ -675,20 +713,20 @@ const upload = (bucket, target) =>
   });
 
 app.post(
-  "/upload",
-  multer.single("file"),
+  '/upload',
+  multer.single('file'),
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
   async (req, res) => {
     // console.log(req.body);
     // console.log(req.file);
 
-    const { questionnaire = "", tag = "", interviewId = "" } = req.body;
-    const [, ext] = req.file.originalname.split(".");
+    const { questionnaire = '', tag = '', interviewId = '' } = req.body;
+    const [, ext] = req.file.originalname.split('.');
 
-    const Key = `${questionnaire}_${tag}_${interviewId}${ext ? `.${ext}` : ""}`;
+    const Key = `${questionnaire}_${tag}_${interviewId}${ext ? `.${ext}` : ''}`;
     res.status(201).send({
-      uri: `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${Key}`
+      uri: `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${Key}`,
     });
 
     // upload and save link in db, accessible via /questionnaireId/id
@@ -696,13 +734,13 @@ app.post(
     const fileData = fs.readFileSync(req.file.path);
 
     const params = {
-      Bucket: "questionnaireuploads",
+      Bucket: 'questionnaireuploads',
       Key,
       Body: fileData,
-      ACL: "public-read"
+      ACL: 'public-read',
     };
     await s3.putObject(params).promise();
-  }
+  },
 );
 
 app.use(errors());
