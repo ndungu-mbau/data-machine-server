@@ -12,7 +12,9 @@ import config from "./config"
 const {
   PORT = 4000,
   HOST = '0.0.0.0',
-  NODE_ENV = 'development'
+  NODE_ENV = 'development',
+  LOG_LEVEL,
+  DB_URL
 } = process.env;
 
 const httpServer = http.createServer(app);
@@ -23,7 +25,15 @@ server.installSubscriptionHandlers(httpServer);
 if (NODE_ENV !== 'test')
   httpServer.listen(PORT, HOST, (err) => {
     ifError(err);
-    console.log(`Server ${HOST}:${PORT}${server.graphqlPath}`);
+    console.log(`
+    🔧  Configured for ${NODE_ENV}.
+      => address: ${HOST}
+      => port: ${PORT}
+      => log: ${LOG_LEVEL}
+      => DB_URL: ${DB_URL}
+  
+    🚀  "graph.braiven.io" has launched on http://${HOST}:${PORT}
+    `)
   });
 
 export {
