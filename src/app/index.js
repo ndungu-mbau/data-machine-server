@@ -24,7 +24,7 @@ const nats = require('nats').connect({
 });
 
 const hemera = new Hemera(nats, {
-  logLevel: 'info',
+  logLevel: 'silent',
 });
 
 AWS.config.loadFromPath('aws_config.json');
@@ -111,8 +111,11 @@ app.use(
   cors(),
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
-  morgan('combined'),
 );
+
+if (NODE_ENV !== 'test') {
+  app.use(morgan('combined'))
+}
 
 const getWeekBreakDown = (daysBack) => {
   const today = moment().toDate();
@@ -246,8 +249,6 @@ app.post(
       .collection('user')
       .findOne({ email });
 
-      console.log({userData})
-
     // console.log(userData);
     if (userData) {
       const saasUserData = await db
@@ -339,7 +340,7 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
       }
 
       if (value === false) {
@@ -473,12 +474,6 @@ hemera.add(action, async (args) => {
     createdBy: user._id,
   };
 
-  const sample = {
-    _id: user._id,
-    username,
-    password: sha1(password),
-  };
-
   const settings = {
     _id: user._id,
     user: user._id,
@@ -506,16 +501,16 @@ hemera.add(action, async (args) => {
     _id: user._id,
     firstName: user.name,
     phoneNumber: company.contact,
-    password: sha1(sample.password),
+    password: sha1(password),
     email: user.email,
   };
 
   // create base data
-  await db.collection('saasAuth').insertOne(sample);
+  await db.collection('user').insertOne(legacyUser);
   await db.collection('settings').insertOne(settings);
   await db.collection('billing').insertOne(billing);
   await db.collection('saasUser').insertOne(user);
-  await db.collection('user').insertOne(legacyUser);
+
   await db.collection('company').insertOne(company);
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
