@@ -1,13 +1,18 @@
 let chai = require("chai");
 let chaiHttp = require("chai-http");
 
-let server = require("../dist");
+let { default: server } = require("../dist");
+
+console.log(server)
 
 console.log(server);
 let should = chai.should();
 var { MongoClient } = require("mongodb");
 
-const testMongoUrl = process.env.MONGO_URL;
+const {
+  MONGO_URL = 'mongodb://localhost:27017'
+} = process.env
+
 let db;
 
 chai.use(chaiHttp);
@@ -15,7 +20,7 @@ chai.use(chaiHttp);
 describe("Books", () => {
   beforeEach(done => {
     MongoClient.connect(
-      testMongoUrl,
+      MONGO_URL,
       { useNewUrlParser: true },
       (err, database) => {
         if (err) throw err;

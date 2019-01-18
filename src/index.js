@@ -11,14 +11,13 @@ const {
   HOST = '0.0.0.0',
 } = process.env;
 
-const start = async () => {
-  const httpServer = http.createServer(app);
-  server.applyMiddleware({ app });
-  server.installSubscriptionHandlers(httpServer);
-  httpServer.listen(PORT, HOST, (err) => {
-    ifError(err);
-    console.log(`Server ${HOST}:${PORT}${server.graphqlPath}`);
-  });
-};
+const httpServer = http.createServer(app);
 
-start().catch(console.log);
+server.applyMiddleware({ app });
+server.installSubscriptionHandlers(httpServer);
+httpServer.listen(PORT, HOST, (err) => {
+  ifError(err);
+  console.log(`Server ${HOST}:${PORT}${server.graphqlPath}`);
+});
+
+export default httpServer
