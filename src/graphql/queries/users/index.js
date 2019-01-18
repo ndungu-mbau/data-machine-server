@@ -7,7 +7,8 @@ const type = `
     email: String,
     phoneNumber: String,
     mobileMoneyNumber: String,
-    teams:[team]
+    teams:[team],
+    client:client
   }
 `;
 
@@ -18,10 +19,8 @@ const queries = `
 
 const user = async (_, { filter = {} } = {}, { db, user }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
-  console.log(user);
   const [userDetails] = await db.collection('user').find({ phoneNumber: user.phoneNumber }).toArray();
 
-  console.log({ userDetails });
   userDetails.id = userDetails._id;
   return userDetails;
 };
@@ -37,8 +36,16 @@ const users = async (_, { filter = {} } = {}, { db }) => {
 
 const nested = {
   user: {
+    client: async ({ id, user }, { filter = {} }, { db, ObjectId }) => {
+      const { destroyed = false, offset = 0, limit = 100 } = filter;
+      const client = await db.collection('company').findOne({ createdBy: id });
+
+      return Object.assign(client, {
+        id:client._id,
+        name: client.company_name
+      });
+    },
     teams: async ({ id }, { filter = {} }, { db, ObjectId }) => {
-      console.log(id);
       const { destroyed = false, offset = 0, limit = 100 } = filter;
       const relations = await db.collection('user_teams').find({ user: id.toString() }).toArray();
       const teams = await db.collection('team').find({ _id: { $in: relations.map(relation => ObjectId(relation.team)) } }).toArray();

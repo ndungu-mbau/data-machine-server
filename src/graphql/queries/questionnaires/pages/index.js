@@ -41,8 +41,22 @@ const root = {
   pages,
 };
 
+const nested = {
+  page: {
+    groups: async ({ id }, { filter = {} }, { db }) => {
+      console.log({ id })
+      const data = await db.collection("group").find({ page: id.toString(), destroyed: false }).toArray();
+      console.log(data)
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
+    }
+  }
+}
+
 export {
   type,
   queries,
   root,
+  nested
 };

@@ -38,7 +38,6 @@ const clients = async (_, { filter = {} }, { db }) => {
 const nested = {
   client: {
     teams: async ({ id }, { filter = {} }, { db }) => {
-      console.log({ id })
       const data = await db.collection("team").find({ client: id.toString(), destroyed: false }).toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,

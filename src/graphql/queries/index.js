@@ -13,6 +13,15 @@ import {
 } from './users';
 
 import {
+  nested as pagesNested
+} from './questionnaires/pages';
+
+import {
+  nested as groupsNested
+} from './questionnaires/pages/groups';
+
+
+import {
   type as clientType,
   queries as clientQueries,
   nested as clientQueriesNested,
@@ -29,6 +38,7 @@ import {
 import {
   type as questionnaireType,
   queries as questionnaireQueries,
+  nested as questionnaireNested,
   root as questionnaireRoot,
 } from './questionnaires';
 
@@ -145,11 +155,10 @@ const typeQueries = `
   }`;
 
 const Query = {
-  hello: () => 'Hello world students!'
+  hello: () => 'Hello world!'
 };
 
 const Nested = {}
-
 
 Object.assign(
   Nested
@@ -157,6 +166,9 @@ Object.assign(
   , teamUsersNested
   , projectQueriesNested
   , userNested
+  , questionnaireNested
+  , pagesNested
+  , groupsNested
 )
 
 
@@ -178,6 +190,7 @@ Object.assign(
   , constantsRoot
   , aliasesRoot
   , questionnaireRoot
+  , teamRoot
 );
 
 const queryRoot = { Query, Nested }

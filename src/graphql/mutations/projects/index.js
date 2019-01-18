@@ -34,9 +34,7 @@ const root = {
     create,
     update,
     destroy,
-    restore,
-    addTeam,
-    removeTeam
+    restore
   }),
 };
 

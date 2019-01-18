@@ -49,9 +49,7 @@ const nested = {
     teams: async ({ id }, { filter = {} }, { db, ObjectId }) => {
       const { destroyed = false, offset = 0, limit = 100 } = filter;
       const relations = await db.collection('project_teams').find({ project: id.toString() }).toArray()
-      console.log(id)
       const teams = await db.collection('team').find({ _id: { $in: relations.map(relation => ObjectId(relation.team)) } }).toArray()
-      console.log(teams)
       return teams.map(entry => Object.assign({}, entry, {
         id: entry._id
       }));

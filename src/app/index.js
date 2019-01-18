@@ -38,7 +38,7 @@ const multer = Multer({
 let db;
 
 MongoClient.connect(
-  config[NODE_ENV].db.url,
+  `${config[NODE_ENV].db.url}/${config[NODE_ENV].db.name}`,
   { useNewUrlParser: true },
   (err, client) => {
     if (err) throw err;
@@ -113,9 +113,9 @@ app.use(
   bodyParser.json(),
 );
 
-if (NODE_ENV !== 'test') {
-  app.use(morgan('combined'))
-}
+// if (NODE_ENV === 'test') {
+app.use(morgan('combined'))
+// }
 
 const getWeekBreakDown = (daysBack) => {
   const today = moment().toDate();
@@ -211,7 +211,6 @@ app.post(
       .collection('user')
       .findOne({ phoneNumber: phone });
 
-    // console.log(userData);
     if (userData) {
       if (userData.password === sha1(password)) {
         return res.send(Object.assign(userData, {
@@ -249,7 +248,6 @@ app.post(
       .collection('user')
       .findOne({ email });
 
-    // console.log(userData);
     if (userData) {
       const saasUserData = await db
         .collection('user')
@@ -513,6 +511,77 @@ hemera.add(action, async (args) => {
 
   await db.collection('company').insertOne(company);
 
+  const questionnaire = {
+    _id: new ObjectID(),
+    name: 'sample questionnaire',
+    client: company._id.toString(),
+    destroyed: false
+  }
+
+  const project = {
+    _id: new ObjectID(),
+    name: 'sample project',
+    client: company._id.toString(),
+    questionnaire: questionnaire._id,
+    destroyed: false
+  }
+
+  const team = {
+    _id: new ObjectID(),
+    name: 'sample team',
+    client: company._id.toString(),
+    destroyed: false
+  }
+
+  const project_team = {
+    project: project._id.toString(),
+    team: team._id.toString(),
+    destroyed: false
+  }
+
+  const user_teams = {
+    user: user._id.toString(),
+    team: team._id.toString(),
+    destroyed: false
+  }
+
+  await db.collection('project').insertOne(project);
+  await db.collection('team').insertOne(team);
+  await db.collection('questionnaire').insertOne(questionnaire);
+  await db.collection('project_teams').insertOne(project_team);
+  await db.collection('user_teams').insertOne(user_teams);
+
+  const page = {
+    _id: new ObjectID(),
+    name: 'sample page',
+    questionnaire: questionnaire._id.toString(),
+    destroyed: false
+  }
+
+  // create questionnire things
+  await db.collection('page').insertOne(page);
+
+  const group = {
+    _id: new ObjectID(),
+    name: 'sample group',
+    page: page._id.toString(),
+    destroyed: false
+  }
+
+  // create questionnire things
+  await db.collection('group').insertOne(group);
+
+  const question = {
+    _id: new ObjectID(),
+    type: 'instruction',
+    placeholder: 'hello questionnaire',
+    group: group._id.toString(),
+    destroyed: false
+  }
+
+  // create questionnire things
+  await db.collection('question').insertOne(question);
+
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user
 
@@ -563,8 +632,6 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
   const weeks = getWeekBreakDown(days);
 
   const { user: { phoneNumber = '' } = { phoneNumber: '' } } = req;
-
-  console.log({ phoneNumber });
 
   const promises = [];
   Object.keys(weeks).map(async weekKey => Object.keys(weeks[weekKey].daysInWeek).map(async (day) => {
@@ -633,7 +700,6 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     .find({ questionnaireId })
     .toArray();
 
-  console.log({ submisions, questionnaireId });
   const computed = submisions.map((row) => {
     const copyRecord = {};
     computedProps.map((form) => {
@@ -650,26 +716,19 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   });
 
   const compounded = {};
-  // console.log({ compoundedProps })
   compoundedProps.map((c) => {
     if (c.type === 'formular') {
-      // console.log("compoundedProps", { formular: c.formular })
       const tempFn = doT.template(c.formular);
       const resultFormular = tempFn(compounded);
-      // console.log("compoundedProps", { resultFormular })
       const compiled = math.eval(resultFormular);
-      // console.log("compoundedProps", { compiled })
       compounded[c.name] = compiled;
       return;
     }
 
-    // console.log("compoundedProps", { field: c.field, computed })
     const values = computed
       .filter(row => row[c.field])
       .map(row => row[c.field]);
-    // console.log("compoundedProps", { values })
     const result = math[c.type](values);
-    // console.log("compoundedProps", { result })
     compounded[c.name] = typeof result === 'object' ? result[0] : result;
   });
   res.send({

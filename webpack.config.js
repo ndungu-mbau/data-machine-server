@@ -13,11 +13,12 @@ fs
 module.exports = {
   entry: './src',
   target: 'node',
+  mode:'development',
   devtool: 'source-map',
   output: {
-    path: path.resolve(__dirname, 'build'),
-    filename: 'server.js',
-    // libraryTarget: 'this',
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'index.js',
+    libraryTarget: 'this',
   },
   externals: nodeModules,
   plugins: [
@@ -27,29 +28,6 @@ module.exports = {
       entryOnly: false,
     }),
   ],
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        use: [
-          {
-            loader: 'babel-loader',
-            options: {
-              presets: [
-                [
-                  'env',
-                  {
-                    exclude: ['transform-regenerator'],
-                    modules: false,
-                  },
-                ],
-              ],
-            },
-          },
-        ],
-      },
-    ],
-  },
   stats: {
     colors: true,
   },

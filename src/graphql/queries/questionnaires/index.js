@@ -123,7 +123,7 @@ const QuestionnaireDashboards = questionnaireId => async (
       id: entry._id,
       layout: dashboardLayouts(entry._id.toString()),
       cps: dashboardCps(entry._id.toString()),
-      cpds:dashboardCpds(entry._id.toString()),
+      cpds: dashboardCpds(entry._id.toString()),
       aliases: dashboardAliases(entry._id.toString()),
       charts: dashboardCharts(entry._id.toString()),
       constants: dashboardConstants(entry._id.toString()),
@@ -133,6 +133,7 @@ const QuestionnaireDashboards = questionnaireId => async (
 export const questionnaire = async ({ questionnaire } = {}, { id }, { db, ObjectId }) => {
   const data = await db.collection('questionnaire').findOne({ _id: new ObjectId(id), destroyed: false });
 
+  console.log({ data })
   return Object.assign({}, data, {
     id,
     pages: QuestionnairePages(id || questionnaire),
@@ -160,4 +161,15 @@ const root = {
   questionnaires,
 };
 
-export { type, queries, root };
+const nested = {
+  questionnaire: {
+    pages: async ({ id }, { filter = {} }, { db }) => {
+      const data = await db.collection("page").find({ questionnaire: id.toString(), destroyed: false }).toArray();
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
+    }
+  }
+}
+
+export { type, queries, root, nested };
