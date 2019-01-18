@@ -17,7 +17,7 @@ const {
 
 const httpServer = http.createServer(app);
 
-server.applyMiddleware({ app });
+server.applyMiddleware({ app, path: ["/graphql", "/"] });
 server.installSubscriptionHandlers(httpServer);
 
 if (NODE_ENV !== 'test')

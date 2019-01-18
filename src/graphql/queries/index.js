@@ -155,7 +155,7 @@ const typeQueries = `
   }`;
 
 const Query = {
-  hello: () => 'Hello world!'
+  hello: () => 'Hello too!'
 };
 
 const Nested = {}
