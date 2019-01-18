@@ -28,13 +28,14 @@
     "nats-hemera": "^6.1.1",
     "nodemailer": "^4.4.1",
     "sha1": "^1.1.1",
-    "source-map-support": "^0.5.9",
+    "source-map-support": "^0.5.10",
     "vm2": "^3.6.4"
   },
   "main": "build/index.bundle.js",
   "scripts": {
-    "dev": "parcel src/index.js --target=node & nodemon -r source-map-support/register dist",
+    "dev": " yarn build & nodemon -r source-map-support/register dist",
     "build": "parcel build src/index.js --target=node",
+    "test": "yarn build && mocha --require source-map-support/register --reporter spec tests/",
     "deploy": "parcel build src/index.js --target=node && gcloud beta functions deploy orbitusQuesitonnaireMachineGraphql --stage-bucket sabek_test_001/ --trigger-http --entry-point default"
   },
   "devDependencies": {
@@ -42,11 +43,16 @@
     "babel-core": "*",
     "babel-loader": "*",
     "babel-preset-es2017": "*",
+    "chai": "^4.2.0",
+    "chai-http": "^4.2.1",
     "eslint": "^4.9.0",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-react": "^7.4.0",
+    "mocha": "^5.2.0",
+    "nodemon": "^1.18.9",
+    "parcel": "^1.11.0",
     "webpack": "^2"
   }
 }

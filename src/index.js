@@ -1,4 +1,5 @@
 import 'babel-polyfill';
+import 'source-map-support/register'
 import http from 'http';
 import { ifError } from 'assert';
 

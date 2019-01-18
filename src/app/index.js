@@ -243,16 +243,17 @@ app.post(
     const { email, password } = req.body;
 
     const userData = await db
-      .collection('saasAuth')
-      .findOne({ username: email });
+      .collection('user')
+      .findOne({ email });
+
+      console.log({userData})
 
     // console.log(userData);
     if (userData) {
       const saasUserData = await db
-        .collection('saasAuth')
+        .collection('user')
         .findOne({ _id: userData._id });
 
-      console.log(saasUserData);
       if (userData.password === sha1(password)) {
         return res.send(Object.assign(userData, {
           password: undefined,
