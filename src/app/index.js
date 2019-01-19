@@ -37,9 +37,8 @@ const multer = Multer({
 
 let db;
 
-console.log("Connecting to db", NODE_ENV, `${config[NODE_ENV].db.url}/${config[NODE_ENV].db.name}`)
 MongoClient.connect(
-  `${config[NODE_ENV].db.url}/${config[NODE_ENV].db.name}`,
+  config[NODE_ENV].db.url,
   { useNewUrlParser: true },
   (err, client) => {
     if (err) throw err;
