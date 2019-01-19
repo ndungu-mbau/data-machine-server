@@ -514,14 +514,14 @@ hemera.add(action, async (args) => {
 
   const questionnaire = {
     _id: new ObjectID(),
-    name: 'sample questionnaire',
+    name: 'Sample questionnaire',
     client: company._id.toString(),
     destroyed: false
   }
 
   const project = {
     _id: new ObjectID(),
-    name: 'sample project',
+    name: 'Sample project',
     client: company._id.toString(),
     questionnaire: questionnaire._id,
     destroyed: false
@@ -529,7 +529,7 @@ hemera.add(action, async (args) => {
 
   const team = {
     _id: new ObjectID(),
-    name: 'sample team',
+    name: 'Sample team',
     client: company._id.toString(),
     destroyed: false
   }
@@ -554,7 +554,7 @@ hemera.add(action, async (args) => {
 
   const page = {
     _id: new ObjectID(),
-    name: 'sample page',
+    name: 'Sample page',
     questionnaire: questionnaire._id.toString(),
     destroyed: false
   }
@@ -564,7 +564,7 @@ hemera.add(action, async (args) => {
 
   const group = {
     _id: new ObjectID(),
-    name: 'sample group',
+    name: 'Sample group',
     page: page._id.toString(),
     destroyed: false
   }
@@ -575,7 +575,7 @@ hemera.add(action, async (args) => {
   const question = {
     _id: new ObjectID(),
     type: 'instruction',
-    placeholder: 'hello questionnaire',
+    placeholder: 'Sample instruction',
     group: group._id.toString(),
     destroyed: false
   }
