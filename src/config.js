@@ -1,5 +1,5 @@
 
-const { DBURL: url = 'mongodb://localhost:27017' } = process.env;
+const { DB_URL: url = 'mongodb://localhost:27017' } = process.env;
 
 
 const config = {
