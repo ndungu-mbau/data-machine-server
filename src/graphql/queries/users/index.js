@@ -41,7 +41,7 @@ const nested = {
       const client = await db.collection('company').findOne({ createdBy: id });
 
       return Object.assign(client, {
-        id:client._id,
+        id: client._id,
         name: client.company_name
       });
     },

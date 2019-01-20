@@ -459,6 +459,7 @@ hemera.add(action, async (args) => {
     address_2,
     zip,
     country,
+    destroyed:false
   };
 
   const company = {
@@ -471,6 +472,7 @@ hemera.add(action, async (args) => {
     communications_sms,
     contact,
     createdBy: user._id,
+    destroyed:false
   };
 
   const settings = {
@@ -479,6 +481,7 @@ hemera.add(action, async (args) => {
     membership,
     promotions,
     accept,
+    destroyed:false
   };
 
   const billing = {
@@ -502,6 +505,7 @@ hemera.add(action, async (args) => {
     phoneNumber: company.contact,
     password: sha1(password),
     email: user.email,
+    destroyed:false
   };
 
   // create base data

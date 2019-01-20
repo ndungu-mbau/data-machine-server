@@ -73,9 +73,8 @@ let token;
 describe("Books", () => {
   before(done => {
     // connect to nats and mongodbi
-    console.log(`${config[NODE_ENV].db.url}/${config[NODE_ENV].db.name}`)
     MongoClient.connect(
-      `${config[NODE_ENV].db.url}/${config[NODE_ENV].db.name}`,
+      config[NODE_ENV].db.url,
       {
         useNewUrlParser: true,
         // server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
@@ -183,6 +182,10 @@ describe("Books", () => {
         .set('auth', token)
         .send({
           query: `query {
+            users{
+              id,
+              firstName
+            }
             user {
               id,
               firstName,
