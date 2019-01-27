@@ -37,7 +37,7 @@
   "scripts": {
     "dev": " webpack -w & nodemon -r source-map-support/register -r dotenv/config dist",
     "build": "webpack -p",
-    "test": "NODE_ENV=test yarn build && mocha --require source-map-support/register --reporter spec test/ --exit",
+    "test": "yarn build && mocha --require source-map-support/register --require dotenv/config --reporter spec test/ --exit",
     "test:watch": "NODE_ENV=test nodemon --watch src --exec 'yarn test'",
     "deploy": "webpack -p && node -r source-map-support/register dist"
   },
