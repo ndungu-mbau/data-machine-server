@@ -42,14 +42,11 @@ MongoClient.connect(
   { useNewUrlParser: true },
   (err, client) => {
     if (err) throw err;
-    console.log("Conection Established")
     db = client.db(config[NODE_ENV].db.name);
   },
 );
 
-hemera.ready(() => {
-  console.log('hemera is for use');
-});
+hemera.ready();
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({

@@ -11,8 +11,7 @@ const {
   PORT = 4000,
   HOST = '0.0.0.0',
   NODE_ENV = 'development',
-  LOG_LEVEL,
-  DB_URL
+  LOG_LEVEL
 } = process.env;
 
 const httpServer = http.createServer(app);
@@ -28,7 +27,7 @@ if (NODE_ENV !== 'test')
       => address: ${HOST}
       => port: ${PORT}
       => log: ${LOG_LEVEL}
-      => DB_URL: ${DB_URL}
+      => DB_URL: ${config[NODE_ENV].db.url}
   
     🚀  "graph.braiven.io" has launched on http://${HOST}:${PORT}
     `)
