@@ -9,6 +9,7 @@ const type = `
   input newquestionnaire {
     id: String,
     name: String,
+    order:[String]
   }
 
   type questionnaireMutations {

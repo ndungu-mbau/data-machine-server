@@ -4,6 +4,7 @@ const type = `
     name: String,
     project:project,
     pages:[page],
+    order:[String],
     dashboards:[dashboard]
   }
 `;
