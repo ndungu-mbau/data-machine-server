@@ -313,6 +313,8 @@ app.post(
 app.post('/submision', async (req, res) => {
   const submission = req.body;
 
+  console.log(JSON.stringify({ submission }, null, '\t'))
+
   const [existingSubmission] = await db
     .collection('submision')
     .find({ completionId: submission.completionId })
@@ -456,7 +458,7 @@ hemera.add(action, async (args) => {
     address_2,
     zip,
     country,
-    destroyed:false
+    destroyed: false
   };
 
   const company = {
@@ -469,7 +471,7 @@ hemera.add(action, async (args) => {
     communications_sms,
     contact,
     createdBy: user._id,
-    destroyed:false
+    destroyed: false
   };
 
   const settings = {
@@ -478,7 +480,7 @@ hemera.add(action, async (args) => {
     membership,
     promotions,
     accept,
-    destroyed:false
+    destroyed: false
   };
 
   const billing = {
@@ -502,7 +504,7 @@ hemera.add(action, async (args) => {
     phoneNumber: company.contact,
     password: sha1(password),
     email: user.email,
-    destroyed:false
+    destroyed: false
   };
 
   // create base data
