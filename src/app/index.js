@@ -188,6 +188,33 @@ const getWeekBreakDown = (daysBack) => {
   return weeks;
 };
 
+
+const getDayBreakDown = ({ start, end }) => {
+  var now = start;
+  var then = end;
+
+  const dayCountDays = {}
+
+  // const x = moment(now).diff(moment(then))
+  const dayNumber = moment(now).diff(moment(then), 'days')
+
+  let currentDay;
+  for (let count = 1; count < dayNumber; count++) {
+
+    const t = moment(start)
+      .subtract(count, 'day')
+      .startOf('day');
+
+    dayCountDays[count] = {
+      start: moment(t).startOf('day'),
+      end: moment(t).endOf('day'),
+    }
+
+  }
+
+  return dayCountDays;
+};
+
 app.use('/health', (req, res) => res.send());
 
 app.post(
@@ -666,6 +693,35 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
     weeks[x.weekKey].daysInWeek[x.day].completions = x.submisions;
   });
   res.send(weeks);
+});
+
+app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
+  const { start, end } = req.params
+  const days = getDayBreakDown({
+    start: new Date(start),
+    end: new Date(end)
+  });
+
+  const info = {};
+
+  for (const x in Object.values(days)) {
+    const day = Object.values(days)[x]
+
+    const count = await db
+    .collection('submision')
+    .find(Object.assign(req.body,{
+      completedAt: {
+        $gte: day.start.toDate(),
+        $lte: day.end.toDate(),
+      }
+    }))
+    .count()
+
+    day.count = count
+    info[x] = day
+  }
+  
+  res.send(info);
 });
 
 app.get('/submisions/:questionnaireId', async (req, res) => {
