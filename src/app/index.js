@@ -190,8 +190,8 @@ const getWeekBreakDown = (daysBack) => {
 
 
 const getDayBreakDown = ({ start, end }) => {
-  var now = start;
-  var then = end;
+  var now = end;
+  var then = start;
 
   const dayCountDays = {}
 
@@ -702,25 +702,34 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
     end: new Date(end)
   });
 
+  const randomCount = ({ min = 0, max = 10 }) => {
+    // and the formula is:
+    var random = Math.floor(Math.random() * (max - min + 1)) + min;
+
+    return random
+  }
+
   const info = {};
 
   for (const x in Object.values(days)) {
     const day = Object.values(days)[x]
 
     const count = await db
-    .collection('submision')
-    .find(Object.assign(req.body,{
-      completedAt: {
-        $gte: day.start.toDate(),
-        $lte: day.end.toDate(),
-      }
-    }))
-    .count()
+      .collection('submision')
+      .find(Object.assign(req.body, {
+        completedAt: {
+          $gte: day.start.toDate(),
+          $lte: day.end.toDate(),
+        }
+      }))
+      .count()
 
-    day.count = count
-    info[x] = day
+    if (count !== 0) {
+      day.count = count
+      info[x] = day
+    }
   }
-  
+
   res.send(info);
 });
 
