@@ -29,6 +29,13 @@ import {
 } from './clients';
 
 import {
+  type as billingType,
+  queries as billingQueries,
+  nested as billingQueriesNested,
+  root as billingRoot,
+} from './billing';
+
+import {
   type as teamType,
   queries as teamQueries,
   nested as teamUsersNested,
@@ -116,6 +123,7 @@ import {
 
 const typeQueries = `
   ${clientType},
+  ${billingType},
   ${teamType},
   ${dashboardsType},
   ${layoutsType},
@@ -135,6 +143,7 @@ const typeQueries = `
   type Query {
       hello: String,
       ${clientQueries},
+      ${billingQueries},
       ${teamQueries},
       ${dashboardsQueries},
       ${layoutsQueries},
@@ -169,6 +178,7 @@ Object.assign(
   , questionnaireNested
   , pagesNested
   , groupsNested
+  , billingQueriesNested
 )
 
 
@@ -191,6 +201,7 @@ Object.assign(
   , aliasesRoot
   , questionnaireRoot
   , teamRoot
+  , billingRoot
 );
 
 const queryRoot = { Query, Nested }

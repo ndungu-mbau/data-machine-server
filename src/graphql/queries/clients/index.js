@@ -5,7 +5,8 @@ const type = `
     id: String,
     name: String,
     projects:[project],
-    teams:[team]
+    teams:[team],
+    billing:billing,
   }
 `;
 
@@ -48,7 +49,13 @@ const nested = {
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
-    }
+    },
+    billing: async ({ id }, { filter = {} }, { db }) => {
+      const data = await db.collection("billing").find({ client: id.toString(), destroyed: false }).toArray();
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
+    },
   }
 }
 
