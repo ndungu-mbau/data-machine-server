@@ -267,7 +267,7 @@ app.post(
       data: {
         id,
         host: process.env.NODE_ENV === 'production'
-          ? 'https://braiven.io'
+          ? 'https://app.braiven.io'
           : 'http://localhost:3000'
       }
     })
