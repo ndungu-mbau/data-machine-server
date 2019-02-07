@@ -501,6 +501,7 @@ hemera.add(action, async (args) => {
   const user = {
     _id: new ObjectID(),
     email,
+    phoneNumber:contact,
     firstName,
     middleName,
     lastName,
@@ -668,6 +669,10 @@ hemera.add(action, async (args) => {
     company: company.id,
     billing: billing.id,
     settings: settings.id,
+    token: jwt.sign(
+      user
+      , config[NODE_ENV].hashingSecret,
+    )
   };
 });
 
