@@ -4,6 +4,10 @@ const type = `
   type client {
     id: String,
     name: String,
+    reg_id: String,
+    contact_email: String,
+    contact: String,
+    comms_sms:String,
     projects:[project],
     teams:[team],
     billing:billing,

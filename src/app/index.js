@@ -3,7 +3,6 @@ import morgan from 'morgan';
 import sha1 from 'sha1';
 import { celebrate, Joi, errors } from 'celebrate';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
 import Multer from 'multer';
 import config from '../config';
 import cors from 'cors';
@@ -12,6 +11,7 @@ import fs from 'fs';
 import AWS from 'aws-sdk';
 import parser from './parser';
 import { MongoClient, ObjectId } from 'mongodb';
+import { passwordResetEmail, registrationThanks } from "./emails/mailer"
 
 const moment = require('moment');
 const doT = require('dot');
@@ -47,52 +47,6 @@ MongoClient.connect(
 );
 
 hemera.ready();
-
-// create reusable transporter object using the default SMTP transport
-const transporter = nodemailer.createTransport({
-  host: 'smtp.zoho.com',
-  port: 465,
-  secure: true, // use SSL
-  auth: {
-    user: 'info@braiven.io',
-    pass: 'a32357377',
-  },
-});
-
-// setup e-mail data, even with unicode symbols
-const mailOptions = {
-  from: '"Credistat " <info@braiven.io>', // sender address (who sends)
-};
-
-const sendMail = ({ to, subject, message }) =>
-  new Promise((resolve, reject) => {
-    mailOptions.to = to;
-    mailOptions.subject = subject;
-    mailOptions.html = message;
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, async (error, info) => {
-      // console.log({ error, info });
-      // async save the email send to our collection on google
-      const emailSends = datastore.key('emailSends');
-
-      await datastore.save({
-        key: emailSends,
-        data: Object.assign(
-          {},
-          { error },
-          info,
-          { subject },
-          { message, triggedAt: new Date().toISOString() },
-        ),
-      });
-
-      if (error) {
-        return reject(error);
-      }
-
-      resolve(info);
-    });
-  });
 
 const app = express();
 
@@ -296,6 +250,86 @@ app.post(
 );
 
 app.post(
+  '/saasAuth/requestResetPassword',
+  celebrate({
+    body: Joi.object().keys({
+      email: Joi
+        .string()
+        .email()
+        .required()
+    }),
+  }),
+  async (req, res) => {
+    const { email } = req.body;
+    const id = new ObjectID()
+    passwordResetEmail({
+      to: email,
+      data: {
+        id,
+        host: process.env.NODE_ENV === 'production'
+          ? 'https://braiven.io'
+          : 'http://localhost:3000'
+      }
+    })
+
+    res.send()
+    await db
+      .collection('loginRequest')
+      .insertOne({
+        _id: id,
+        email,
+        time: new Date()
+      });
+  })
+
+app.post(
+  '/saasAuth/resetPassword/:resetRequestId',
+  celebrate({
+    body: Joi.object().keys({
+      password: Joi
+        .string()
+        .required(),
+      confirm: Joi
+        .string()
+        .required()
+    }),
+  }),
+  async (req, res) => {
+    const { confirm, password } = req.body;
+    const { resetRequestId } = req.params
+
+    if (confirm !== password) {
+      res.status(401)
+        .send({ message: 'Password entries do not match' });
+    }
+
+    const requestData = await db
+      .collection('loginRequest')
+      .findOne({ _id: ObjectID(resetRequestId) });
+
+    if (!requestData) {
+      res.status(401)
+        .send({ message: 'Invalid password reset id' });
+    }
+
+    const userData = await db
+      .collection('user')
+      .find({ email: requestData.email });
+
+    if (userData) {
+      await db
+        .collection('user')
+        .updateOne({ email: requestData.email }, { $set: { password: sha1(password) } });
+      return res.send()
+    }
+
+    return res
+      .status(401)
+      .send({ message: 'We do not have the an account with the email you are trying to register to' });
+  },
+);
+
+app.post(
   '/auth/register',
   celebrate({
     body: Joi.object().keys({
@@ -334,8 +368,6 @@ app.post(
     return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) });
   },
 );
-
-// a  dd hemera action for saas registration
 
 app.post('/submision', async (req, res) => {
   const submission = req.body;
@@ -394,17 +426,6 @@ app.post('/submision', async (req, res) => {
   });
 
   await db.collection('submision').insertOne(entry);
-
-  // send the emails here and other realtime stuff for the dashboards
-  // sendMail({
-  //     to: "credistart@gmail.com",
-  //     subject: `Notification of a completed interview ${id} at ${new Date().toLocaleString()}`,
-  //     message: `
-  //     A new interview has been completed, please view at <a href="http://sabekinstitute.co.ke/dashboard.html#!/interview=${id}">view</a>
-  //     <hr>
-  //     <pre>${JSON.stringify(submission, null, "\t")}</pre>
-  //   `
-  // }).then(console.log).catch(console.log)
 
   const [submited] = await db
     .collection('submision')
@@ -622,6 +643,21 @@ hemera.add(action, async (args) => {
   //   billing: billing._id,
   //   settings: settings._id
   // });
+
+  // send out a welcome email
+  registrationThanks({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      company: {
+        name: company.company_name
+      }
+    })
+  })
+  // send out a sample project created email
+  // send out a process guide email
+  // send out a download our app email
+
+  // start tracking this user for the next 30 days
 
   return {
     user: user.id,
