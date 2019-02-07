@@ -479,7 +479,9 @@ hemera.add(action, async (args) => {
     billing_country,
 
     email,
-    name,
+    firstName,
+    middleName,
+    lastName,
     address_1,
     address_2,
     city,
@@ -499,12 +501,12 @@ hemera.add(action, async (args) => {
   const user = {
     _id: new ObjectID(),
     email,
-    name,
+    firstName,
+    middleName,
+    lastName,
     address_1,
     city,
     state,
-    address_2,
-    zip,
     country,
     destroyed: false
   };
@@ -548,7 +550,9 @@ hemera.add(action, async (args) => {
 
   const legacyUser = {
     _id: user._id,
-    firstName: user.name,
+    firstName: user.firstName,
+    middleName: user.middleName,
+    lastName: user.lastName,
     phoneNumber: company.contact,
     password: sha1(password),
     email: user.email,
