@@ -11,7 +11,12 @@ import fs from 'fs';
 import AWS from 'aws-sdk';
 import parser from './parser';
 import { MongoClient, ObjectId } from 'mongodb';
-import { passwordResetEmail, registrationThanks } from "./emails/mailer"
+import {
+  passwordResetEmail,
+  registrationThanks,
+  userLoggedIn,
+  userCreatedAccount
+} from "./emails/mailer"
 
 const moment = require('moment');
 const doT = require('dot');
@@ -233,6 +238,12 @@ app.post(
         .findOne({ _id: userData._id });
 
       if (userData.password === sha1(password)) {
+        userLoggedIn({
+          to: "sirbranson67@gmail.com",
+          data: {
+            email
+          }
+        })
         return res.send(Object.assign(userData, {
           password: undefined,
           token: jwt.sign(
@@ -501,7 +512,7 @@ hemera.add(action, async (args) => {
   const user = {
     _id: new ObjectID(),
     email,
-    phoneNumber:contact,
+    phoneNumber: contact,
     firstName,
     middleName,
     lastName,
@@ -657,6 +668,13 @@ hemera.add(action, async (args) => {
         name: company.company_name
       }
     })
+  })
+
+  userCreatedAccount({
+    to: "sirbranson67@gmail.com",
+    data: {
+      email
+    }
   })
   // send out a sample project created email
   // send out a process guide email
