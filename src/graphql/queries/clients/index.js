@@ -10,6 +10,7 @@ const type = `
     comms_sms:String,
     projects:[project],
     teams:[team],
+    users:[user],
     billing:billing,
   }
 `;
@@ -44,6 +45,12 @@ const nested = {
   client: {
     teams: async ({ id }, { filter = {} }, { db }) => {
       const data = await db.collection("team").find({ client: id.toString(), destroyed: false }).toArray();
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
+    },
+    users: async ({ id }, { filter = {} }, { db }) => {
+      const data = await db.collection("users").find({ client: id.toString(), destroyed: false }).toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));

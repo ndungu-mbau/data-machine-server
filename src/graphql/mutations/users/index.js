@@ -14,7 +14,8 @@ const type = `
     email: String,
     phoneNumber: String,
     mobileMoneyNumber: String,
-    password: String
+    password: String,
+    client: String
   }
 
   type userMutations {
