@@ -109,7 +109,7 @@ const userCreatedAccount = async ({
     sendMail({
         to,
         subject,
-        message: data.email + " just logged in"
+        message: data.email + " just registered"
     }).then(console.log).catch(console.log)
 }
 
