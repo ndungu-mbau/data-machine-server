@@ -1,39 +1,39 @@
-const moment = require("moment");
+const moment = require('moment');
 
-const getWeekBreakDown = daysBack => {
-  var today = moment().toDate();
+const getWeekBreakDown = (daysBack) => {
+  const today = moment().toDate();
 
   function weeksBetween(d1, d2) {
     return Math.round((d2 - d1) / (7 * 24 * 60 * 60 * 1000));
   }
 
   const weekNumber = weeksBetween(
-    moment(today).subtract(daysBack, "day"),
-    today
+    moment(today).subtract(daysBack, 'day'),
+    today,
   );
 
-  // loop by number of times subtracting date by 6 each time to get the dates that start and end the weeks between
+  // loop by number of times subtracting date by 6 each time to get the
+  // dates that start and end the weeks between
   const weeks = {};
 
   let ctx = {};
   for (let count = 1; count < weekNumber + 1; count++) {
     let start;
-    let end;
-    let daysInWeek = {};
+    const daysInWeek = {};
 
     if (!ctx.start) {
-      start = moment().endOf("day");
+      start = moment().endOf('day');
     } else {
       start = ctx.end;
     }
 
-    end = moment(start)
-      .subtract(6, "day")
-      .startOf("day");
+    const end = moment(start)
+      .subtract(6, 'day')
+      .startOf('day');
 
     ctx = {
       start,
-      end
+      end,
     };
 
     // get days between start and end
@@ -48,23 +48,23 @@ const getWeekBreakDown = daysBack => {
       }
 
       daysInWeek[dayCount] = {
-        start: moment(dayStart).startOf("day"),
-        end: moment(dayStart).endOf("day")
+        start: moment(dayStart).startOf('day'),
+        end: moment(dayStart).endOf('day'),
       };
 
       dayStart = moment(dayStart)
-        .subtract(1, "day")
-        .startOf("day");
+        .subtract(1, 'day')
+        .startOf('day');
 
       daysCtx = {
-        start: dayStart
+        start: dayStart,
       };
     }
 
     weeks[count] = {
       start,
       end,
-      daysInWeek
+      daysInWeek,
     };
   }
 
@@ -72,4 +72,5 @@ const getWeekBreakDown = daysBack => {
 };
 
 const weeks = getWeekBreakDown(14);
-console.log(JSON.stringify({ weeks }, null, "\t"));
+// eslint-disable-next-line no-console
+console.log(JSON.stringify({ weeks }, null, '\t'));

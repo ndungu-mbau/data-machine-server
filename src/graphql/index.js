@@ -1,9 +1,11 @@
 import { ApolloServer, gql } from 'apollo-server-express';
+import jwt from 'jsonwebtoken';
+import { MongoClient, ObjectId } from 'mongodb';
+
 import { typeQueries, queryRoot } from './queries';
 import { typeMutations, mutationRoot } from './mutations';
-import jwt from 'jsonwebtoken';
+
 import config from '../config';
-import { MongoClient, ObjectId } from 'mongodb';
 
 const {
   NODE_ENV = 'development',
