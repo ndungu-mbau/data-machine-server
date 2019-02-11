@@ -50,7 +50,8 @@ const nested = {
       }));
     },
     users: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("users").find({ client: id.toString(), destroyed: false }).toArray();
+      const data = await db.collection("user").find({ client: id }).toArray();
+
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));

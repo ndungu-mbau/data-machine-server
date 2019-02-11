@@ -472,7 +472,6 @@ const action = {
 
 hemera.add(action, async (args) => {
   const {
-    username,
     password,
 
     membership,
@@ -509,20 +508,8 @@ hemera.add(action, async (args) => {
     contact,
   } = args.data;
 
-  const user = {
-    _id: new ObjectID(),
-    email,
-    phoneNumber: contact,
-    firstName,
-    middleName,
-    lastName,
-    address_1,
-    city,
-    state,
-    country,
-    destroyed: false
-  };
-
+  
+  const userid = new ObjectID()
   const company = {
     _id: new ObjectID(),
     company_name,
@@ -532,7 +519,22 @@ hemera.add(action, async (args) => {
     communications_email,
     communications_sms,
     contact,
-    createdBy: user._id,
+    createdBy: userid,
+    destroyed: false
+  };
+
+  const user = {
+    _id: userid,
+    email,
+    phoneNumber: contact,
+    firstName,
+    middleName,
+    lastName,
+    address_1,
+    city,
+    state,
+    country,
+    client:company.id,
     destroyed: false
   };
 
@@ -568,7 +570,8 @@ hemera.add(action, async (args) => {
     phoneNumber: company.contact,
     password: sha1(password),
     email: user.email,
-    destroyed: false
+    destroyed: false,
+    client:company._id
   };
 
   // create base data
@@ -578,6 +581,7 @@ hemera.add(action, async (args) => {
   await db.collection('saasUser').insertOne(user);
 
   await db.collection('company').insertOne(company);
+  await db.collection('client').insertOne(company);
 
   const questionnaire = {
     _id: new ObjectID(),

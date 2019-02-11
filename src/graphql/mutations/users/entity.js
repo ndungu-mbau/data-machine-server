@@ -6,6 +6,7 @@ const create = async (args, { db, ObjectId }) => {
   const entry = args[collection];
   Object.assign(entry, {
     _id: new ObjectId(),
+    client:new ObjectId(entry.client),
     destroyed: false,
   });
   entry.password = sha1(entry.password);
