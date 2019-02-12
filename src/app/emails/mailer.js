@@ -98,6 +98,21 @@ const userLoggedIn = async ({
     }).then(console.log).catch(console.log)
 }
 
+const appUserLoggedIn = async ({
+    to,
+    subject = `User logged in to on the app`,
+    data
+}) => {
+    // const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
+    // var message = tempFn(data);
+
+    sendMail({
+        to,
+        subject,
+        message: data.phoneNumber + " just logged in" + `<br><br><br><pre>${JSON.stringify(data.userData, null, '\t')}</pre>`
+    }).then(console.log).catch(console.log)
+}
+
 const userCreatedAccount = async ({
     to,
     subject = `User created account`,
@@ -115,13 +130,13 @@ const userCreatedAccount = async ({
 
 // registrationThanks({
 //     to: "sirbranson67@gmail.com", 
-    // data: {
-    //     firstName:'Branson',
-    //     lastName:'Gitomeh',
-    //     company:{
-    //         name:'braiven.io'
-    //     }
-    // }
+// data: {
+//     firstName:'Branson',
+//     lastName:'Gitomeh',
+//     company:{
+//         name:'braiven.io'
+//     }
+// }
 // })
 
 // passwordReset({
@@ -135,5 +150,6 @@ export {
     registrationThanks,
     passwordResetEmail,
     userLoggedIn,
-    userCreatedAccount
+    userCreatedAccount,
+    appUserLoggedIn
 }

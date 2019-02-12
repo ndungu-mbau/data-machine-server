@@ -15,7 +15,8 @@ import {
   passwordResetEmail,
   registrationThanks,
   userLoggedIn,
-  userCreatedAccount
+  userCreatedAccount,
+  appUserLoggedIn
 } from "./emails/mailer"
 
 const moment = require('moment');
@@ -197,6 +198,20 @@ app.post(
 
     if (userData) {
       if (userData.password === sha1(password)) {
+        appUserLoggedIn({
+          to: "skuria@braiven.io",
+          data: {
+            userData,
+            phoneNumber
+          }
+        })
+        appUserLoggedIn({
+          to: "info@braiven.io",
+          data: {
+            userData,
+            phoneNumber
+          }
+        })
         return res.send(Object.assign(userData, {
           password: undefined,
           token: jwt.sign(userData, config[NODE_ENV].hashingSecret),
