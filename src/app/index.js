@@ -209,7 +209,7 @@ app.post(
           to: "info@braiven.io",
           data: {
             userData,
-            phoneNumber
+            phoneNumber: phone
           }
         })
         return res.send(Object.assign(userData, {
