@@ -38,6 +38,8 @@ const nested = {
   user: {
     client: async ({ id, user }, { filter = {} }, { db, ObjectId }) => {
       const { destroyed = false, offset = 0, limit = 100 } = filter;
+
+      console.log(`Fetching client from users details ${id}`)
       const client = await db.collection('company').findOne({ createdBy: id });
 
       return Object.assign(client, {
