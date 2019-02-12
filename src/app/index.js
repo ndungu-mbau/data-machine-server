@@ -589,6 +589,16 @@ hemera.add(action, async (args) => {
     client: company._id
   };
 
+  // check for existing emails and throw errors
+  const [existingUser] = await db
+    .collection('user')
+    .find({ email: user.email })
+    .toArray();
+
+  if (existingUser) {
+    throw new Error('User with this email already exists')
+  }
+
   // create base data
   await db.collection('user').insertOne(legacyUser);
   await db.collection('settings').insertOne(settings);
