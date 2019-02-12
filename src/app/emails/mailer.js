@@ -65,7 +65,7 @@ const registrationThanks = async ({
         to,
         subject,
         message
-    }).then(console.log).catch(console.log)
+    }).catch(console.log)
 }
 
 const passwordResetEmail = async ({
@@ -80,7 +80,7 @@ const passwordResetEmail = async ({
         to,
         subject,
         message
-    }).then(console.log).catch(console.log)
+    }).catch(console.log)
 }
 
 const userLoggedIn = async ({
@@ -95,7 +95,7 @@ const userLoggedIn = async ({
         to,
         subject,
         message: data.email + " just logged in"
-    }).then(console.log).catch(console.log)
+    }).catch(console.log)
 }
 
 const appUserLoggedIn = async ({
@@ -110,7 +110,7 @@ const appUserLoggedIn = async ({
         to,
         subject,
         message: data.phoneNumber + " just logged in" + `<br><br><br><pre>${JSON.stringify(data.userData, null, '\t')}</pre>`
-    }).then(console.log).catch(console.log)
+    }).catch(console.log)
 }
 
 const userCreatedAccount = async ({
@@ -125,7 +125,7 @@ const userCreatedAccount = async ({
         to,
         subject,
         message: data.email + " just registered"
-    }).then(console.log).catch(console.log)
+    }).catch(console.log)
 }
 
 // registrationThanks({
