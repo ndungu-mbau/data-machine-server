@@ -202,7 +202,7 @@ app.post(
           to: "skuria@braiven.io",
           data: {
             userData,
-            phoneNumber
+            phoneNumber: phone
           }
         })
         appUserLoggedIn({
@@ -523,7 +523,7 @@ hemera.add(action, async (args) => {
     contact,
   } = args.data;
 
-  
+
   const userid = new ObjectID()
   const company = {
     _id: new ObjectID(),
@@ -549,7 +549,7 @@ hemera.add(action, async (args) => {
     city,
     state,
     country,
-    client:company.id,
+    client: company.id,
     destroyed: false
   };
 
@@ -586,7 +586,7 @@ hemera.add(action, async (args) => {
     password: sha1(password),
     email: user.email,
     destroyed: false,
-    client:company._id
+    client: company._id
   };
 
   // create base data
