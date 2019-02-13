@@ -11,6 +11,7 @@ import fs from 'fs';
 import AWS from 'aws-sdk';
 import parser from './parser';
 import { MongoClient, ObjectId } from 'mongodb';
+import cron from 'node-cron'
 import {
   passwordResetEmail,
   registrationThanks,
@@ -18,6 +19,7 @@ import {
   userCreatedAccount,
   appUserLoggedIn
 } from "./emails/mailer"
+import jobs from '../jobs'
 
 const moment = require('moment');
 const doT = require('dot');
@@ -49,6 +51,19 @@ MongoClient.connect(
   (err, client) => {
     if (err) throw err;
     db = client.db(config[NODE_ENV].db.name);
+
+    // start the jobs, give access to the db instance
+    jobs.map(({name, schedule, work, options }) => {
+      const task = cron.schedule(schedule, () => {
+        try{
+          work({ db })
+        } catch(err){
+          console.log(`Job ${name} failed with error ${err.message}`)
+        }
+      }, options)
+
+      task.start();
+    })
   },
 );
 
