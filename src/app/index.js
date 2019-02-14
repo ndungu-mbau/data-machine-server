@@ -86,9 +86,7 @@ app.use(
   bodyParser.json(),
 );
 
-// if (NODE_ENV === 'test') {
 app.use(morgan('combined'))
-// }
 
 const getWeekBreakDown = (daysBack) => {
   const today = moment().toDate();
@@ -162,7 +160,6 @@ const getWeekBreakDown = (daysBack) => {
   // console.log(JSON.stringify({ weeks }, null, '\t'))
   return weeks;
 };
-
 
 const getDayBreakDown = ({ start, end }) => {
   var now = end;
