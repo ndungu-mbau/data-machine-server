@@ -25,7 +25,22 @@ const create = async (args, { db, ObjectId }) => {
 
 const update = async (args, { db, ObjectId }) => {
   const entry = args[collection];
-  if (entry.password) { entry.password = sha1(entry.password); }
+  if (entry.password) {
+    entry.password = sha1(entry.password);
+  }
+
+  if (entry.address || entry.contact || entry.phoneNumber) {
+    db.collection('saasUser')
+      .updateOne({ _id: new ObjectId(entry.id) }, {
+        $set: Object.assign({}, entry, {
+          id: undefined,
+          phoneNumber: entry.phoneNumber,
+          address_1: entry.address,
+          city: entry.city
+        })
+      });
+
+  }
   return db.collection(collection)
     .updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined }) });
 };

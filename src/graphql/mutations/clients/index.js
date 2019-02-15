@@ -8,7 +8,10 @@ import {
 const type = `
   input newclient {
     id: String,
-    name	: String
+    name: String,
+    comms_sms: String,
+    contact_email: String,
+    reg_id: String
   }
 
   type clientMutations {

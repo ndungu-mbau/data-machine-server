@@ -6,7 +6,6 @@ const type = `
     name: String,
     reg_id: String,
     contact_email: String,
-    contact: String,
     comms_sms:String,
     projects:[project],
     teams:[team],
@@ -38,6 +37,9 @@ const clients = async (_, { filter = {} }, { db }) => {
 
   return data.map(entry => Object.assign({}, entry, {
     id: entry._id,
+    reg_id: entry.company_registration_id,
+    contact_email: company.company_email,
+    comms_sms:company.contact,
   }));
 };
 

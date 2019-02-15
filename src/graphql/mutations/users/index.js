@@ -12,6 +12,8 @@ const type = `
     middleName: String,
     lastName: String,
     email: String,
+    city: String,
+    address: String,
     phoneNumber: String,
     mobileMoneyNumber: String,
     password: String,

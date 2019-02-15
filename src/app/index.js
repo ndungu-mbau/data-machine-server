@@ -550,6 +550,14 @@ hemera.add(action, async (args) => {
     destroyed: false
   };
 
+  const client = {
+    _id: new ObjectID(),
+    name:company_name,
+    contact,
+    createdBy: userid,
+    destroyed: false
+  };
+
   const user = {
     _id: userid,
     email,
@@ -618,7 +626,7 @@ hemera.add(action, async (args) => {
   await db.collection('saasUser').insertOne(user);
 
   await db.collection('company').insertOne(company);
-  await db.collection('client').insertOne(company);
+  // await db.collection('client').insertOne(client);
 
   const questionnaire = {
     _id: new ObjectID(),

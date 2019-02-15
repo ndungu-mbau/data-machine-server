@@ -50,7 +50,10 @@ const nested = {
 
       return Object.assign(client, {
         id: client._id,
-        name: client.company_name
+        name: client.company_name,
+        reg_id: client.company_registration_id,
+        contact_email: client.company_email,
+        comms_sms: client.communications_sms,
       });
     },
     teams: async ({ id }, { filter = {} }, { db, ObjectId }) => {
