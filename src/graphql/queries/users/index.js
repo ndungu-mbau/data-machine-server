@@ -5,6 +5,8 @@ const type = `
     middleName: String,
     lastName: String,
     email: String,
+    city: String,
+    address: String,
     phoneNumber: String,
     mobileMoneyNumber: String,
     teams:[team],
@@ -20,9 +22,13 @@ const queries = `
 const user = async (_, { filter = {} } = {}, { db, user }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
   const [userDetails] = await db.collection('user').find({ phoneNumber: user.phoneNumber }).toArray();
+  const [saasUserDetails] = await db.collection('saasUser').find({ phoneNumber: user.phoneNumber }).toArray();
 
   userDetails.id = userDetails._id;
-  return userDetails;
+  return Object.assign({}, userDetails, {
+    address: saasUserDetails.address_1,
+    city: saasUserDetails.city
+  });
 };
 
 const users = async (_, { filter = {} } = {}, { db }) => {
