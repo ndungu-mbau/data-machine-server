@@ -36,10 +36,7 @@ const clients = async (_, { filter = {} }, { db }) => {
   const data = await db.collection("client").find({ destroyed: false }).toArray();
 
   return data.map(entry => Object.assign({}, entry, {
-    id: entry._id,
-    reg_id: entry.company_registration_id,
-    contact_email: company.company_email,
-    comms_sms:company.contact,
+    id: entry._id
   }));
 };
 
