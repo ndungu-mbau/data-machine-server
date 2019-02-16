@@ -60,7 +60,7 @@ const nested = {
     stats: async ({ id }, { filter = {} }, { db }) => {
       const teams = await db.collection("team").find({ client: id.toString(), destroyed: false }).count();
       const projects = await db.collection("project").find({ client: id.toString(), destroyed: false }).count()
-      const users = await db.collection("users").find({ client: id.toString(), destroyed: false }).count()
+      const users = await db.collection("user").find({ client: id, destroyed: false }).count()
       const submissions = await db.collection("submission").find({ client: id.toString(), destroyed: false }).count()
 
       return {
