@@ -1,6 +1,14 @@
 import { root as questionnaireRoot } from '../questionnaires';
 
 const type = `
+  type stats{
+    projects: Float,
+    submissions: Float,
+    teams: Float,
+    users:Float,
+    fileUploads: Float
+  }
+
   type client {
     id: String,
     name: String,
@@ -11,6 +19,7 @@ const type = `
     teams:[team],
     users:[user],
     billing:billing,
+    stats:stats
   }
 `;
 
@@ -47,6 +56,19 @@ const nested = {
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
+    },
+    stats: async ({ id }, { filter = {} }, { db }) => {
+      const teams = await db.collection("team").find({ client: id.toString(), destroyed: false }).count();
+      const projects = await db.collection("project").find({ client: id.toString(), destroyed: false }).count()
+      const users = await db.collection("users").find({ client: id.toString(), destroyed: false }).count()
+      const submissions = await db.collection("submission").find({ client: id.toString(), destroyed: false }).count()
+
+      return {
+        teams,
+        projects,
+        users,
+        submissions
+      }
     },
     users: async ({ id }, { filter = {} }, { db }) => {
       const data = await db.collection("user").find({ client: id }).toArray();
