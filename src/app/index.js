@@ -53,11 +53,11 @@ MongoClient.connect(
     db = client.db(config[NODE_ENV].db.name);
 
     // start the jobs, give access to the db instance
-    jobs.map(({name, schedule, work, options }) => {
+    jobs.map(({ name, schedule, work, options }) => {
       const task = cron.schedule(schedule, () => {
-        try{
+        try {
           work({ db })
-        } catch(err){
+        } catch (err) {
           console.log(`Job ${name} failed with error ${err.message}`)
         }
       }, options)
@@ -552,7 +552,7 @@ hemera.add(action, async (args) => {
 
   const client = {
     _id: new ObjectID(),
-    name:company_name,
+    name: company_name,
     contact,
     createdBy: userid,
     destroyed: false
@@ -836,10 +836,10 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
       }))
       .count()
 
-    if (count !== 0) {
-      day.count = count
-      info[x] = day
-    }
+    // if (count !== 0) {
+    day.count = count
+    info[x] = day
+    // }
   }
 
   res.send(info);
