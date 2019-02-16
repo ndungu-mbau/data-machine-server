@@ -1,13 +1,28 @@
 const collection = "project"
 
 const create = async (args, { db, ObjectId }) => {
-
-  console.log(ObjectId)
   const entry = args[collection]
   Object.assign(entry, {
     _id: new ObjectId(),
     destroyed: false
   })
+
+  if (entry.questionnaire === 'newBlank') {
+    const questionnaire = {
+      _id: new ObjectId(),
+      name: entry.name,
+      project: entry._id.toString(),
+      destroyed: false
+    }
+
+    entry.questionnaire = questionnaire._id
+    entry.id = entry._id
+
+    await db.collection('questionnaire').insertOne(questionnaire)
+    await db.collection(collection).insertOne(entry)
+
+    return entry
+  }
 
   const questionnaire = {
     _id: new ObjectId(),
