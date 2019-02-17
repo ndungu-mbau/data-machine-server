@@ -48,6 +48,12 @@ const nested = {
       console.log(`Fetching client from users details ${id}`)
       const client = await db.collection('company').findOne({ createdBy: id });
 
+      if (!client) {
+        return {
+          id: 'legacy account'
+        }
+      }
+
       return Object.assign(client, {
         id: client._id,
         name: client.company_name,
