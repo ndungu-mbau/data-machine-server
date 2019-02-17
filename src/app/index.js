@@ -162,25 +162,23 @@ const getWeekBreakDown = (daysBack) => {
 };
 
 const getDayBreakDown = ({ start, end }) => {
-  var now = end;
-  var then = start;
+  var now = start;
+  var then = end;
 
   const dayCountDays = {}
 
   // const x = moment(now).diff(moment(then))
-  const dayNumber = moment(now).diff(moment(then), 'days')
+  const dayNumber = moment(then).diff(moment(now), 'days')
 
   let currentDay;
-  for (let count = 1; count < dayNumber; count++) {
+  for (let count = 0; count < dayNumber + 1; count++) {
 
-    const t = moment(start)
+    const t = moment(end)
       .subtract(count, 'day')
       .startOf('day');
 
-    dayCountDays[count] = {
-      start: moment(t).startOf('day'),
-      end: moment(t).endOf('day'),
-    }
+
+    dayCountDays[count] = moment(t)
 
   }
 
@@ -824,20 +822,35 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
   const info = {};
 
   for (const x in Object.values(days)) {
-    const day = Object.values(days)[x]
+    let day = Object.values(days)[x]
+    const end = day.endOf('day').toDate()
+    const start = day.startOf('day').toDate()
+
+    const completedAt = {
+      $gte: start,
+      $lte: end
+    }
+
+
+    // console.log(JSON.stringify(req.body, null, "\t"))
 
     const count = await db
       .collection('submision')
-      .find(Object.assign(req.body, {
-        completedAt: {
-          $gte: day.start.toDate(),
-          $lte: day.end.toDate(),
-        }
+      .find(Object.assign({}, {
+        completedAt
       }))
       .count()
 
+    // console.log(completedAt, day, count,
+    //   moment.duration(moment(completedAt.$gte).diff(moment(completedAt.$lte))).humanize()
+    // )
+
     // if (count !== 0) {
-    day.count = count
+    day = {
+      start,
+      end,
+      count
+    }
     info[x] = day
     // }
   }
