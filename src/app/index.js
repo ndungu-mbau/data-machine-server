@@ -11,15 +11,15 @@ import fs from 'fs';
 import AWS from 'aws-sdk';
 import parser from './parser';
 import { MongoClient, ObjectId } from 'mongodb';
-import cron from 'node-cron'
+import cron from 'node-cron';
 import {
   passwordResetEmail,
   registrationThanks,
   userLoggedIn,
   userCreatedAccount,
-  appUserLoggedIn
-} from "./emails/mailer"
-import jobs from '../jobs'
+  appUserLoggedIn,
+} from './emails/mailer';
+import jobs from '../jobs';
 
 const moment = require('moment');
 const doT = require('dot');
@@ -53,17 +53,19 @@ MongoClient.connect(
     db = client.db(config[NODE_ENV].db.name);
 
     // start the jobs, give access to the db instance
-    jobs.map(({ name, schedule, work, options }) => {
+    jobs.map(({
+      name, schedule, work, options,
+    }) => {
       const task = cron.schedule(schedule, () => {
         try {
-          work({ db })
+          work({ db });
         } catch (err) {
-          console.log(`Job ${name} failed with error ${err.message}`)
+          console.log(`Job ${name} failed with error ${err.message}`);
         }
-      }, options)
+      }, options);
 
       task.start();
-    })
+    });
   },
 );
 
@@ -86,7 +88,7 @@ app.use(
   bodyParser.json(),
 );
 
-app.use(morgan('combined'))
+app.use(morgan('combined'));
 
 const getWeekBreakDown = (daysBack) => {
   const today = moment().toDate();
@@ -162,24 +164,22 @@ const getWeekBreakDown = (daysBack) => {
 };
 
 const getDayBreakDown = ({ start, end }) => {
-  var now = start;
-  var then = end;
+  const now = start;
+  const then = end;
 
-  const dayCountDays = {}
+  const dayCountDays = {};
 
   // const x = moment(now).diff(moment(then))
-  const dayNumber = moment(then).diff(moment(now), 'days')
+  const dayNumber = moment(then).diff(moment(now), 'days');
 
   let currentDay;
   for (let count = 0; count < dayNumber + 1; count++) {
-
     const t = moment(end)
       .subtract(count, 'day')
       .startOf('day');
 
 
-    dayCountDays[count] = moment(t)
-
+    dayCountDays[count] = moment(t);
   }
 
   return dayCountDays;
@@ -209,19 +209,19 @@ app.post(
     if (userData) {
       if (userData.password === sha1(password)) {
         appUserLoggedIn({
-          to: "skuria@braiven.io",
+          to: 'skuria@braiven.io',
           data: {
             userData,
-            phoneNumber: phone
-          }
-        })
+            phoneNumber: phone,
+          },
+        });
         appUserLoggedIn({
-          to: "info@braiven.io",
+          to: 'info@braiven.io',
           data: {
             userData,
-            phoneNumber: phone
-          }
-        })
+            phoneNumber: phone,
+          },
+        });
         return res.send(Object.assign(userData, {
           password: undefined,
           token: jwt.sign(userData, config[NODE_ENV].hashingSecret),
@@ -264,11 +264,11 @@ app.post(
 
       if (userData.password === sha1(password)) {
         userLoggedIn({
-          to: "sirbranson67@gmail.com",
+          to: 'sirbranson67@gmail.com',
           data: {
-            email
-          }
-        })
+            email,
+          },
+        });
         return res.send(Object.assign(userData, {
           password: undefined,
           token: jwt.sign(
@@ -292,31 +292,32 @@ app.post(
       email: Joi
         .string()
         .email()
-        .required()
+        .required(),
     }),
   }),
   async (req, res) => {
     const { email } = req.body;
-    const id = new ObjectID()
+    const id = new ObjectID();
     passwordResetEmail({
       to: email,
       data: {
         id,
         host: process.env.NODE_ENV === 'production'
           ? 'https://app.braiven.io'
-          : 'http://localhost:3000'
-      }
-    })
+          : 'http://localhost:3000',
+      },
+    });
 
-    res.send()
+    res.send();
     await db
       .collection('loginRequest')
       .insertOne({
         _id: id,
         email,
-        time: new Date()
+        time: new Date(),
       });
-  })
+  },
+);
 
 app.post(
   '/saasAuth/resetPassword/:resetRequestId',
@@ -327,12 +328,12 @@ app.post(
         .required(),
       confirm: Joi
         .string()
-        .required()
+        .required(),
     }),
   }),
   async (req, res) => {
     const { confirm, password } = req.body;
-    const { resetRequestId } = req.params
+    const { resetRequestId } = req.params;
 
     if (confirm !== password) {
       res.status(401)
@@ -356,7 +357,7 @@ app.post(
       await db
         .collection('user')
         .updateOne({ email: requestData.email }, { $set: { password: sha1(password) } });
-      return res.send()
+      return res.send();
     }
 
     return res
@@ -408,7 +409,7 @@ app.post(
 app.post('/submision', async (req, res) => {
   const submission = req.body;
 
-  console.log(JSON.stringify({ submission }, null, '\t'))
+  console.log(JSON.stringify({ submission }, null, '\t'));
 
   const [existingSubmission] = await db
     .collection('submision')
@@ -433,7 +434,7 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
       }
 
       if (value === false) {
@@ -534,7 +535,7 @@ hemera.add(action, async (args) => {
   } = args.data;
 
 
-  const userid = new ObjectID()
+  const userid = new ObjectID();
   const company = {
     _id: new ObjectID(),
     company_name,
@@ -545,7 +546,7 @@ hemera.add(action, async (args) => {
     communications_sms,
     contact,
     createdBy: userid,
-    destroyed: false
+    destroyed: false,
   };
 
   const client = {
@@ -553,7 +554,7 @@ hemera.add(action, async (args) => {
     name: company_name,
     contact,
     createdBy: userid,
-    destroyed: false
+    destroyed: false,
   };
 
   const user = {
@@ -568,7 +569,7 @@ hemera.add(action, async (args) => {
     state,
     country,
     client: company.id,
-    destroyed: false
+    destroyed: false,
   };
 
   const settings = {
@@ -577,7 +578,7 @@ hemera.add(action, async (args) => {
     membership,
     promotions,
     accept,
-    destroyed: false
+    destroyed: false,
   };
 
   const billing = {
@@ -604,7 +605,7 @@ hemera.add(action, async (args) => {
     password: sha1(password),
     email: user.email,
     destroyed: false,
-    client: company._id
+    client: company._id,
   };
 
   // check for existing emails and throw errors
@@ -614,7 +615,7 @@ hemera.add(action, async (args) => {
     .toArray();
 
   if (existingUser) {
-    throw new Error('User with this email already exists')
+    throw new Error('User with this email already exists');
   }
 
   // create base data
@@ -630,35 +631,35 @@ hemera.add(action, async (args) => {
     _id: new ObjectID(),
     name: 'Sample questionnaire',
     client: company._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   const project = {
     _id: new ObjectID(),
     name: 'Sample project',
     client: company._id.toString(),
     questionnaire: questionnaire._id,
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   const team = {
     _id: new ObjectID(),
     name: 'Sample team',
     client: company._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   const project_team = {
     project: project._id.toString(),
     team: team._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   const user_teams = {
     user: user._id.toString(),
     team: team._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   await db.collection('project').insertOne(project);
   await db.collection('team').insertOne(team);
@@ -670,8 +671,8 @@ hemera.add(action, async (args) => {
     _id: new ObjectID(),
     name: 'Sample page',
     questionnaire: questionnaire._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   // create questionnire things
   await db.collection('page').insertOne(page);
@@ -680,8 +681,8 @@ hemera.add(action, async (args) => {
     _id: new ObjectID(),
     name: 'Sample group',
     page: page._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   // create questionnire things
   await db.collection('group').insertOne(group);
@@ -691,8 +692,8 @@ hemera.add(action, async (args) => {
     type: 'instruction',
     placeholder: 'Sample instruction',
     group: group._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   // create questionnire things
   await db.collection('question').insertOne(question);
@@ -712,17 +713,17 @@ hemera.add(action, async (args) => {
     to: user.email,
     data: Object.assign({}, legacyUser, {
       company: {
-        name: company.company_name
-      }
-    })
-  })
+        name: company.company_name,
+      },
+    }),
+  });
 
   userCreatedAccount({
-    to: "sirbranson67@gmail.com",
+    to: 'sirbranson67@gmail.com',
     data: {
-      email
-    }
-  })
+      email,
+    },
+  });
   // send out a sample project created email
   // send out a process guide email
   // send out a download our app email
@@ -737,7 +738,7 @@ hemera.add(action, async (args) => {
     token: jwt.sign(
       user
       , config[NODE_ENV].hashingSecret,
-    )
+    ),
   };
 });
 
@@ -775,27 +776,28 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
   const { user: { phoneNumber = '' } = { phoneNumber: '' } } = req;
 
   const promises = [];
-  Object.keys(weeks).map(async weekKey => Object.keys(weeks[weekKey].daysInWeek).map(async (day) => {
-    promises.push(new Promise(async (resolve, reject) => {
-      const { start, end } = weeks[weekKey].daysInWeek[day];
-      const submisions = await db
-        .collection('submision')
-        .find(Object.assign({
-          completedAt: {
-            $gte: start.toDate(),
-            $lte: end.toDate(),
-          },
-          phoneNumber,
-        }))
-        .count();
+  Object.keys(weeks).map(async weekKey => Object.keys(weeks[weekKey].daysInWeek)
+    .map(async (day) => {
+      promises.push(new Promise(async (resolve, reject) => {
+        const { start, end } = weeks[weekKey].daysInWeek[day];
+        const submisions = await db
+          .collection('submision')
+          .find(Object.assign({
+            completedAt: {
+              $gte: start.toDate(),
+              $lte: end.toDate(),
+            },
+            phoneNumber,
+          }))
+          .count();
 
-      resolve({
-        submisions,
-        weekKey,
-        day,
-      });
+        resolve({
+          submisions,
+          weekKey,
+          day,
+        });
+      }));
     }));
-  }));
 
   const residue = await Promise.all(promises);
 
@@ -806,40 +808,39 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
 });
 
 app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
-  const { start, end } = req.params
+  const { start, end } = req.params;
   const days = getDayBreakDown({
     start: new Date(start),
-    end: new Date(end)
+    end: new Date(end),
   });
 
   const randomCount = ({ min = 0, max = 10 }) => {
     // and the formula is:
-    var random = Math.floor(Math.random() * (max - min + 1)) + min;
+    const random = Math.floor(Math.random() * (max - min + 1)) + min;
 
-    return random
-  }
+    return random;
+  };
 
   const info = {};
 
   for (const x in Object.values(days)) {
-    let day = Object.values(days)[x]
-    const end = day.endOf('day').toDate()
-    const start = day.startOf('day').toDate()
+    let day = Object.values(days)[x];
+    const end = day.endOf('day').toDate();
+    const start = day.startOf('day').toDate();
 
     const completedAt = {
       $gte: start,
-      $lte: end
-    }
-
+      $lte: end,
+    };
 
     // console.log(JSON.stringify(req.body, null, "\t"))
 
     const count = await db
       .collection('submision')
-      .find(Object.assign({}, {
-        completedAt
+      .find(Object.assign({}, req.body, {
+        completedAt,
       }))
-      .count()
+      .count();
 
     // console.log(completedAt, day, count,
     //   moment.duration(moment(completedAt.$gte).diff(moment(completedAt.$lte))).humanize()
@@ -849,9 +850,9 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
     day = {
       start,
       end,
-      count
-    }
-    info[x] = day
+      count,
+    };
+    info[x] = day;
     // }
   }
 
