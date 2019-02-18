@@ -25,9 +25,9 @@ const user = async (_, { filter = {} } = {}, { db, user }) => {
   const [saasUserDetails] = await db.collection('saasUser').find({ phoneNumber: user.phoneNumber }).toArray();
 
   userDetails.id = userDetails._id;
-  return Object.assign({}, userDetails, {
+  return Object.assign({}, userDetails, !saasUserDetails ? {} : {
     address: saasUserDetails.address_1,
-    city: saasUserDetails.city
+    city: saasUserDetails.city,
   });
 };
 
@@ -45,13 +45,13 @@ const nested = {
     client: async ({ id, user }, { filter = {} }, { db, ObjectId }) => {
       const { destroyed = false, offset = 0, limit = 100 } = filter;
 
-      console.log(`Fetching client from users details ${id}`)
+      console.log(`Fetching client from users details ${id}`);
       const client = await db.collection('company').findOne({ createdBy: id });
 
       if (!client) {
         return {
-          id: 'legacy account'
-        }
+          id: 'legacy account',
+        };
       }
 
       return Object.assign(client, {
@@ -67,9 +67,13 @@ const nested = {
       const relations = await db.collection('user_teams').find({ user: id.toString() }).toArray();
       const teams = await db.collection('team').find({ _id: { $in: relations.map(relation => ObjectId(relation.team)) } }).toArray();
 
-      return teams.map(entry => Object.assign({}, entry, {
+      const teamsInfo = teams.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
+
+      console.log(teamsInfo);
+
+      return teamsInfo;
     },
   },
 };
