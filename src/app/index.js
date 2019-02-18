@@ -823,37 +823,38 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
 
   const info = {};
 
-  for (const x in Object.values(days)) {
-    let day = Object.values(days)[x];
-    const end = day.endOf('day').toDate();
-    const start = day.startOf('day').toDate();
+  for (const x in Object.values(days)) { /* eslint-disable-line no-restricted-syntax */
+    if (Object.prototype.hasOwnProperty.call(Object.values(days), x)) {
+      let day = Object.values(days)[x];
+      const endTime = day.endOf('day').toDate();
+      const startTime = day.startOf('day').toDate();
 
-    const completedAt = {
-      $gte: start,
-      $lte: end,
-    };
+      const completedAt = {
+        $gte: startTime,
+        $lte: endTime,
+      };
 
-    // console.log(JSON.stringify(req.body, null, "\t"))
+      // console.log(JSON.stringify(req.body, null, "\t"))
 
-    const count = await db
-      .collection('submision')
-      .find(Object.assign({}, req.body, {
-        completedAt,
-      }))
-      .count();
+      const data = await db /* eslint-disable-line no-await-in-loop */
+        .collection('submision')
+        .find(Object.assign({}, req.body, {
+          completedAt,
+        })).toArray();
 
-    // console.log(completedAt, day, count,
-    //   moment.duration(moment(completedAt.$gte).diff(moment(completedAt.$lte))).humanize()
-    // )
+      // console.log(completedAt, day, count,
+      //   moment.duration(moment(completedAt.$gte).diff(moment(completedAt.$lte))).humanize()
+      // )
 
-    // if (count !== 0) {
-    day = {
-      start,
-      end,
-      count,
-    };
-    info[x] = day;
-    // }
+      day = {
+        start,
+        end,
+        count: data.length,
+        // attatch data thats used on the admin ui
+        data: data.map(({ _id, GPS_longitude: long, GPS_latitude: lat }) => ({ _id, long, lat })),
+      };
+      info[x] = day;
+    }
   }
 
   res.send(info);
