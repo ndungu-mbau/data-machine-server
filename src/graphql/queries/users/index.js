@@ -21,7 +21,7 @@ const queries = `
 
 const user = async (_, { filter = {} } = {}, { db, user }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const userDetails = Object.assign(
+  const userDetailsForSearch = Object.assign(
     {},
     user.email ? {
       email: user.email
@@ -31,9 +31,9 @@ const user = async (_, { filter = {} } = {}, { db, user }) => {
     } : {}
   )
 
-  console.log('finding user', { userDetails })
-  const [userDetails] = await db.collection('user').find(userDetails).toArray();
-  const [saasUserDetails] = await db.collection('saasUser').find(userDetails).toArray();
+  console.log('finding user', { userDetailsForSearch })
+  const [userDetails] = await db.collection('user').find(userDetailsForSearch).toArray();
+  const [saasUserDetails] = await db.collection('saasUser').find(userDetailsForSearch).toArray();
   
   console.log('found user', { userDetails })
   userDetails.id = userDetails._id;
