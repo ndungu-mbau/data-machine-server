@@ -409,7 +409,7 @@ app.post(
 app.post('/submision', async (req, res) => {
   const submission = req.body;
 
-  console.log(JSON.stringify({ submission }, null, '\t'));
+  // console.log(JSON.stringify({ submission }, null, '\t'));
 
   const [existingSubmission] = await db
     .collection('submision')
@@ -427,16 +427,6 @@ app.post('/submision', async (req, res) => {
   // find the files and use they data in the url to generate the url
   Object.entries(submission).map(([key, value]) => {
     if (value) {
-      if (value.toString().includes('file://')) {
-        const [, ext] = value.split('.');
-
-        cleanCopy[
-          key
-        ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
-          submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
-      }
-
       if (value === false) {
         cleanCopy[key] = 0;
         return;
@@ -456,11 +446,32 @@ app.post('/submision', async (req, res) => {
     }
   });
 
+
+  Object.entries(submission).map(([key, value]) => {
+    if (value) {
+      if (value.toString().includes('file://')) {
+        const [, ext] = value.split('.');
+
+        cleanCopy[
+          key
+        ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
+          submission.questionnaireId
+          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+
+        console.log("=====>", cleanCopy[key])
+      }
+    }
+  })
+  console.log(JSON.stringify({ cleanCopy }, null, '\t'))
+
+
   const entry = Object.assign({}, cleanCopy, {
     createdAt: new Date(),
     destroyed: false,
     userId: req.user ? req.user._id : undefined,
   });
+
+
 
   await db.collection('submision').insertOne(entry);
 
