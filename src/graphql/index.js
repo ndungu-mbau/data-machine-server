@@ -4,6 +4,8 @@ import { MongoClient, ObjectId } from 'mongodb';
 
 import { typeQueries, queryRoot } from './queries';
 import { typeMutations, mutationRoot } from './mutations';
+import { graphql, buildSchema } from 'graphql';
+
 
 import config from '../config';
 
@@ -52,6 +54,51 @@ const context = ({ req }) => {
   throw new Error('Please provide auth headers');
 };
 
-const server = new ApolloServer({ typeDefs, resolvers, context });
+// --------------------------native graphql js-------for internal use
+var schema = buildSchema(`
+  ${typeQueries},
+  ${typeMutations}
+`);
+
+var root = {
+  Query: {
+    hello: () => {
+      return 'Hello world!';
+    },
+  },
+  Mutation: {
+    honk: () => {
+      return 'honk!';
+    },
+  },
+  // bellow works
+  // hello: () => {
+  //   return 'Hello world!';
+  // },
+};
+
+// console.log(resolvers)
+
+graphql(schema, `query{
+  hello
+}`, root).then((response) => {
+  console.log(response);
+  // { data: { hello: null } }
+});
+
+// ----------------------------------------------------------------------
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context,
+  formatError(error) {
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+      // logging the errors can help in development
+      console.error(error);
+    }
+    return error;
+  },
+});
 
 export default server;

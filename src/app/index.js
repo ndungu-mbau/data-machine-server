@@ -784,7 +784,7 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
   const { days = 30 } = req.params;
   const weeks = getWeekBreakDown(days);
 
-  const { user: { phoneNumber = '' } = { phoneNumber: '' } } = req;
+  const { phoneNumber } = req.user;
 
   const promises = [];
   Object.keys(weeks).map(async weekKey => Object.keys(weeks[weekKey].daysInWeek)
@@ -793,13 +793,13 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
         const { start, end } = weeks[weekKey].daysInWeek[day];
         const submisions = await db
           .collection('submision')
-          .find(Object.assign({
-            completedAt: {
+          .find({
+            createdAt: {
               $gte: start.toDate(),
               $lte: end.toDate(),
             },
-            phoneNumber,
-          }))
+            __agentPhoneNumber: phoneNumber,
+          })
           .count();
 
         resolve({
