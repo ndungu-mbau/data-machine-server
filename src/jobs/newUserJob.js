@@ -55,6 +55,7 @@ export default {
             }
           })
           .then(el => {
+              console.log(el)
           return el;
           })
           .catch(err => {
@@ -62,6 +63,7 @@ export default {
           });
       }
     });
+    console.log(validatedUserobj)
   },
   opts: {
     schedule: true
