@@ -44,8 +44,10 @@ export default {
               }
         }).then((el)=>{
             console.log(el)
+        }).catch((err)=>{
+            console.log(err)
         })
-      }
+      } 
     });
   },
   opts: {
