@@ -33,6 +33,7 @@
     "sha1": "^1.1.1",
     "source-map-support": "^0.5.10",
     "splunk-sdk": "^1.8.4",
+    "validator": "^10.11.0",
     "vm2": "^3.6.4"
   },
   "main": "build/index.bundle.js",
