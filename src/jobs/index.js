@@ -3,7 +3,7 @@ import newUser from "./newUserJob"
 
 const jobs = [
     newUser,
-    // testJob
+    testJob
     
 ]
 

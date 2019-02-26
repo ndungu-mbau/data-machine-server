@@ -16,38 +16,51 @@ export default {
     let validatedUserobj = users.map(el => {
       validateUserObj(el);
 
-       function validateUserObj(el) {
-        let checkMail = new Promise((resolve,reject) => {
+      function validateUserObj(el) {
+        let checkMail = new Promise((resolve, reject) => {
           if (!validator.isEmail(el.email)) {
-            resolve({ ...el, EmailCheck: "Invalid email", flagged: true }) ;
+            resolve({ ...el, EmailCheck: "Invalid email", flagged: true });
           } else {
-            resolve( { ...el });
+            resolve({ ...el });
           }
         });
-        checkMail.then((el)=>{
-            if (el.firstName.length === 0  ) {
-                return({ ...el, firstNameCheck: "empty firstName", flagged: true }) ;
-              } else {
-                return( { ...el });
-              }
-        }).then((el)=>{
-            if (el.lastName.length === 0  ) {
-                return({ ...el, lastNameCheck: "empty lastName", flagged: true }) ;
-              } else {
-                return( { ...el });
-              }
-        }).then((el)=>{
-            if (el.middleName.length === 0  ) {
-                return({ ...el, middleNameCheck: "empty lastName", flagged: true }) ;
-              } else {
-                return( { ...el });
-              }
-        }).then((el)=>{
-            console.log(el)
-        }).catch((err)=>{
-            console.log(err)
-        })
-      } 
+        checkMail
+          .then(el => {
+            if (el.firstName.length === 0) {
+              return {
+                ...el,
+                firstNameCheck: "empty firstName",
+                flagged: true
+              };
+            } else {
+              return { ...el };
+            }
+          })
+          .then(el => {
+            if (el.lastName.length === 0) {
+              return { ...el, lastNameCheck: "empty lastName", flagged: true };
+            } else {
+              return { ...el };
+            }
+          })
+          .then(el => {
+            if (el.middleName.length === 0) {
+              return {
+                ...el,
+                middleNameCheck: "empty lastName",
+                flagged: true
+              };
+            } else {
+              return { ...el };
+            }
+          })
+          .then(el => {
+          return el;
+          })
+          .catch(err => {
+            return err;
+          });
+      }
     });
   },
   opts: {
