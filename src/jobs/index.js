@@ -3,8 +3,8 @@ import newUser from "./newUserJob"
 import emailJob from "./emailJob"
 const jobs = [
     emailJob,
-    testJob
-    // newUser
+    testJob,
+    newUser
    
     
 ]
