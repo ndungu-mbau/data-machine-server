@@ -20,7 +20,7 @@ export default {
       validateUserObj(el);
 
       function validateUserObj(el) {
-        // delete el._id;
+        //check user mail field and return a promise
         let checkMail = new Promise((resolve, reject) => {
           if (!validator.isEmail(el.email)) {
             resolve({ ...el, EmailCheck: "Invalid email", flagged: true });
@@ -30,6 +30,7 @@ export default {
         });
 
         checkMail
+          //check firstmail and return a thenable
           .then(el => {
             if (el.firstName.length === 0) {
               return {
@@ -41,6 +42,7 @@ export default {
               return { ...el };
             }
           })
+          //check lastname
           .then(el => {
             if (el.lastName.length === 0) {
               return { ...el, lastNameCheck: "empty lastName", flagged: true };
@@ -48,6 +50,7 @@ export default {
               return { ...el };
             }
           })
+          //check lastname
           .then(el => {
             if (el.middleName.length === 0) {
               return {
@@ -59,24 +62,29 @@ export default {
               return { ...el };
             }
           })
+          //insert the object in validateUsers collection
           .then(el => {
             name(el);
             async function name(el) {
-              console.log(el)
-           console.log(db.collection("validateUsers").replaceOne({email:el.email},{ ...el} ,{upsert:true}))   
+              console.log(
+                db
+                  .collection("validateUsers")
+                  .replaceOne({ email: el.email }, { ...el }, { upsert: true })
+              );
             }
           })
           .catch(err => {
             return err;
           });
-            
       }
-      let validusers= db.collection("validateUsers").find({}).toArray()
-      console.log(validusers)
-       
-    //  db.collection("validateUserObjcol").drop()
-    });
+      let validusers = db
+        .collection("validateUsers")
+        .find({})
+        .toArray();
+      console.log(validusers);
 
+      //  db.collection("validateUserObjcol").drop()
+    });
   },
   opts: {
     schedule: true
