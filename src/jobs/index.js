@@ -1,9 +1,11 @@
 import testJob from "./testJob"
 import newUser from "./newUserJob"
-
+import emailJob from "./emailJob"
 const jobs = [
-    newUser,
+    emailJob,
     testJob
+    // newUser
+   
     
 ]
 
