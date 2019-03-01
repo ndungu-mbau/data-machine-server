@@ -13,7 +13,7 @@ const parameters = {
 export default {
   name: "EMAIL_JOB",
   schedule: "* * * * *",
-  emediate:true,
+  emediate:false,
   async work({ db }) {
     console.log("sending ",parameters.mail_name," emails");
 

@@ -5,8 +5,6 @@ const jobs = [
     emailJob,
     testJob,
     newUser
-   
-    
 ]
 
 export default jobs

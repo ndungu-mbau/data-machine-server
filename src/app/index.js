@@ -60,16 +60,16 @@ MongoClient.connect(
         work({ db });
       }
 
-      if(NODE_ENV !== 'development')
-      const task = cron.schedule(schedule, () => {
-        try {
-          work({ db });
-        } catch (err) {
-          console.log(`Job ${name} failed with error ${err.message}`);
-        }
-      }, options);
-
-      task.start();
+      if(NODE_ENV !== 'development'){
+        const task = cron.schedule(schedule, () => {
+          try {
+            work({ db });
+          } catch (err) {
+            console.log(`Job ${name} failed with error ${err.message}`);
+          }
+        }, options);
+        task.start();
+      }
     });
   },
 );
