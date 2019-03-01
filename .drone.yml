@@ -9,7 +9,9 @@ pipeline:
     password: password
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-
+    when:
+      branch:
+      - master
 
   rancher:
     image: peloton/drone-rancher
@@ -21,6 +23,9 @@ pipeline:
     start_first: true
     confirm: true
     timeout: 10000
+    when:
+      branch:
+      - master
 
   announce:
     image: appleboy/drone-telegram
@@ -35,13 +40,12 @@ pipeline:
       @{{commit.author}} <a href="{{build.Link}}">{{build.event}}ed</a> to <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}">{{repo.owner}}/{{repo.name}}</a>
 
       {{commit.email}}: {{commit.message}}
-      
+
       CI ✅ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
       {{else}}
         @{{commit.author}} <a href="{{build.Link}}">{{build.event}}ed</a> to <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}">{{repo.owner}}/{{repo.name}}</a>
 
         {{commit.email}}: {{commit.message}}
-        
+
         CI ❌ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
       {{/success}}
-    
