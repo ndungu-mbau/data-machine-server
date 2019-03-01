@@ -37,7 +37,7 @@ const hemera = new Hemera(nats, {
 
 AWS.config.loadFromPath('aws_config.json');
 
-const { NODE_ENV = 'development' } = process.env;
+const { NODE_ENV = 'development',DISABLE_JOBS=false } = process.env;
 
 const multer = Multer({
   dest: 'uploads/',
@@ -54,17 +54,22 @@ MongoClient.connect(
 
     // start the jobs, give access to the db instance
     jobs.map(({
-      name, schedule, work, options,
+      name, schedule, work, options, emediate
     }) => {
-      const task = cron.schedule(schedule, () => {
-        try {
-          work({ db });
-        } catch (err) {
-          console.log(`Job ${name} failed with error ${err.message}`);
-        }
-      }, options);
+      if(emediate === true){
+        work({ db });
+      }
 
-      task.start();
+      if(NODE_ENV !== 'development' && !DISABLE_JOBS){
+        const task = cron.schedule(schedule, () => {
+          try {
+            work({ db });
+          } catch (err) {
+            console.log(`Job ${name} failed with error ${err.message}`);
+          }
+        }, options);
+        task.start();
+      }
     });
   },
 );
