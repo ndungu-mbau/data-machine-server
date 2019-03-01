@@ -4,87 +4,107 @@ import validator from "validator";
 import { checkDocument } from "apollo-utilities";
 import { string } from "postcss-selector-parser";
 
+const _email = async (x) =>{
+  const flags = []
+
+  if(x === ''){
+    flags.push({
+      message:'blank'
+    })
+  }
+
+  return {
+    _email_flags:flags
+  }
+}
+
+const _firstname = async (x) =>{
+  const flags = []
+
+  if(x === ''){
+    flags.push({
+      message:'blank'
+    })
+  }
+
+  return {
+    _firstname_flag:flags
+  }
+}
+
+const _middlename = async (x) =>{
+  const flags = []
+
+  if(x === ''){
+    flags.push({
+      message:'blank'
+    })
+  }
+
+  return {
+    _middlename_flag:flags
+  }
+}
+
+const _lastname = async (x) =>{
+  const flags = []
+
+  if(x === ''){
+    flags.push({
+      message:'blank'
+    })
+  }
+
+  return {
+    _lastname_flag:flags
+  }
+}
+
 export default {
   name: "NEW_USER",
   schedule: "* * * * *",
+  emediate:false,
   async work({ db }) {
-    console.log("running a NEW_USER every minute");
-    //use user collection
-    const col = db.collection("user");
-    //fetch all users in the collection
-    const users = await col.find({}, { firstName: true, _id: false }).toArray();
-    const validateUserObjcol = await db.createCollection("validateUsers");
+    // first store all validations on a map for access when running
+    const validationsMap = {}
+    const users = await db.collection("user").find({}).toArray();
+    const user_validations = await db.collection("user_validation").find({}).toArray();
 
-    //loop through each collection
-    users.map(el => {
-      validateUserObj(el);
+    user_validations.map(val=>validationsMap[val.email]=val)
 
-      function validateUserObj(el) {
-        //check user mail field and return a promise
-        let checkMail = new Promise((resolve, reject) => {
-          if (!validator.isEmail(el.email)) {
-            resolve({ ...el, EmailCheck: "Invalid email", flagged: true });
-          } else {
-            resolve({ ...el });
+    console.log("working with ",users.length )
+    for (const i in users){
+          const user = users[i]
+
+          const {
+            email,
+            firstName,
+            middleName,
+            lastName
+          } = user
+
+          if(!email){
+            return;
           }
-        });
 
-        checkMail
-          //check firstmail and return a thenable
-          .then(el => {
-            if (el.firstName.length === 0) {
-              return {
-                ...el,
-                firstNameCheck: "empty firstName",
-                flagged: true
-              };
-            } else {
-              return { ...el };
-            }
-          })
-          //check lastname
-          .then(el => {
-            if (el.lastName.length === 0) {
-              return { ...el, lastNameCheck: "empty lastName", flagged: true };
-            } else {
-              return { ...el };
-            }
-          })
-          //check lastname
-          .then(el => {
-            if (el.middleName.length === 0) {
-              return {
-                ...el,
-                middleNameCheck: "empty lastName",
-                flagged: true
-              };
-            } else {
-              return { ...el };
-            }
-          })
-          //insert the object in validateUsers collection
-          .then(el => {
-            name(el);
-            async function name(el) {
-              console.log(
-                db
-                  .collection("validateUsers")
-                  .replaceOne({ email: el.email }, { ...el }, { upsert: true })
-              );
-            }
-          })
-          .catch(err => {
-            return err;
-          });
-      }
-      let validusers = db
-        .collection("validateUsers")
-        .find({})
-        .toArray();
-      console.log(validusers);
+          const issues = {};
 
-      //  db.collection("validateUserObjcol").drop()
-    });
+          Object.assign(
+            issues,
+            await _email(email),
+            await _firstname(firstName),
+            await _middlename(middleName),
+            await _lastname(lastName)
+          )
+
+          let validusers = await db
+            .collection("user_validation")
+            .updateOne(
+              { email },
+              { $set:issues },
+              { upsert:true }
+            )
+    }
   },
   opts: {
     schedule: true

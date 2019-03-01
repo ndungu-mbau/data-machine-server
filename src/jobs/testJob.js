@@ -4,6 +4,7 @@ import config from '../config'
 export default {
     name: "TEST_JOB",
     schedule: '* * * * *',
+    emediate:false,
     async work({ db }) {
         console.log('running a task every minute');
         const col = db.collection('user');
