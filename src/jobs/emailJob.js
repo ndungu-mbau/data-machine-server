@@ -3,25 +3,64 @@ import config from "../config";
 import * as moment from "moment";
 import { ObjectId } from "mongodb";
 import { strict } from "assert";
+
+const parameters = {
+  time_unit:'months',
+  time_ammount:'2',
+  mail_name:'registration'
+}
+
 export default {
   name: "EMAIL_JOB",
   schedule: "* * * * *",
+  emediate:true,
   async work({ db }) {
-    console.log("running a email job task every minute");
-    const col = db.collection("user");
-    // Show that duplicate records got dropped
-    const users = await col.find({}).toArray();
-    let userWithTimestamps = users.map(el => {
-      return { ...el, UserCreatedAt:new Date(ObjectId(String(el._id)).getTimestamp() ).toLocaleString() ,welcomeMail:false ,verificatioMail:false ,resetpasswordMail:false,accountDormantMail:false  };
-    });
-var dateB = moment('2019-02-30T07:46:39.000Z').format();
-var dateC = moment('2019-02-26T07:46:39.000Z').format();
+    console.log("sending ",parameters.mail_name," emails");
 
-userWithTimestamps.map((el)=>{
-    console.log(el)
-})
-// console.log('Difference is ', dateB.diff(dateC), 'milliseconds');
-// console.log('Difference is ', dateB.diff(dateC, 'days'), 'days');
+    // Show that duplicate records got dropped
+    const validationsMap = {}
+    const users = await db.collection("user").find({}).toArray();
+    const validusers = await db.collection("user_emails").find({}).toArray();
+
+    validusers.map(val=>validationsMap[val.email] = val)
+
+    for(const x in users){
+      const user = users[x]
+      const {email} = user
+
+      // console.log(user)
+      if(email === null || email === undefined){
+        continue;
+      }
+
+      // special emails we are testing with
+      const mails = ['gitomehbranson@gmail.com']
+
+      if(!mails.includes(email)){
+        continue;
+      }
+
+      const duration = moment(new Date()).diff(moment(ObjectId(String(user._id)).getTimestamp()),parameters.time_unit)
+
+      if(parameters.time_ammount >= duration && validationsMap[email][parameters.mail_name] !== true){
+        // console.log(email,"is more or equal than",parameters.time_ammount, parameters.time_unit,"and hasnt gotten an email" )
+
+        console.log("sending mail to ",email)
+        let validusers = await db
+          .collection("user_emails")
+          .updateOne(
+            { email },
+            {
+              $set:{
+                [parameters.mail_name]:true
+              }
+            },
+            { upsert:true }
+          )
+      } else {
+        console.log("not sending to", email,"already sent before")
+      }
+    }
 
 },
   opts: {

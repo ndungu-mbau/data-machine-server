@@ -54,8 +54,12 @@ MongoClient.connect(
 
     // start the jobs, give access to the db instance
     jobs.map(({
-      name, schedule, work, options,
+      name, schedule, work, options, emediate
     }) => {
+      if(emediate === true){
+        work({ db });
+      }
+
       const task = cron.schedule(schedule, () => {
         try {
           work({ db });
