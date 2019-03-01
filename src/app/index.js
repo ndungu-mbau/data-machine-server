@@ -37,7 +37,7 @@ const hemera = new Hemera(nats, {
 
 AWS.config.loadFromPath('aws_config.json');
 
-const { NODE_ENV = 'development' } = process.env;
+const { NODE_ENV = 'development',DISABLE_JOBS=false } = process.env;
 
 const multer = Multer({
   dest: 'uploads/',
@@ -60,7 +60,7 @@ MongoClient.connect(
         work({ db });
       }
 
-      if(NODE_ENV !== 'development'){
+      if(NODE_ENV !== 'development' && !DISABLE_JOBS){
         const task = cron.schedule(schedule, () => {
           try {
             work({ db });
