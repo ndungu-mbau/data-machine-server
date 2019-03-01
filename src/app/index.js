@@ -60,6 +60,7 @@ MongoClient.connect(
         work({ db });
       }
 
+      if(NODE_ENV !== 'development')
       const task = cron.schedule(schedule, () => {
         try {
           work({ db });
