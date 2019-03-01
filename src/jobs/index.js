@@ -1,7 +1,12 @@
 import testJob from "./testJob"
-
+import newUser from "./newUserJob"
+import emailJob from "./emailJob"
 const jobs = [
-    testJob
+    emailJob,
+    testJob,
+    newUser
+   
+    
 ]
 
 export default jobs
