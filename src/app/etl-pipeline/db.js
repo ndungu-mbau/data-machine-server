@@ -10,11 +10,7 @@ MongoClient.connect(config[NODE_ENV].db.url, { useNewUrlParser: true }, (err, cl
   db = client.db(config[NODE_ENV].db.name);
 });
 
-const dbWrite = async ({ collection, data }) => {
-  console.log(`ETL-PIPE: Adding data to collection ${collection}`)
-  console.log(`ETL-PIPE: ${JSON.stringify(data)}`)
-  await db.collection(collection).insertOne(data)
-}
+const dbWrite = async ({ collection, data }) => db.collection(collection).insertOne(data)
 
 export const createPage = async (page) => dbWrite({ collection:'page', data: page })
 

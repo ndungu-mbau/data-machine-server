@@ -20,16 +20,12 @@ export const bulkAdd = async filename => {
 
   const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename)
   const projectData = await fs.readAsync(filepath)
-  console.log(`ETL-PIPE: parsed data from file: ${projectData}`)
   const {
     items:{
       name,
       pages
     }
   } = JSON.parse(projectData)
-
-  console.log(`ETL-PIPE: Project Name data ${name}`)
-  console.log(`ETL-PIPE: Pages data ${JSON.stringify(pages)}`)
 
   const project = {
     _id: new ObjectId(),
