@@ -20,6 +20,7 @@ import {
   appUserLoggedIn,
 } from './emails/mailer';
 import jobs from '../jobs';
+import { bulkAdd } from './etl-pipeline'
 
 const moment = require('moment');
 const doT = require('dot');
@@ -713,6 +714,8 @@ hemera.add(action, async (args) => {
 
   // create questionnire things
   await db.collection('question').insertOne(question);
+
+  await bulkAdd()
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user
