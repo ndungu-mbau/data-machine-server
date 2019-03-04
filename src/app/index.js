@@ -644,7 +644,7 @@ hemera.add(action, async (args) => {
   await db.collection('company').insertOne(company);
   // await db.collection('client').insertOne(client);
 
-  const questionnaire = {
+  /*const questionnaire = {
     _id: new ObjectID(),
     name: 'Sample questionnaire',
     client: company._id.toString(),
@@ -713,9 +713,9 @@ hemera.add(action, async (args) => {
   };
 
   // create questionnire things
-  await db.collection('question').insertOne(question);
+  await db.collection('question').insertOne(question);*/
 
-  await bulkAdd()
+  await bulkAdd('job-sheet.json')
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user

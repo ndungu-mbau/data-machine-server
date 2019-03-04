@@ -1,4 +1,5 @@
-import { items as projectData } from './job-sheet.json';
+import fs from 'fs'
+import path from 'path'
 import {
   createPage,
   createGroup,
@@ -9,22 +10,39 @@ import {
 
 import { ObjectId } from 'mongodb'
 
-const bulkAdd = async () => {
+fs.readAsync = (path) => new Promise((resolve, reject) => fs.readFile(path, (err, data) => {
+    if(err) reject(err)
+    resolve(data)
+  })
+)
+
+export const bulkAdd = async filename => {
+
+  const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename)
+  const projectData = await fs.readAsync(filepath)
+  console.log(`ETL-PIPE: parsed data from file: ${projectData}`)
   const {
-    name,
-    pages
-  } = projectData
+    items:{
+      name,
+      pages
+    }
+  } = JSON.parse(projectData)
+
+  console.log(`ETL-PIPE: Project Name data ${name}`)
+  console.log(`ETL-PIPE: Pages data ${JSON.stringify(pages)}`)
 
   const project = {
     _id: new ObjectId(),
     destroyed: false,
-    name
+    name:name
   }
+
+  console.log(`ETL-PIPE: Project data ${JSON.stringify(project)}`)
 
   project.id = project._id
   await createProject(project)
 
-  pages.forEach(({ name }) => {
+  pages.forEach(async ({ name }) => {
     const questionnaire = {
       _id: new ObjectId(),
       name,
@@ -45,7 +63,7 @@ const bulkAdd = async () => {
     page.id = page._id;
     await createPage(page)
 
-    page.groups.forEach(({ name }) => {
+    page.groups.forEach(async ({ name, questions }) => {
 
       const group = {
         _id : new ObjectId(),
@@ -56,9 +74,9 @@ const bulkAdd = async () => {
       const createdGroup = await createGroup(group);
       group.id = createdGroup.id;
 
-      group.questions.forEach((question) => {
+      questions.forEach(async (question) => {
 
-        const question = Object.assign(question,{
+        Object.assign(question,{
           _id: new ObjectId(),
           group: createdGroup.id,
         })
@@ -68,8 +86,4 @@ const bulkAdd = async () => {
       })
     })
   })
-}
-
-export default {
-  bulkAdd
 }
