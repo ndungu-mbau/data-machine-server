@@ -715,7 +715,10 @@ hemera.add(action, async (args) => {
   // create questionnire things
   await db.collection('question').insertOne(question);*/
 
-  await bulkAdd('job-sheet.json')
+  await bulkAdd({
+    files:['job-sheet.json'],
+    client: company._id.toString()
+  })
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user

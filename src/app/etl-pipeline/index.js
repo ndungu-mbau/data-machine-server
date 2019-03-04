@@ -16,7 +16,7 @@ fs.readAsync = (path) => new Promise((resolve, reject) => fs.readFile(path, (err
   })
 )
 
-export const bulkAdd = async filename => {
+export const bulkAdd = async ({ filename, client }) => {
 
   const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename)
   const projectData = await fs.readAsync(filepath)
@@ -30,7 +30,8 @@ export const bulkAdd = async filename => {
   const project = {
     _id: new ObjectId(),
     destroyed: false,
-    name:name
+    name,
+    client
   }
 
   //console.log(`ETL-PIPE: Project data ${JSON.stringify(project)}`)
@@ -38,17 +39,18 @@ export const bulkAdd = async filename => {
   project.id = project._id
   await createProject(project)
 
-  const questionnaire = {
-    _id: new ObjectId(),
-    name,
-    project: project._id.toString(),
-    destroyed: false
-  }
-
-  questionnaire.id = questionnaire._id
-  await createQuestionnaire(questionnaire)
-
   pages.forEach(async ({ name, groups }) => {
+
+    const questionnaire = {
+      _id: new ObjectId(),
+      name,
+      project: project._id.toString(),
+      destroyed: false,
+      client
+    }
+  
+    questionnaire.id = questionnaire._id
+    await createQuestionnaire(questionnaire)
 
     const page = {
       _id: new ObjectId(),
