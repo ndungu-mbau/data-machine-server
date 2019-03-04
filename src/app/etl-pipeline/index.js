@@ -56,7 +56,7 @@ export const bulkAdd = async ({ files:[filename], client }) => {
       _id: new ObjectId(),
       destroyed: false,
       name,
-      questionnaire
+      questionnaire: questionnaire._id.toString()
     }
 
     page.id = page._id;
@@ -70,18 +70,18 @@ export const bulkAdd = async ({ files:[filename], client }) => {
         page: page.id
       }
 
-      const createdGroup = await createGroup(group);
-      group.id = createdGroup.id;
+      group.id = group._id
+      await createGroup(group);
 
       questions.forEach(async (question) => {
 
         Object.assign(question,{
           _id: new ObjectId(),
-          group: createdGroup.id,
+          group:group.id,
         })
 
-        const createdQuestion = await createQuestion(question);
-        question.id = createdQuestion.id;
+        question.id = question._id;
+        await createQuestion(question);
       })
     })
   })
