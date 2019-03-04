@@ -16,7 +16,7 @@ fs.readAsync = (path) => new Promise((resolve, reject) => fs.readFile(path, (err
   })
 )
 
-export const bulkAdd = async ({ filename, client }) => {
+export const bulkAdd = async ({ files:[filename], client }) => {
 
   const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename)
   const projectData = await fs.readAsync(filepath)
@@ -67,7 +67,7 @@ export const bulkAdd = async ({ filename, client }) => {
       const group = {
         _id : new ObjectId(),
         name,
-        page: createdPage.id
+        page: page.id
       }
 
       const createdGroup = await createGroup(group);
