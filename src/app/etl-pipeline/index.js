@@ -33,21 +33,22 @@ export const bulkAdd = async filename => {
     name:name
   }
 
-  console.log(`ETL-PIPE: Project data ${JSON.stringify(project)}`)
+  //console.log(`ETL-PIPE: Project data ${JSON.stringify(project)}`)
 
   project.id = project._id
   await createProject(project)
 
-  pages.forEach(async ({ name }) => {
-    const questionnaire = {
-      _id: new ObjectId(),
-      name,
-      project: newProject._id.toString(),
-      destroyed: false
-    }
+  const questionnaire = {
+    _id: new ObjectId(),
+    name,
+    project: project._id.toString(),
+    destroyed: false
+  }
 
-    questionnaire.id = questionnaire._id
-    await createQuestionnaire(questionnaire)
+  questionnaire.id = questionnaire._id
+  await createQuestionnaire(questionnaire)
+
+  pages.forEach(async ({ name, groups }) => {
 
     const page = {
       _id: new ObjectId(),
@@ -59,7 +60,7 @@ export const bulkAdd = async filename => {
     page.id = page._id;
     await createPage(page)
 
-    page.groups.forEach(async ({ name, questions }) => {
+    groups.forEach(async ({ name, questions }) => {
 
       const group = {
         _id : new ObjectId(),
@@ -77,7 +78,7 @@ export const bulkAdd = async filename => {
           group: createdGroup.id,
         })
 
-        const createdQuestion = await createQuestion();
+        const createdQuestion = await createQuestion(question);
         question.id = createdQuestion.id;
       })
     })
