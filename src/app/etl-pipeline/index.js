@@ -36,9 +36,6 @@ export const bulkAdd = async ({ files:[filename], client }) => {
 
   //console.log(`ETL-PIPE: Project data ${JSON.stringify(project)}`)
 
-  project.id = project._id
-  await createProject(project)
-
   pages.forEach(async ({ name, groups }) => {
 
     const questionnaire = {
@@ -51,6 +48,8 @@ export const bulkAdd = async ({ files:[filename], client }) => {
   
     questionnaire.id = questionnaire._id
     await createQuestionnaire(questionnaire)
+
+    project.questionnaire = questionnaire._id.toString()
 
     const page = {
       _id: new ObjectId(),
@@ -85,4 +84,7 @@ export const bulkAdd = async ({ files:[filename], client }) => {
       })
     })
   })
+
+  project.id = project._id
+  await createProject(project)
 }
