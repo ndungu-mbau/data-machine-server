@@ -54,40 +54,6 @@ const context = ({ req }) => {
   throw new Error('Please provide auth headers');
 };
 
-// --------------------------native graphql js-------for internal use
-var schema = buildSchema(`
-  ${typeQueries},
-  ${typeMutations}
-`);
-
-var root = {
-  Query: {
-    hello: () => {
-      return 'Hello world!';
-    },
-  },
-  Mutation: {
-    honk: () => {
-      return 'honk!';
-    },
-  },
-  // bellow works
-  // hello: () => {
-  //   return 'Hello world!';
-  // },
-};
-
-// console.log(resolvers)
-
-graphql(schema, `query{
-  hello
-}`, root).then((response) => {
-  console.log(response);
-  // { data: { hello: null } }
-});
-
-// ----------------------------------------------------------------------
-
 const server = new ApolloServer({
   typeDefs,
   resolvers,
