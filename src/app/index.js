@@ -843,6 +843,7 @@ hemera.add(registrationAction, async (args) => {
   accountActivationEmail({
     to: user.email,
     data: Object.assign({}, legacyUser, {
+      id: legacyUser._id,
       host: process.env.NODE_ENV === 'production'
           ? 'https://app.braiven.io'
           : 'http://localhost:3000',
