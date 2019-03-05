@@ -68,6 +68,21 @@ const registrationThanks = async ({
     }).catch(console.log)
 }
 
+const accountActivationEmail = async ({
+  to,
+  subject = `Activate your account`,
+  data
+}) => {
+  const tempFn = doT.template((await readFile('src/app/emails/activate-account.html', 'utf8')));
+  var message = tempFn(data);
+
+  sendMail({
+      to,
+      subject,
+      message
+  }).catch(console.log)
+}
+
 const passwordResetEmail = async ({
     to,
     subject = `Reset your datakit password`,
@@ -148,6 +163,7 @@ const userCreatedAccount = async ({
 
 export {
     registrationThanks,
+    accountActivationEmail,
     passwordResetEmail,
     userLoggedIn,
     userCreatedAccount,

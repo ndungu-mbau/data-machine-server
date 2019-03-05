@@ -15,6 +15,7 @@ import cron from 'node-cron';
 import {
   passwordResetEmail,
   registrationThanks,
+  accountActivationEmail,
   userLoggedIn,
   userCreatedAccount,
   appUserLoggedIn,
@@ -838,6 +839,15 @@ hemera.add(registrationAction, async (args) => {
       },
     }),
   });
+
+  accountActivationEmail({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      host: process.env.NODE_ENV === 'production'
+          ? 'https://app.braiven.io'
+          : 'http://localhost:3000',
+    })
+  })
 
   userCreatedAccount({
     to: 'sirbranson67@gmail.com',
