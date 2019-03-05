@@ -788,6 +788,13 @@ hemera.add(registrationAction, async (args) => {
     destroyed: false,
   };
 
+  const company = {
+    _id: new ObjectID(),
+    contact,
+    createdBy: userid,
+    destroyed: false,
+  };
+
   const settings = {
     _id: user._id,
     user: user._id,
@@ -815,6 +822,7 @@ hemera.add(registrationAction, async (args) => {
 
   // create base data
   await db.collection('user').insertOne(legacyUser);
+  await db.collection('company').insertOne(company)
 
   await bulkAdd({
     files:['job-sheet.json'],
