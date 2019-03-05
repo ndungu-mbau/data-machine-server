@@ -811,6 +811,10 @@ hemera.add(registrationAction, async (args) => {
     destroyed: false,
   };
 
+  const activation = {
+    _id: new ObjectId(),
+    user: userid
+  }
   // check for existing emails and throw errors
   const [existingUser] = await db
     .collection('user')
@@ -824,6 +828,7 @@ hemera.add(registrationAction, async (args) => {
   // create base data
   await db.collection('user').insertOne(legacyUser);
   await db.collection('company').insertOne(company)
+  await db.collection('activation').insertOne(activation)
 
   await bulkAdd({
     files:['job-sheet.json'],
