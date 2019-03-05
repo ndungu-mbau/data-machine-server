@@ -66,7 +66,8 @@ export const bulkAdd = async ({ files:[filename], client }) => {
       const group = {
         _id : new ObjectId(),
         name,
-        page: page.id.toString()
+        page: page.id.toString(),
+        destroyed: false
       }
 
       group.id = group._id
@@ -76,7 +77,8 @@ export const bulkAdd = async ({ files:[filename], client }) => {
 
         Object.assign(question,{
           _id: new ObjectId(),
-          group:group.id,
+          group:group.id.toString(),
+          destroyed: false
         })
 
         question.id = question._id;
