@@ -813,7 +813,8 @@ hemera.add(registrationAction, async (args) => {
 
   const activation = {
     _id: new ObjectId(),
-    user: userid
+    user: userid,
+    destroyed: false
   }
   // check for existing emails and throw errors
   const [existingUser] = await db
@@ -874,6 +875,21 @@ hemera.add(registrationAction, async (args) => {
     ),
   };
 });
+
+hemera.add({
+  topic:'registration',
+  cmd:'activate-account-check'
+}, async (args) => {
+  const { id } = args
+
+  const activation = await db.collection('activation').findOne({ user : new ObjectId(id), destroyed: false})
+
+  if(!activation){
+    return false
+  }
+
+  return true
+})
 
 app.get('/submision/:id', async (req, res) => {
   const submission = req.params;
