@@ -869,8 +869,8 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
       // )
 
       day = {
-        start,
-        end,
+        start:startTime,
+        end:endTime,
         count: data.length,
         // attatch data thats used on the admin ui
         data: data.map(({ _id, GPS_longitude: long, GPS_latitude: lat }) => ({ _id, long, lat })),
