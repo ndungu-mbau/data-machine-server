@@ -34,22 +34,22 @@ export const bulkAdd = async ({ files:[filename], client }) => {
     client
   }
 
+  const questionnaire = {
+    _id: new ObjectId(),
+    name,
+    project: project._id.toString(),
+    destroyed: false,
+    client
+  }
+
+  questionnaire.id = questionnaire._id
+  await createQuestionnaire(questionnaire)
+
+  project.questionnaire = new ObjectId(questionnaire._id.toString())
+
   //console.log(`ETL-PIPE: Project data ${JSON.stringify(project)}`)
 
-  pages.forEach(async ({ name, groups }) => {
-
-    const questionnaire = {
-      _id: new ObjectId(),
-      name,
-      project: project._id.toString(),
-      destroyed: false,
-      client
-    }
-  
-    questionnaire.id = questionnaire._id
-    await createQuestionnaire(questionnaire)
-
-    project.questionnaire = questionnaire._id.toString()
+  for(const { name, groups } of pages){
 
     const page = {
       _id: new ObjectId(),
@@ -61,18 +61,18 @@ export const bulkAdd = async ({ files:[filename], client }) => {
     page.id = page._id;
     await createPage(page)
 
-    groups.forEach(async ({ name, questions }) => {
+    for(const { name, questions } of groups){
 
       const group = {
         _id : new ObjectId(),
         name,
-        page: page.id
+        page: page.id.toString()
       }
 
       group.id = group._id
       await createGroup(group);
 
-      questions.forEach(async (question) => {
+      for(const question of questions){
 
         Object.assign(question,{
           _id: new ObjectId(),
@@ -81,9 +81,9 @@ export const bulkAdd = async ({ files:[filename], client }) => {
 
         question.id = question._id;
         await createQuestion(question);
-      })
-    })
-  })
+      }
+    }
+  }
 
   project.id = project._id
   await createProject(project)
