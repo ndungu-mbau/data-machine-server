@@ -764,6 +764,93 @@ hemera.add(action, async (args) => {
   };
 });
 
+const registrationAction = {
+  topic: 'registration',
+  cmd: 'saas-registration',
+};
+
+hemera.add(registrationAction, async (args) => {
+  const {
+    password,
+    email,
+    contact,
+    firstName,
+  } = args.data;
+
+
+  const userid = new ObjectID();
+
+  const user = {
+    _id: userid,
+    email,
+    phoneNumber: contact,
+    firstName,
+    destroyed: false,
+  };
+
+  const settings = {
+    _id: user._id,
+    user: user._id,
+    destroyed: false,
+  };
+
+  const legacyUser = {
+    _id: user._id,
+    firstName: user.firstName,
+    phoneNumber: user.phoneNumber,
+    password: sha1(password),
+    email: user.email,
+    destroyed: false,
+  };
+
+  // check for existing emails and throw errors
+  const [existingUser] = await db
+    .collection('user')
+    .find({ email: user.email })
+    .toArray();
+
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }
+
+  // create base data
+  await db.collection('user').insertOne(legacyUser);
+
+  await bulkAdd({
+    files:['job-sheet.json'],
+    client: company._id.toString()
+  })
+
+  // send out a welcome email
+  registrationThanks({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      company: {
+        name: user.firstName,
+      },
+    }),
+  });
+
+  userCreatedAccount({
+    to: 'sirbranson67@gmail.com',
+    data: {
+      email,
+    },
+  });
+  // send out a sample project created email
+  // send out a process guide email
+  // send out a download our app email
+
+  return {
+    user: user.id,
+    settings: settings.id,
+    token: jwt.sign(
+      user
+      , config[NODE_ENV].hashingSecret,
+    ),
+  };
+});
+
 app.get('/submision/:id', async (req, res) => {
   const submission = req.params;
   const { id } = submission;
