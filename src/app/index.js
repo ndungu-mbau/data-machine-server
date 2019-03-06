@@ -20,6 +20,7 @@ import {
   appUserLoggedIn,
 } from './emails/mailer';
 import jobs from '../jobs';
+import { bulkAdd } from './etl-pipeline'
 
 const moment = require('moment');
 const doT = require('dot');
@@ -643,7 +644,7 @@ hemera.add(action, async (args) => {
   await db.collection('company').insertOne(company);
   // await db.collection('client').insertOne(client);
 
-  const questionnaire = {
+  /*const questionnaire = {
     _id: new ObjectID(),
     name: 'Sample questionnaire',
     client: company._id.toString(),
@@ -712,7 +713,12 @@ hemera.add(action, async (args) => {
   };
 
   // create questionnire things
-  await db.collection('question').insertOne(question);
+  await db.collection('question').insertOne(question);*/
+
+  await bulkAdd({
+    files:['job-sheet.json'],
+    client: company._id.toString()
+  })
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user
@@ -863,8 +869,8 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
       // )
 
       day = {
-        start,
-        end,
+        start:startTime,
+        end:endTime,
         count: data.length,
         // attatch data thats used on the admin ui
         data: data.map(({ _id, GPS_longitude: long, GPS_latitude: lat }) => ({ _id, long, lat })),
