@@ -52,7 +52,6 @@ MongoClient.connect(
   (err, client) => {
     if (err) throw err;
     db = client.db(config[NODE_ENV].db.name);
-
     // start the jobs, give access to the db instance
     jobs.map(({
       name, schedule, work, options, emediate
@@ -625,6 +624,8 @@ hemera.add(action, async (args) => {
     client: company._id,
   };
 
+  const role={companyId:legacyUser.client ,UserId:legacyUser._id ,role:"admin" }
+
   // check for existing emails and throw errors
   const [existingUser] = await db
     .collection('user')
@@ -637,6 +638,7 @@ hemera.add(action, async (args) => {
 
   // create base data
   await db.collection('user').insertOne(legacyUser);
+  await db.collection("roles").insertOne(role)
   await db.collection('settings').insertOne(settings);
   await db.collection('billing').insertOne(billing);
   await db.collection('saasUser').insertOne(user);
