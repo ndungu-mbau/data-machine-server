@@ -882,10 +882,10 @@ hemera.add({
 }, async (args) => {
   const { id } = args
 
-  const activation = await db.collection('activation').findOne({ user : new ObjectId(id), destroyed: false})
+  const [activation] = await db.collection('activation').find({ user : new ObjectId(id), destroyed: false}).toArray()
 
   if(!activation){
-    return false
+    throw new Error('Invalid activation details')
   }
 
   return true
