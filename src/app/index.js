@@ -20,11 +20,13 @@ import {
   appUserLoggedIn,
 } from './emails/mailer';
 import jobs from '../jobs';
-import { bulkAdd } from './etl-pipeline'
+import { bulkAdd } from './etl-pipeline';
 
 const moment = require('moment');
 const doT = require('dot');
 const math = require('mathjs');
+const puppeteer = require('puppeteer');
+
 const { ObjectID } = require('mongodb');
 
 const Hemera = require('nats-hemera');
@@ -38,7 +40,7 @@ const hemera = new Hemera(nats, {
 
 AWS.config.loadFromPath('aws_config.json');
 
-const { NODE_ENV = 'development',DISABLE_JOBS=false } = process.env;
+const { NODE_ENV = 'development', DISABLE_JOBS = false } = process.env;
 
 const multer = Multer({
   dest: 'uploads/',
@@ -55,13 +57,13 @@ MongoClient.connect(
 
     // start the jobs, give access to the db instance
     jobs.map(({
-      name, schedule, work, options, emediate
+      name, schedule, work, options, emediate,
     }) => {
-      if(emediate === true){
+      if (emediate === true) {
         work({ db });
       }
 
-      if(NODE_ENV !== 'development' && !DISABLE_JOBS){
+      if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
         const task = cron.schedule(schedule, () => {
           try {
             work({ db });
@@ -462,13 +464,13 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
 
-        console.log("=====>", cleanCopy[key])
+        console.log('=====>', cleanCopy[key]);
       }
     }
-  })
-  console.log(JSON.stringify({ cleanCopy }, null, '\t'))
+  });
+  console.log(JSON.stringify({ cleanCopy }, null, '\t'));
 
 
   const entry = Object.assign({}, cleanCopy, {
@@ -476,7 +478,6 @@ app.post('/submision', async (req, res) => {
     destroyed: false,
     userId: req.user ? req.user._id : undefined,
   });
-
 
 
   await db.collection('submision').insertOne(entry);
@@ -644,7 +645,7 @@ hemera.add(action, async (args) => {
   await db.collection('company').insertOne(company);
   // await db.collection('client').insertOne(client);
 
-  /*const questionnaire = {
+  /* const questionnaire = {
     _id: new ObjectID(),
     name: 'Sample questionnaire',
     client: company._id.toString(),
@@ -713,12 +714,12 @@ hemera.add(action, async (args) => {
   };
 
   // create questionnire things
-  await db.collection('question').insertOne(question);*/
+  await db.collection('question').insertOne(question); */
 
   await bulkAdd({
-    files:['job-sheet.json'],
-    client: company._id.toString()
-  })
+    files: ['job-sheet.json'],
+    client: company._id.toString(),
+  });
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user
@@ -869,8 +870,8 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
       // )
 
       day = {
-        start:startTime,
-        end:endTime,
+        start: startTime,
+        end: endTime,
         count: data.length,
         // attatch data thats used on the admin ui
         data: data.map(({ _id, GPS_longitude: long, GPS_latitude: lat }) => ({ _id, long, lat })),
@@ -1016,6 +1017,56 @@ app.post(
   },
 );
 
+app.get(
+  '/printable/:q/:a',
+  bodyParser.urlencoded({ extended: false }),
+  bodyParser.json(),
+  async (req, res) => {
+    const { MASTER_TOKEN, NODE_ENV } = process.env;
+    const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://braiven.io'}/printable/questionnnaire/${req.params.q}/answer/${req.params.a}`;
+    console.log(bookingUrl);
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 926 });
+    await page.goto(bookingUrl);
+    await page.evaluate((MASTER_TOKEN) => {
+      localStorage.setItem('token', MASTER_TOKEN);
+    }, MASTER_TOKEN);
+    await page.goto(bookingUrl, { waitUntil: 'networkidle0' });
+    console.log('===>', 'saving the pdf');
+    await page.pdf({ 
+      path: `./dist/${req.params.a}.pdf`, 
+      format: 'A4', 
+      margin: { 
+        top: "100px", 
+        bottom: "100px"
+      } 
+  });
+
+    res.setHeader('content-type', 'some/type');
+    fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
+  },
+);
+
+
 app.use(errors());
 
 export default app;
+
+let browser;
+
+puppeteer.launch({
+  headless: true,
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+  ],
+}).then(browserInstance => browser = browserInstance);
+
+
+hemera.add({
+  topic: 'printer',
+  cmd: 'printSubmission',
+}, async args => makeDoc(args));
+
+// call on processexit
+// await browser.close();
