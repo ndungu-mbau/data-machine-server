@@ -560,15 +560,14 @@ app.post('/submision', async (req, res) => {
     cc: ccPeople.join(","),
     subject: `'${project.name}' Submission`,
     message: `
-      My submission '${project.name}' for is now ready for download as a pdf.
+      My submission for ${project.name} is now ready for download as a pdf.
       <br>
       <br>
 
-      I made the submission with a device branded ${entry.__brand}(${entry.__systemVersion} and manufactured by ${entry.__manufacturer}) at ${new Date(entry.createdAt).toLocaleString()}. 
+      Please find the document attached to this email.
       <br>
       <br>
-
-      Please find the pdf document attached to this email
+      Regards,
     `,
     attachments: [{
       filename: `${submited._id}.pdf`,
