@@ -464,7 +464,7 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
 
         console.log('=====>', cleanCopy[key]);
       }
@@ -1025,6 +1025,13 @@ app.get(
     const { MASTER_TOKEN, NODE_ENV } = process.env;
     const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://braiven.io'}/printable/questionnnaire/${req.params.q}/answer/${req.params.a}`;
     console.log(bookingUrl);
+    const browser = puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+      ],
+    })
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 926 });
     await page.goto(bookingUrl);
@@ -1033,17 +1040,18 @@ app.get(
     }, MASTER_TOKEN);
     await page.goto(bookingUrl, { waitUntil: 'networkidle0' });
     console.log('===>', 'saving the pdf');
-    await page.pdf({ 
-      path: `./dist/${req.params.a}.pdf`, 
-      format: 'A4', 
-      margin: { 
-        top: "100px", 
+    await page.pdf({
+      path: `./dist/${req.params.a}.pdf`,
+      format: 'A4',
+      margin: {
+        top: "100px",
         bottom: "100px"
-      } 
-  });
+      }
+    });
 
     res.setHeader('content-type', 'some/type');
     fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
+    await browser.close()
   },
 );
 
@@ -1052,15 +1060,13 @@ app.use(errors());
 
 export default app;
 
-let browser;
-
-puppeteer.launch({
-  headless: true,
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-  ],
-}).then(browserInstance => browser = browserInstance);
+// puppeteer.launch({
+//   headless: true,
+//   args: [
+//     '--no-sandbox',
+//     '--disable-setuid-sandbox',
+//   ],
+// }).then(browserInstance => browser = browserInstance);
 
 
 hemera.add({
