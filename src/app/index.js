@@ -555,20 +555,20 @@ app.post('/submision', async (req, res) => {
 
   const ccPeople = ['kuriagitome@gmail.com', cleanCopy.__agentEmail]
   sendDocumentEmails({
-    from: `"${entry.__agentFirstName ? entry.__agentFirstName : ''} ${entry.__agentLastName ? entry.__agentLastName : ''} via Datakit " <${process.env.EMAIL_BASE}>`,
+    from: `"${entry.__agentFirstName ? entry.__agentFirstName : ''} ${entry.__agentLastName ? entry.__agentLastName : ''} ${entry.__agentLastName ? entry.__agentLastName : '' } ${entry.__agentMiddleName ? entry.__agentMiddleName : '' } via Datakit " <${process.env.EMAIL_BASE}>`,
     to: 'sirbranson67@gmail.com',
     cc: ccPeople.join(","),
     subject: `'${project.name}' Submission`,
     message: `
-      The submission from ${entry.__agentFirstName} ${entry.__agentLastName} is now ready for download as a pdf.
+      My submission '${project.name}' for is now ready for download as a pdf.
       <br>
       <br>
 
-      The submission was done from device with brand ${entry.__brand}(${entry.__systemVersion} and manufactured by ${entry.__manufacturer}) at ${new Date(entry.createdAt).toLocaleString()}. 
+      I made the submission with a device branded ${entry.__brand}(${entry.__systemVersion} and manufactured by ${entry.__manufacturer}) at ${new Date(entry.createdAt).toLocaleString()}. 
       <br>
       <br>
 
-      Please find the document attached to this email
+      Please find the pdf document attached to this email
     `,
     attachments: [{
       filename: `${submited._id}.pdf`,
