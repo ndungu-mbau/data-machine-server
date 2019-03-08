@@ -1052,34 +1052,25 @@ app.get(
 
     res.setHeader('content-type', 'some/type');
     fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
+    const ccPeople = ['kuriagitome@gmail.com','muriithited@gmail.com']
     sendDocumentEmails({
       to: 'sirbranson67@gmail.com',
-      attatchments: [{   // filename and content type is derived from path
-        path: `./dist/${req.params.a}.pdf`
+      cc:ccPeople.join(","),
+      attachments: [{   // filename and content type is derived from path
+        filename: `${req.params.a}.pdf`,
+        content: fs.createReadStream(`./dist/${req.params.a}.pdf`),
+        contentType: 'application/pdf'
       }]
     })
     await browser.close()
   },
 );
 
-
 app.use(errors());
 
 export default app;
 
-// puppeteer.launch({
-//   headless: true,
-//   args: [
-//     '--no-sandbox',
-//     '--disable-setuid-sandbox',
-//   ],
-// }).then(browserInstance => browser = browserInstance);
-
-
-hemera.add({
-  topic: 'printer',
-  cmd: 'printSubmission',
-}, async args => makeDoc(args));
-
-// call on processexit
-// await browser.close();
+// hemera.add({
+//   topic: 'printer',
+//   cmd: 'printSubmission',
+// }, async args => makeDoc(args));
