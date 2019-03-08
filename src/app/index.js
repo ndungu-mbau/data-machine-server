@@ -415,6 +415,37 @@ app.post(
   },
 );
 
+const makePdf = async (path, params) => {
+  const { MASTER_TOKEN, NODE_ENV } = process.env;
+  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
+  console.log(bookingUrl);
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+    ],
+  })
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1920, height: 926 });
+  await page.goto(bookingUrl);
+  await page.evaluate((MASTER_TOKEN) => {
+    localStorage.setItem('token', MASTER_TOKEN);
+  }, MASTER_TOKEN);
+  await page.goto(bookingUrl, { waitUntil: 'networkidle0' });
+  console.log('===>', 'saving the pdf');
+  await page.pdf({
+    path,
+    format: 'A4',
+    margin: {
+      top: "100px",
+      bottom: "100px"
+    }
+  });
+  await browser.close()
+}
+
 app.post('/submision', async (req, res) => {
   const submission = req.body;
 
@@ -475,6 +506,7 @@ app.post('/submision', async (req, res) => {
 
 
   const entry = Object.assign({}, cleanCopy, {
+    _id: new ObjectID(),
     createdAt: new Date(),
     destroyed: false,
     userId: req.user ? req.user._id : undefined,
@@ -508,6 +540,24 @@ app.post('/submision', async (req, res) => {
       console.log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
     }
   });
+
+  const path = `./dist/${submited._id}.pdf`
+
+  await makePdf(path, {
+    q: cleanCopy.questionnaireId,
+    a: entry._id
+  })
+
+  const ccPeople = ['kuriagitome@gmail.com',cleanCopy.__agentEmail]
+  sendDocumentEmails({
+    to: 'sirbranson67@gmail.com',
+    cc: ccPeople.join(","),
+    attachments: [{
+      filename: `${submited._id}.pdf`,
+      content: fs.createReadStream(path),
+      contentType: 'application/pdf'
+    }]
+  })
 });
 
 const action = {
@@ -1023,48 +1073,27 @@ app.get(
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
   async (req, res) => {
-    const { MASTER_TOKEN, NODE_ENV } = process.env;
-    const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${req.params.q}/answer/${req.params.a}`;
-    console.log(bookingUrl);
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-      ],
-    })
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1920, height: 926 });
-    await page.goto(bookingUrl);
-    await page.evaluate((MASTER_TOKEN) => {
-      localStorage.setItem('token', MASTER_TOKEN);
-    }, MASTER_TOKEN);
-    await page.goto(bookingUrl, { waitUntil: 'networkidle0' });
-    console.log('===>', 'saving the pdf');
-    await page.pdf({
-      path: `./dist/${req.params.a}.pdf`,
-      format: 'A4',
-      margin: {
-        top: "100px",
-        bottom: "100px"
-      }
-    });
+    const path = `./dist/${req.params.a}.pdf`
+
+    await makePdf(path, req.params)
 
     res.setHeader('content-type', 'some/type');
     fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
-    const ccPeople = ['kuriagitome@gmail.com','muriithited@gmail.com']
+    const ccPeople = ['kuriagitome@gmail.com', 'muriithited@gmail.com']
     sendDocumentEmails({
       to: 'sirbranson67@gmail.com',
-      cc:ccPeople.join(","),
+      cc: ccPeople.join(","),
       attachments: [{   // filename and content type is derived from path
         filename: `${req.params.a}.pdf`,
         content: fs.createReadStream(`./dist/${req.params.a}.pdf`),
         contentType: 'application/pdf'
       }]
     })
-    await browser.close()
+
   },
 );
+
+
 
 app.use(errors());
 
