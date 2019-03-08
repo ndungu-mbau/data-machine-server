@@ -154,7 +154,7 @@ const userCreatedAccount = async ({
 
 const sendDocumentEmails = ({
     to,
-    subject = `User created account`,
+    subject = `Your document is now ready`,
     attachments
 }) => {
     sendMail({
