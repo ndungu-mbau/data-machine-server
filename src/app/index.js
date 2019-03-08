@@ -63,16 +63,16 @@ MongoClient.connect(
         work({ db });
       }
 
-      if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
-        const task = cron.schedule(schedule, () => {
-          try {
-            work({ db });
-          } catch (err) {
-            console.log(`Job ${name} failed with error ${err.message}`);
-          }
-        }, options);
-        task.start();
-      }
+      // if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
+      //   const task = cron.schedule(schedule, () => {
+      //     try {
+      //       work({ db });
+      //     } catch (err) {
+      //       console.log(`Job ${name} failed with error ${err.message}`);
+      //     }
+      //   }, options);
+      //   task.start();
+      // }
     });
   },
 );
@@ -1025,7 +1025,7 @@ app.get(
     const { MASTER_TOKEN, NODE_ENV } = process.env;
     const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://braiven.io'}/printable/questionnnaire/${req.params.q}/answer/${req.params.a}`;
     console.log(bookingUrl);
-    const browser = puppeteer.launch({
+    const browser = await puppeteer.launch({
       headless: true,
       args: [
         '--no-sandbox',
