@@ -548,10 +548,28 @@ app.post('/submision', async (req, res) => {
     a: entry._id
   })
 
-  const ccPeople = ['kuriagitome@gmail.com',cleanCopy.__agentEmail]
+  // -------------------------------fetch project details to make a nice project body --------------------
+  const project = await db.collection('project').findOne({
+    _id: new ObjectID(entry.projectId)
+  });
+
+  const ccPeople = ['kuriagitome@gmail.com', cleanCopy.__agentEmail]
   sendDocumentEmails({
+    from: `"${entry.__agentFirstName} ${entry.__agentLastName} via Datakit " <${process.env.EMAIL_BASE}>`,
     to: 'sirbranson67@gmail.com',
     cc: ccPeople.join(","),
+    subject: `'${project.name}' Submission`,
+    message: `
+      The submission from ${entry.__agentFirstName} ${entry.__agentLastName} is now ready for download as a pdf.
+      <br>
+      <br>
+
+      The submission was done from device with brand ${entry.__brand}(${entry.__systemVersion} and manufactured by ${entry.__manufacturer}) at ${new Date(entry.createdAt).toLocaleString()}. 
+      <br>
+      <br>
+
+      Please find the document attached to this email
+    `,
     attachments: [{
       filename: `${submited._id}.pdf`,
       content: fs.createReadStream(path),
@@ -1089,7 +1107,6 @@ app.get(
         contentType: 'application/pdf'
       }]
     })
-
   },
 );
 

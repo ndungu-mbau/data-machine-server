@@ -21,7 +21,7 @@ const mailOptions = {
     from: `"Datakit Support " <${process.env.EMAIL_BASE}>`, // sender address (who sends)
 };
 
-export const sendMail = ({ to, subject, message, attachments, cc, bcc }) =>
+export const sendMail = ({ from, to, subject, message, attachments, cc, bcc }) =>
     new Promise((resolve, reject) => {
         mailOptions.to = to;
         mailOptions.subject = subject;
@@ -32,9 +32,18 @@ export const sendMail = ({ to, subject, message, attachments, cc, bcc }) =>
             bcc,
         })
 
+        
+
         if (attachments) {
             mailOptions.attachments = attachments;
         }
+
+        if (from) {
+            mailOptions.from = from;
+        }
+
+        console.log({ mailOptions })
+
         // send mail with defined transport object
         transporter.sendMail(mailOptions, async (error, info) => {
             console.log({ error, info });
@@ -160,16 +169,19 @@ const userCreatedAccount = async ({
 const sendDocumentEmails = ({
     to,
     cc,
+    from,
     bcc,
     subject = `Your document is now ready`,
+    message,
     attachments
 }) => {
     sendMail({
         to,
+        from,
         cc,
         bcc,
         subject,
-        message: "Document is now ready",
+        message,
         attachments
     }).catch(console.log)
 }
