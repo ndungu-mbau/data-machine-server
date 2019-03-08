@@ -21,14 +21,18 @@ const mailOptions = {
     from: `"Datakit Support " <${process.env.EMAIL_BASE}>`, // sender address (who sends)
 };
 
-export const sendMail = ({ to, subject, message }) =>
+export const sendMail = ({ to, subject, message, attachments }) =>
     new Promise((resolve, reject) => {
         mailOptions.to = to;
         mailOptions.subject = subject;
         mailOptions.html = message;
+
+        if (attachments) {
+            mailOptions.attachments = attachments;
+        }
         // send mail with defined transport object
         transporter.sendMail(mailOptions, async (error, info) => {
-            // console.log({ error, info });
+            console.log({ error, info });
             // async save the email send to our collection on google
             // const emailSends = datastore.key('emailSends');
 
@@ -146,10 +150,26 @@ const userCreatedAccount = async ({
 //     }
 // })
 
+
+
+const sendDocumentEmails = ({
+    to,
+    subject = `User created account`,
+    attachments
+}) => {
+    sendMail({
+        to,
+        subject,
+        message: "Document is now ready",
+        attachments
+    }).catch(console.log)
+}
+
 export {
     registrationThanks,
     passwordResetEmail,
     userLoggedIn,
     userCreatedAccount,
-    appUserLoggedIn
+    appUserLoggedIn,
+    sendDocumentEmails
 }

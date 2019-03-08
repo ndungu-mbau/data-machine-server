@@ -14,6 +14,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import cron from 'node-cron';
 import {
   passwordResetEmail,
+  sendDocumentEmails,
   registrationThanks,
   userLoggedIn,
   userCreatedAccount,
@@ -1023,7 +1024,7 @@ app.get(
   bodyParser.json(),
   async (req, res) => {
     const { MASTER_TOKEN, NODE_ENV } = process.env;
-    const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://braiven.io'}/printable/questionnnaire/${req.params.q}/answer/${req.params.a}`;
+    const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${req.params.q}/answer/${req.params.a}`;
     console.log(bookingUrl);
     const browser = await puppeteer.launch({
       headless: true,
@@ -1051,6 +1052,12 @@ app.get(
 
     res.setHeader('content-type', 'some/type');
     fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
+    sendDocumentEmails({
+      to: 'sirbranson67@gmail.com',
+      attatchments: [{   // filename and content type is derived from path
+        path: `./dist/${req.params.a}.pdf`
+      }]
+    })
     await browser.close()
   },
 );
