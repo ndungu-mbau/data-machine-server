@@ -21,11 +21,16 @@ const mailOptions = {
     from: `"Datakit Support " <${process.env.EMAIL_BASE}>`, // sender address (who sends)
 };
 
-export const sendMail = ({ to, subject, message, attachments }) =>
+export const sendMail = ({ to, subject, message, attachments, cc, bcc }) =>
     new Promise((resolve, reject) => {
         mailOptions.to = to;
         mailOptions.subject = subject;
         mailOptions.html = message;
+
+        Object.assign(mailOptions, {
+            cc,
+            bcc,
+        })
 
         if (attachments) {
             mailOptions.attachments = attachments;
@@ -154,11 +159,15 @@ const userCreatedAccount = async ({
 
 const sendDocumentEmails = ({
     to,
+    cc,
+    bcc,
     subject = `Your document is now ready`,
     attachments
 }) => {
     sendMail({
         to,
+        cc,
+        bcc,
         subject,
         message: "Document is now ready",
         attachments
