@@ -555,7 +555,7 @@ app.post('/submision', async (req, res) => {
 
   const ccPeople = ['kuriagitome@gmail.com', cleanCopy.__agentEmail]
   sendDocumentEmails({
-    from: `"${entry.__agentFirstName} ${entry.__agentLastName} via Datakit " <${process.env.EMAIL_BASE}>`,
+    from: `"${entry.__agentFirstName ? entry.__agentFirstName : ''} ${entry.__agentLastName ? entry.__agentLastName : ''} via Datakit " <${process.env.EMAIL_BASE}>`,
     to: 'sirbranson67@gmail.com',
     cc: ccPeople.join(","),
     subject: `'${project.name}' Submission`,
