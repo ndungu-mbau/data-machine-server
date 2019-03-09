@@ -121,7 +121,17 @@ import {
   root as sentencesRoot,
 } from './questionnaires/pages/groups/questions/sentences';
 
-const typeQueries = `
+
+import {
+  type as roleType, 
+  queries as roleQueries,
+  root as rolesRoot
+
+} from './roles/index';
+
+
+const typeQueries = ` 
+  ${roleType}
   ${clientType},
   ${billingType},
   ${teamType},
@@ -142,6 +152,7 @@ const typeQueries = `
   ${sentencesType},
   type Query {
       hello: String,
+      ${roleQueries},
       ${clientQueries},
       ${billingQueries},
       ${teamQueries},
@@ -179,11 +190,13 @@ Object.assign(
   , pagesNested
   , groupsNested
   , billingQueriesNested
+  
 )
 
 
 Object.assign(
   Query
+  ,rolesRoot
   , projectRoot
   , userRoot
   , pageRoot
