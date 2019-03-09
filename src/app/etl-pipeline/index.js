@@ -11,17 +11,17 @@ import {
 import { ObjectId } from 'mongodb'
 
 fs.readAsync = (path) => new Promise((resolve, reject) => fs.readFile(path, (err, data) => {
-    if(err) reject(err)
-    resolve(data)
-  })
+  if (err) reject(err)
+  resolve(data)
+})
 )
 
-export const bulkAdd = async ({ files:[filename], client }) => {
+export const bulkAdd = async ({ db, files: [filename], client, user }) => {
 
   const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename)
   const projectData = await fs.readAsync(filepath)
   const {
-    items:{
+    items: {
       name,
       pages
     }
@@ -33,6 +33,29 @@ export const bulkAdd = async ({ files:[filename], client }) => {
     name,
     client
   }
+
+  const team = {
+    _id: new ObjectId(),
+    name: 'Sample team',
+    client,
+    destroyed: false,
+  };
+
+  const project_team = {
+    project: project._id.toString(),
+    team: team._id.toString(),
+    destroyed: false,
+  };
+
+  const user_teams = {
+    user: user,
+    team: team._id.toString(),
+    destroyed: false,
+  };
+
+  await db.collection('team').insertOne(team);
+  await db.collection('project_teams').insertOne(project_team);
+  await db.collection('user_teams').insertOne(user_teams);
 
   const questionnaire = {
     _id: new ObjectId(),
@@ -49,7 +72,7 @@ export const bulkAdd = async ({ files:[filename], client }) => {
 
   //console.log(`ETL-PIPE: Project data ${JSON.stringify(project)}`)
 
-  for(const { name, groups } of pages){
+  for (const { name, groups } of pages) {
 
     const page = {
       _id: new ObjectId(),
@@ -61,10 +84,10 @@ export const bulkAdd = async ({ files:[filename], client }) => {
     page.id = page._id;
     await createPage(page)
 
-    for(const { name, questions } of groups){
+    for (const { name, questions } of groups) {
 
       const group = {
-        _id : new ObjectId(),
+        _id: new ObjectId(),
         name,
         page: page.id.toString(),
         destroyed: false
@@ -73,11 +96,11 @@ export const bulkAdd = async ({ files:[filename], client }) => {
       group.id = group._id
       await createGroup(group);
 
-      for(const question of questions){
+      for (const question of questions) {
 
-        Object.assign(question,{
+        Object.assign(question, {
           _id: new ObjectId(),
-          group:group.id.toString(),
+          group: group.id.toString(),
           destroyed: false
         })
 

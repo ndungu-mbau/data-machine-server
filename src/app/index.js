@@ -16,6 +16,7 @@ import {
   passwordResetEmail,
   sendDocumentEmails,
   registrationThanks,
+  accountActivationEmail,
   userLoggedIn,
   userCreatedAccount,
   appUserLoggedIn,
@@ -64,16 +65,16 @@ MongoClient.connect(
         work({ db });
       }
 
-      // if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
-      //   const task = cron.schedule(schedule, () => {
-      //     try {
-      //       work({ db });
-      //     } catch (err) {
-      //       console.log(`Job ${name} failed with error ${err.message}`);
-      //     }
-      //   }, options);
-      //   task.start();
-      // }
+      if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
+        const task = cron.schedule(schedule, () => {
+          try {
+            work({ db });
+          } catch (err) {
+            console.log(`Job ${name} failed with error ${err.message}`);
+          }
+        }, options);
+        task.start();
+      }
     });
   },
 );
@@ -785,9 +786,11 @@ hemera.add(action, async (args) => {
   await db.collection('question').insertOne(question); */
 
   await bulkAdd({
+    db,
     files: ['job-sheet.json'],
     client: company._id.toString(),
-  });
+    user: user._id.toString()
+  })
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user
@@ -832,6 +835,305 @@ hemera.add(action, async (args) => {
     ),
   };
 });
+
+const registrationAction = {
+  topic: 'registration',
+  cmd: 'saas-registration',
+};
+
+hemera.add(registrationAction, async (args) => {
+  const {
+    password,
+    email,
+    contact,
+    firstName,
+    orgName
+  } = args.data;
+
+
+  const userid = new ObjectID();
+
+  const user = {
+    _id: userid,
+    email,
+    phoneNumber: contact,
+    firstName,
+    destroyed: false,
+  };
+
+  const company = {
+    _id: new ObjectID(),
+    company_name: orgName,
+    contact,
+    createdBy: userid,
+    destroyed: false,
+  };
+
+  const settings = {
+    _id: user._id,
+    user: user._id,
+    destroyed: false,
+  };
+
+  const legacyUser = {
+    _id: user._id,
+    firstName: user.firstName,
+    phoneNumber: user.phoneNumber,
+    password: sha1(password),
+    email: user.email,
+    destroyed: false,
+    client: company._id,
+  };
+
+  const activation = {
+    _id: new ObjectId(),
+    user: userid,
+    destroyed: false
+  }
+  // check for existing emails and throw errors
+  const [existingUser] = await db
+    .collection('user')
+    .find({ email: user.email })
+    .toArray();
+
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }
+
+  // create base data
+  await db.collection('user').insertOne(legacyUser);
+  await db.collection('company').insertOne(company)
+  await db.collection('activation').insertOne(activation)
+
+  await bulkAdd({
+    db,
+    files: ['job-sheet.json'],
+    client: company._id.toString(),
+    user: user._id.toString(),
+  })
+
+  // send out a welcome email
+  registrationThanks({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      company: {
+        name: user.firstName,
+      },
+    }),
+  });
+
+  accountActivationEmail({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      id: legacyUser._id,
+      host: process.env.NODE_ENV === 'production'
+        ? 'https://app.braiven.io'
+        : 'http://localhost:3000',
+    })
+  })
+
+  userCreatedAccount({
+    to: 'sirbranson67@gmail.com',
+    data: {
+      email,
+    },
+  });
+  // send out a sample project created email
+  // send out a process guide email
+  // send out a download our app email
+
+  return {
+    user: user.id,
+    settings: settings.id,
+    token: jwt.sign(
+      user
+      , config[NODE_ENV].hashingSecret,
+    ),
+  };
+});
+
+hemera.add({
+  topic: 'registration',
+  cmd: 'activate-account-check'
+}, async (args) => {
+  const { id } = args
+
+  const [activation] = await db.collection('activation').find({ user: new ObjectId(id), destroyed: false }).toArray()
+
+  if (!activation) {
+    throw new Error('Invalid activation details')
+  }
+
+  return true
+})
+
+hemera.add({
+  topic: 'registration',
+  cmd: 'activate-account'
+}, async (args) => {
+  const {
+    id,
+    password,
+
+    membership,
+    promotions,
+    accept,
+
+    card_holder_name,
+    card_number,
+    billing_card_exp_month,
+    billing_card_exp_year,
+    cvv,
+    address_line_1,
+    address_line_2,
+    zip_code,
+    billing_country,
+
+    email,
+    firstName,
+    middleName,
+    lastName,
+    address_1,
+    address_2,
+    city,
+    state,
+    zip,
+    country,
+
+    company_name,
+    company_registration_id,
+    company_email,
+    company_contact,
+    communications_email,
+    communications_sms,
+    contact,
+  } = args.data;
+
+
+  const userid = new ObjectID(id);
+
+  const company = {
+    _id: new ObjectID(),
+    company_name,
+    company_registration_id,
+    company_email,
+    company_contact,
+    communications_email,
+    communications_sms,
+    contact,
+    createdBy: userid,
+    destroyed: false,
+  };
+
+  const client = {
+    _id: new ObjectID(),
+    name: company_name,
+    contact,
+    createdBy: userid,
+    destroyed: false,
+  };
+
+  const user = {
+    _id: userid,
+    email,
+    phoneNumber: contact,
+    firstName,
+    middleName,
+    lastName,
+    address_1,
+    city,
+    state,
+    country,
+    client: company.id,
+    destroyed: false,
+  };
+
+  const settings = {
+    _id: user._id,
+    user: user._id,
+    membership,
+    promotions,
+    accept,
+    destroyed: false,
+  };
+
+  const billing = {
+    _id: new ObjectID(),
+    company: company._id,
+    user: user._id,
+    card_holder_name,
+    card_number,
+    billing_card_exp_month,
+    billing_card_exp_year,
+    cvv,
+    address_line_1,
+    address_line_2,
+    zip_code,
+    billing_country,
+  };
+
+  const legacyUser = {
+    _id: user._id,
+    firstName: user.firstName,
+    middleName: user.middleName,
+    lastName: user.lastName,
+    phoneNumber: company.contact,
+    password: sha1(password),
+    email: user.email,
+    destroyed: false,
+    client: company._id,
+  };
+
+  // check for existing emails and throw errors
+  /*const [existingUser] = await db
+    .collection('user')
+    .find({ email: user.email })
+    .toArray();
+
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }*/
+
+  // create base data
+  await db.collection('user').updateOne({ _id: userid }, { $set: legacyUser })
+  await db.collection('settings').updateOne({ id: settings._id }, { $set: settings });
+  await db.collection('company').updateOne({ _id: company_contact._id }, { $set: company });
+
+  await db.collection('billing').insertOne(billing);
+  await db.collection('saasUser').insertOne(user);
+
+  /*registrationThanks({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      company: {
+        name: company.company_name,
+      },
+    }),
+  });
+
+  userCreatedAccount({
+    to: 'sirbranson67@gmail.com',
+    data: {
+      email,
+    },
+  });*/
+  // send out a sample project created email
+  // send out a process guide email
+  // send out a download our app email
+
+  // start tracking this user for the next 30 days
+
+  return {
+    user: user.id,
+    company: company.id,
+    billing: billing.id,
+    settings: settings.id,
+    token: jwt.sign(
+      user
+      , config[NODE_ENV].hashingSecret,
+    ),
+  };
+})
 
 app.get('/submision/:id', async (req, res) => {
   const submission = req.params;
