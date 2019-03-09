@@ -14,6 +14,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import cron from 'node-cron';
 import {
   passwordResetEmail,
+  sendDocumentEmails,
   registrationThanks,
   accountActivationEmail,
   userLoggedIn,
@@ -21,11 +22,13 @@ import {
   appUserLoggedIn,
 } from './emails/mailer';
 import jobs from '../jobs';
-import { bulkAdd } from './etl-pipeline'
+import { bulkAdd } from './etl-pipeline';
 
 const moment = require('moment');
 const doT = require('dot');
 const math = require('mathjs');
+const puppeteer = require('puppeteer');
+
 const { ObjectID } = require('mongodb');
 
 const Hemera = require('nats-hemera');
@@ -56,7 +59,7 @@ MongoClient.connect(
 
     // start the jobs, give access to the db instance
     jobs.map(({
-      name, schedule, work, options, emediate
+      name, schedule, work, options, emediate,
     }) => {
       if (emediate === true) {
         work({ db });
@@ -413,6 +416,37 @@ app.post(
   },
 );
 
+const makePdf = async (path, params) => {
+  const { MASTER_TOKEN, NODE_ENV } = process.env;
+  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
+  console.log(bookingUrl);
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+    ],
+  })
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1920, height: 926 });
+  await page.goto(bookingUrl);
+  await page.evaluate((MASTER_TOKEN) => {
+    localStorage.setItem('token', MASTER_TOKEN);
+  }, MASTER_TOKEN);
+  await page.goto(bookingUrl, { waitUntil: 'networkidle0' });
+  console.log('===>', 'saving the pdf');
+  await page.pdf({
+    path,
+    format: 'A4',
+    margin: {
+      top: "100px",
+      bottom: "100px"
+    }
+  });
+  await browser.close()
+}
+
 app.post('/submision', async (req, res) => {
   const submission = req.body;
 
@@ -465,19 +499,19 @@ app.post('/submision', async (req, res) => {
           submission.questionnaireId
           }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
 
-        console.log("=====>", cleanCopy[key])
+        console.log('=====>', cleanCopy[key]);
       }
     }
-  })
-  console.log(JSON.stringify({ cleanCopy }, null, '\t'))
+  });
+  console.log(JSON.stringify({ cleanCopy }, null, '\t'));
 
 
   const entry = Object.assign({}, cleanCopy, {
+    _id: new ObjectID(),
     createdAt: new Date(),
     destroyed: false,
     userId: req.user ? req.user._id : undefined,
   });
-
 
 
   await db.collection('submision').insertOne(entry);
@@ -507,6 +541,41 @@ app.post('/submision', async (req, res) => {
       console.log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
     }
   });
+
+  const path = `./dist/${submited._id}.pdf`
+
+  await makePdf(path, {
+    q: cleanCopy.questionnaireId,
+    a: entry._id
+  })
+
+  // -------------------------------fetch project details to make a nice project body --------------------
+  const project = await db.collection('project').findOne({
+    _id: new ObjectID(entry.projectId)
+  });
+
+  const ccPeople = ['kuriagitome@gmail.com', cleanCopy.__agentEmail]
+  sendDocumentEmails({
+    from: `"${entry.__agentFirstName ? entry.__agentFirstName : ''} ${entry.__agentLastName ? entry.__agentLastName : ''} ${entry.__agentLastName ? entry.__agentLastName : '' } ${entry.__agentMiddleName ? entry.__agentMiddleName : '' } via Datakit " <${process.env.EMAIL_BASE}>`,
+    to: 'sirbranson67@gmail.com',
+    cc: ccPeople.join(","),
+    subject: `'${project.name}' Submission`,
+    message: `
+      My submission for ${project.name} is now ready for download as a pdf.
+      <br>
+      <br>
+
+      Please find the document attached to this email.
+      <br>
+      <br>
+      Regards,
+    `,
+    attachments: [{
+      filename: `${submited._id}.pdf`,
+      content: fs.createReadStream(path),
+      contentType: 'application/pdf'
+    }]
+  })
 });
 
 const action = {
@@ -645,7 +714,7 @@ hemera.add(action, async (args) => {
   await db.collection('company').insertOne(company);
   // await db.collection('client').insertOne(client);
 
-  /*const questionnaire = {
+  /* const questionnaire = {
     _id: new ObjectID(),
     name: 'Sample questionnaire',
     client: company._id.toString(),
@@ -714,7 +783,7 @@ hemera.add(action, async (args) => {
   };
 
   // create questionnire things
-  await db.collection('question').insertOne(question);*/
+  await db.collection('question').insertOne(question); */
 
   await bulkAdd({
     db,
@@ -1171,8 +1240,8 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
       // )
 
       day = {
-        start,
-        end,
+        start: startTime,
+        end: endTime,
         count: data.length,
         // attatch data thats used on the admin ui
         data: data.map(({ _id, GPS_longitude: long, GPS_latitude: lat }) => ({ _id, long, lat })),
@@ -1318,6 +1387,37 @@ app.post(
   },
 );
 
+app.get(
+  '/printable/:q/:a',
+  bodyParser.urlencoded({ extended: false }),
+  bodyParser.json(),
+  async (req, res) => {
+    const path = `./dist/${req.params.a}.pdf`
+
+    await makePdf(path, req.params)
+
+    res.setHeader('content-type', 'some/type');
+    fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
+    const ccPeople = ['kuriagitome@gmail.com', 'muriithited@gmail.com']
+    sendDocumentEmails({
+      to: 'sirbranson67@gmail.com',
+      cc: ccPeople.join(","),
+      attachments: [{   // filename and content type is derived from path
+        filename: `${req.params.a}.pdf`,
+        content: fs.createReadStream(`./dist/${req.params.a}.pdf`),
+        contentType: 'application/pdf'
+      }]
+    })
+  },
+);
+
+
+
 app.use(errors());
 
 export default app;
+
+// hemera.add({
+//   topic: 'printer',
+//   cmd: 'printSubmission',
+// }, async args => makeDoc(args));
