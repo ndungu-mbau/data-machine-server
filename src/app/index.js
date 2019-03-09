@@ -39,7 +39,7 @@ const hemera = new Hemera(nats, {
 
 AWS.config.loadFromPath('aws_config.json');
 
-const { NODE_ENV = 'development',DISABLE_JOBS=false } = process.env;
+const { NODE_ENV = 'development', DISABLE_JOBS = false } = process.env;
 
 const multer = Multer({
   dest: 'uploads/',
@@ -58,11 +58,11 @@ MongoClient.connect(
     jobs.map(({
       name, schedule, work, options, emediate
     }) => {
-      if(emediate === true){
+      if (emediate === true) {
         work({ db });
       }
 
-      if(NODE_ENV !== 'development' && !DISABLE_JOBS){
+      if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
         const task = cron.schedule(schedule, () => {
           try {
             work({ db });
@@ -717,8 +717,10 @@ hemera.add(action, async (args) => {
   await db.collection('question').insertOne(question);*/
 
   await bulkAdd({
-    files:['job-sheet.json'],
-    client: company._id.toString()
+    db,
+    files: ['job-sheet.json'],
+    client: company._id.toString(),
+    user: user._id.toString()
   })
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
@@ -776,6 +778,7 @@ hemera.add(registrationAction, async (args) => {
     email,
     contact,
     firstName,
+    orgName
   } = args.data;
 
 
@@ -791,6 +794,7 @@ hemera.add(registrationAction, async (args) => {
 
   const company = {
     _id: new ObjectID(),
+    company_name: orgName,
     contact,
     createdBy: userid,
     destroyed: false,
@@ -809,6 +813,7 @@ hemera.add(registrationAction, async (args) => {
     password: sha1(password),
     email: user.email,
     destroyed: false,
+    client: company._id,
   };
 
   const activation = {
@@ -832,8 +837,10 @@ hemera.add(registrationAction, async (args) => {
   await db.collection('activation').insertOne(activation)
 
   await bulkAdd({
-    files:['job-sheet.json'],
-    client: company._id.toString()
+    db,
+    files: ['job-sheet.json'],
+    client: company._id.toString(),
+    user: user._id.toString(),
   })
 
   // send out a welcome email
@@ -851,8 +858,8 @@ hemera.add(registrationAction, async (args) => {
     data: Object.assign({}, legacyUser, {
       id: legacyUser._id,
       host: process.env.NODE_ENV === 'production'
-          ? 'https://app.braiven.io'
-          : 'http://localhost:3000',
+        ? 'https://app.braiven.io'
+        : 'http://localhost:3000',
     })
   })
 
@@ -877,14 +884,14 @@ hemera.add(registrationAction, async (args) => {
 });
 
 hemera.add({
-  topic:'registration',
-  cmd:'activate-account-check'
+  topic: 'registration',
+  cmd: 'activate-account-check'
 }, async (args) => {
   const { id } = args
 
-  const [activation] = await db.collection('activation').find({ user : new ObjectId(id), destroyed: false}).toArray()
+  const [activation] = await db.collection('activation').find({ user: new ObjectId(id), destroyed: false }).toArray()
 
-  if(!activation){
+  if (!activation) {
     throw new Error('Invalid activation details')
   }
 
@@ -892,8 +899,8 @@ hemera.add({
 })
 
 hemera.add({
-  topic:'registration',
-  cmd:'activate-account'
+  topic: 'registration',
+  cmd: 'activate-account'
 }, async (args) => {
   const {
     id,
@@ -1019,9 +1026,9 @@ hemera.add({
   }*/
 
   // create base data
-  await db.collection('user').updateOne({_id: userid}, {$set: legacyUser})
-  await db.collection('settings').updateOne({id: settings._id}, {$set:settings});
-  await db.collection('company').updateOne({_id: company_contact._id}, {$set: company});
+  await db.collection('user').updateOne({ _id: userid }, { $set: legacyUser })
+  await db.collection('settings').updateOne({ id: settings._id }, { $set: settings });
+  await db.collection('company').updateOne({ _id: company_contact._id }, { $set: company });
 
   await db.collection('billing').insertOne(billing);
   await db.collection('saasUser').insertOne(user);
