@@ -554,14 +554,22 @@ app.post('/submision', async (req, res) => {
     _id: new ObjectID(entry.projectId)
   });
 
+  const {
+    __agentFirstName ='',
+    __agentLastName = '',
+    __agentMiddleName = ''
+  } = entry
+
+  const upper = lower.replace(/^\w/, c => c.toUpperCase());
+
   const ccPeople = ['kuriagitome@gmail.com', cleanCopy.__agentEmail]
   sendDocumentEmails({
-    from: `"${entry.__agentFirstName ? entry.__agentFirstName : ''} ${entry.__agentLastName ? entry.__agentLastName : ''} ${entry.__agentLastName ? entry.__agentLastName : '' } ${entry.__agentMiddleName ? entry.__agentMiddleName : '' } via Datakit " <${process.env.EMAIL_BASE}>`,
+    from: `"${upper(__agentFirstName.toLowerCase())} ${upper(__agentMiddleName.toLowerCase())} ${upper(__agentLastName.toLowerCase())} via Datakit " <${process.env.EMAIL_BASE}>`,
     to: 'sirbranson67@gmail.com',
     cc: ccPeople.join(","),
     subject: `'${project.name}' Submission`,
     message: `
-      My submission for ${project.name} is now ready for download as a pdf.
+      My ${upper(project.name.toLowerCase())} submission for is now ready for download as a pdf.
       <br>
       <br>
 
