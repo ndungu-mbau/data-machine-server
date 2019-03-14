@@ -28,16 +28,18 @@ function makeShortPassword() {
 const create = async (args, { db, ObjectId }) => {
   const entry = args[collection];
 
+  const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
+  const coolNumber = phoneUtil.format(number, PNF.E164)
+
   // check if there is an entry with that phoneNumber
-  const existingUser = await db.collection(collection).findOne({ phoneNumber: entry.phoneNumber })
+  const existingUser = await db.collection(collection).findOne({ phoneNumber: coolNumber })
   if (existingUser) {
     existingUser.id = existingUser._id;
-    console.log("User already exists,not sending sms ", entry.phoneNumber)
+    console.log("User already exists,not sending sms ", coolNumber)
     return existingUser;
   } else {
     // ask for the country and use that here - then ask to confirm
-    const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
-    const coolNumber = phoneUtil.format(number, PNF.E164)
+
 
     const tempPassword = makeShortPassword()
 
