@@ -550,8 +550,9 @@ const lauchNewInstance = async () => {
 
 puppeteer.launch(launchOptions).then(Ibrowser => {
   browser = Ibrowser
-  browser.on('disconnected', async () => {
-    lauchNewInstance()
+  browser.on('disconnected', async (err) => {
+    console.log("chrome died",err)
+    // lauchNewInstance()
   });
 });
 
