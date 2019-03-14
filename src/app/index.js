@@ -558,8 +558,8 @@ puppeteer.launch(launchOptions).then(Ibrowser => {
     console.log("chrome died", err)
     // lauchNewInstance()
   });
-}).catch(err=>{
-  console.log("unable to start chrome",err)
+}).catch(err => {
+  console.log("unable to start chrome", err)
 });
 
 
