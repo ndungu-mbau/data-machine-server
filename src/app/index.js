@@ -537,7 +537,7 @@ const launchOptions = {
 
 let browser; 
 
-puppeteer.launch(launchOptions).then(Ibrowser => browser = Ibrowser);
+
 
 const lauchNewInstance = async () => {
   console.log("launching new browser")
@@ -548,9 +548,14 @@ const lauchNewInstance = async () => {
   });
 }
 
-browser.on('disconnected', async () => {
-  lauchNewInstance()
+puppeteer.launch(launchOptions).then(Ibrowser => {
+  browser = Ibrowser
+  browser.on('disconnected', async () => {
+    lauchNewInstance()
+  });
 });
+
+
 
 
 const makePdf = async (path, params) => {
