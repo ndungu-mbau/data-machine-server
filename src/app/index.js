@@ -52,6 +52,7 @@ MongoClient.connect(
   (err, client) => {
     if (err) throw err;
     db = client.db(config[NODE_ENV].db.name);
+    console.log("jobs started")
     // start the jobs, give access to the db instance
     jobs.map(({
       name, schedule, work, options, emediate
@@ -622,6 +623,7 @@ hemera.add(action, async (args) => {
     email: user.email,
     destroyed: false,
     client: company._id,
+    userActivated:false
   };
 
   const role={companyId:legacyUser.client ,UserId:legacyUser._id ,role:"admin" }
