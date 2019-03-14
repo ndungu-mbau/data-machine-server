@@ -32,6 +32,7 @@ const create = async (args, { db, ObjectId }) => {
   const existingUser = await db.collection(collection).findOne({ phoneNumber: entry.phoneNumber })
   if (existingUser) {
     existingUser.id = existingUser._id;
+    console.log("User already exists,not sending sms ", entry.phoneNumber)
     return existingUser;
   } else {
     // ask for the country and use that here - then ask to confirm
@@ -49,6 +50,8 @@ const create = async (args, { db, ObjectId }) => {
       },
     };
 
+    console.log(action)
+
     hemera.act(action, (err, resp) => {
       if (err) {
         console.log("Error sending sms to ", entry.phoneNumber, coolNumber, err)
@@ -57,7 +60,7 @@ const create = async (args, { db, ObjectId }) => {
 
     Object.assign(entry, {
       _id: new ObjectId(),
-      phoneNumber:coolNumber,
+      phoneNumber: coolNumber,
       password: entry.password ? sha1(entry.password) : sha1(tempPassword),
       client: new ObjectId(entry.client),
       destroyed: false,
