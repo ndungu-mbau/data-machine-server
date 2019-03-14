@@ -535,7 +535,7 @@ const launchOptions = {
     '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
 }
 
-let browser; 
+let browser;
 
 
 
@@ -551,7 +551,7 @@ const lauchNewInstance = async () => {
 puppeteer.launch(launchOptions).then(Ibrowser => {
   browser = Ibrowser
   browser.on('disconnected', async (err) => {
-    console.log("chrome died",err)
+    console.log("chrome died", err)
     // lauchNewInstance()
   });
 });
