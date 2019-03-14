@@ -549,11 +549,17 @@ const lauchNewInstance = async () => {
 }
 
 puppeteer.launch(launchOptions).then(Ibrowser => {
+  if (Ibrowser)
+    console.log('launched chrome')
+
+
   browser = Ibrowser
   browser.on('disconnected', async (err) => {
     console.log("chrome died", err)
     // lauchNewInstance()
   });
+}).catch(err=>{
+  console.log("unable to start chrome",err)
 });
 
 
