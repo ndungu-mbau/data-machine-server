@@ -528,17 +528,34 @@ app.post(
   },
 );
 
+const launchOptions = {
+  headless: true,
+  pipe: true,
+  args: ['--headless', '--disable-gpu', '--full-memory-crash-report', '--unlimited-storage',
+    '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+}
+
+let browser = await puppeteer.launch(launchOptions);
+
+const lauchNewInstance = () => {
+  console.log("launching new browser")
+  browser = await puppeteer.launch(launchOptions);
+
+  browser.on('disconnected', async () => {
+    lauchNewInstance()
+  });
+}
+
+browser.on('disconnected', async () => {
+  lauchNewInstance()
+});
+
+
 const makePdf = async (path, params) => {
   const { MASTER_TOKEN, NODE_ENV } = process.env;
   const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    pipe: true,
-    args: ['--headless', '--disable-gpu', '--full-memory-crash-report', '--unlimited-storage',
-      '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  })
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 926 });
   await page.goto(bookingUrl);
@@ -555,7 +572,6 @@ const makePdf = async (path, params) => {
       bottom: "100px"
     }
   });
-  await browser.close()
 }
 
 app.post('/submision', async (req, res) => {
