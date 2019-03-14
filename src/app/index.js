@@ -539,7 +539,7 @@ let browser;
 
 puppeteer.launch(launchOptions).then(Ibrowser => browser = Ibrowser);
 
-const lauchNewInstance = () => {
+const lauchNewInstance = async () => {
   console.log("launching new browser")
   browser = await puppeteer.launch(launchOptions);
 
