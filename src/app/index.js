@@ -535,10 +535,9 @@ const makePdf = async (path, params) => {
 
   const browser = await puppeteer.launch({
     headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-    ],
+    pipe: true,
+    args: ['--headless', '--disable-gpu', '--full-memory-crash-report', '--unlimited-storage',
+      '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   })
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 926 });
