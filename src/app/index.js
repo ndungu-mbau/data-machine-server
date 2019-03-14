@@ -535,7 +535,9 @@ const launchOptions = {
     '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
 }
 
-let browser = await puppeteer.launch(launchOptions);
+let browser; 
+
+puppeteer.launch(launchOptions).then(Ibrowser => browser = Ibrowser);
 
 const lauchNewInstance = () => {
   console.log("launching new browser")
