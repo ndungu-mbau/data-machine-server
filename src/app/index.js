@@ -24,6 +24,34 @@ import {
 import jobs from '../jobs';
 import { bulkAdd } from './etl-pipeline';
 
+const rateLimit = require("express-rate-limit");
+ 
+ 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+ 
+const createAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 3, // start blocking after 5 requests
+  message:
+    "Too many accounts created from this IP, please try again after an hour"
+});
+
+const loginAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 5, // start blocking after 5 requests
+  message:
+    "Too login attempts this IP, please try again after an hour"
+});
+
+
+const PNF = require('google-libphonenumber').PhoneNumberFormat;
+
+// Get an instance of `PhoneNumberUtil`.
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
+
 const moment = require('moment');
 const doT = require('dot');
 const math = require('mathjs');
@@ -49,6 +77,16 @@ const multer = Multer({
 });
 
 let db;
+
+function makeShortPassword() {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  for (var i = 0; i < 4; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
+}
 
 MongoClient.connect(
   config[NODE_ENV].db.url,
@@ -99,6 +137,9 @@ app.use(
 );
 
 app.use(morgan('combined'));
+//  apply to all requests
+// app.use(limiter);
+app.enable("trust proxy");
 
 const getWeekBreakDown = (daysBack) => {
   const today = moment().toDate();
@@ -199,6 +240,7 @@ app.use('/health', (req, res) => res.send());
 
 app.post(
   '/auth/login',
+  loginAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       phone: Joi.string()
@@ -246,7 +288,57 @@ app.post(
 );
 
 app.post(
+  '/auth/login_management',
+  loginAccountLimiter,
+  celebrate({
+    body: Joi.object().keys({
+      username: Joi.string()
+        .required()
+        .error(new Error('Please provide a username')),
+      password: Joi.string()
+        .required()
+        .error(new Error('Please provide a password')),
+    }),
+  }),
+  async (req, res) => {
+    const { username, password } = req.body;
+    const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitomeh@gmail.com']
+
+    console.log("authenticating management",username)
+    if (allowedAdmins.includes(username)) {
+      console.log("authing a legit manager",username)
+      const userData = await db
+        .collection('user')
+        .findOne({ email: username });
+
+      if (userData) {
+        if (userData.password === sha1(password)) {
+          appUserLoggedIn({
+            to: 'info@braiven.io',
+            data: {
+              userData,
+              phoneNumber: username,
+            },
+          });
+          return res.send(Object.assign(userData, {
+            password: undefined,
+            token: jwt.sign(userData, config[NODE_ENV].managementHashingSecret),
+          }));
+        }
+      }
+
+      return res
+        .status(401)
+        .send({ message: 'Wrong username and password combination' });
+    }
+    console.log("management username not found in users",username)
+    return res.status(500).send("Unauthorised")
+  },
+);
+
+app.post(
   '/saasAuth/login',
+  loginAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       email: Joi
@@ -378,6 +470,7 @@ app.post(
 
 app.post(
   '/auth/register',
+  createAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       password: Joi.string().required(),
@@ -392,10 +485,14 @@ app.post(
   async (req, res) => {
     const { body: user } = req;
 
+    // ask for the country and use that here - then ask to confirm
+    const number = phoneUtil.parseAndKeepRawInput(user.phoneNumber, 'KE');
+    const coolNumber = phoneUtil.format(number, PNF.E164)
+
     // check if user already exists
     const userData = await db
       .collection('user')
-      .findOne({ phoneNumber: user.phoneNumber });
+      .findOne({ phoneNumber: coolNumber });
 
     // console.log({ userData })
     if (userData) {
@@ -404,9 +501,24 @@ app.post(
         .send({ message: 'Phone number already used, trying to log in?' });
     }
 
+    const action = {
+      topic: 'exec',
+      cmd: 'sms_nalm_treasury_pwc_1',
+      data: {
+        password: user.password ? user.password : makeShortPassword(),
+        phone: coolNumber
+      },
+    };
+    hemera.act(action, (err, resp) => {
+      if (err) {
+        console.log("Error sending sms to ", user.phoneNumber, coolNumber, err)
+      }
+    });
+
     Object.assign(user, {
       _id: new ObjectId(),
       password: sha1(user.password),
+      phoneNumber: coolNumber,
       destroyed: false,
     });
 
@@ -555,7 +667,7 @@ app.post('/submision', async (req, res) => {
   });
 
   const {
-    __agentFirstName ='',
+    __agentFirstName = '',
     __agentLastName = '',
     __agentMiddleName = ''
   } = entry

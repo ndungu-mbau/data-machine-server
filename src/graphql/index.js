@@ -34,7 +34,20 @@ MongoClient.connect(config[NODE_ENV].db.url, { useNewUrlParser: true }, (err, cl
   db = client.db(config[NODE_ENV].db.name);
 });
 
-const myAuthenticationLookup = req => jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret);
+const myAuthenticationLookup = req => {
+  try {
+    return jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret)
+
+    
+  } catch (err) {
+    // throw err
+    try {
+      return jwt.verify(req.headers.auth, config[NODE_ENV].managementHashingSecret)
+    } catch (err) {
+      throw err
+    }
+  }
+};
 
 const context = ({ req }) => {
   if (req.headers.auth) {

@@ -4206,6 +4206,13 @@ express-mongo-db@^2.0.4:
   dependencies:
     mongodb "^2.0.39"
 
+express-rate-limit@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/express-rate-limit/-/express-rate-limit-3.4.0.tgz#c053ee294feac6d3529863de549438749fd83ef1"
+  integrity sha512-SktWQGHhTQfIOZykiVIaoqmHCptqq177fEbumVytWsMpEqe+g78IFrfzivJTimoCdMZ5+vYJ5/a/w1darXMv+A==
+  dependencies:
+    defaults "^1.0.3"
+
 express@^4.16.1:
   version "4.16.3"
   resolved "http://registry.npmjs.org/express/-/express-4.16.3.tgz#6af8a502350db3246ecc4becf6b5a34d22f7ed53"
@@ -4771,6 +4778,11 @@ globby@^5.0.0:
     object-assign "^4.0.1"
     pify "^2.0.0"
     pinkie-promise "^2.0.0"
+
+google-libphonenumber@^3.2.2:
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/google-libphonenumber/-/google-libphonenumber-3.2.2.tgz#3d9d7ba727e99a50812f21b0ed313723b76c5c54"
+  integrity sha512-ubjGeosYPeusjYbUHy76lCniGTTI0k1rIFc+uKBX+jHQLDmWOSUtlFUxaeoLJ+Y+PAMM6dWp+C1HjHx5BI8kEw==
 
 got@^6.7.1:
   version "6.7.1"
