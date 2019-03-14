@@ -19,7 +19,6 @@ const queries = `
 `;
 
 const dashboardLayouts = dashboardId => async (filter, { datastore }) => {
-  console.log(dashboardId);
   const { destroyed = false, offset = 0, limit = 100 } = filter;
   const query = datastore
     .createQuery('layouts')

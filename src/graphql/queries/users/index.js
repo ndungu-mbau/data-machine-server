@@ -21,7 +21,6 @@ const queries = `
 
 const user = async (_, { filter = {} } = {}, { db, ObjectId, user }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
-  console.log(user)
   const userDetailsForSearch = { _id: new ObjectId(user._id) }
 
   console.log('finding user', { userDetailsForSearch })
@@ -75,8 +74,6 @@ const nested = {
       const teamsInfo = teams.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
-
-      console.log(teamsInfo);
 
       return teamsInfo;
     },

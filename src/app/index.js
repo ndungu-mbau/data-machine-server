@@ -1413,10 +1413,10 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     const copyRecord = {};
     computedProps.map((form) => {
       const tempFn = doT.template(form.formular || '');
-      console.log('computed', { formular: form.formular });
+      // console.log('computed', { formular: form.formular });
       const resultFormular = tempFn(row);
 
-      console.log('computed', { resultFormular });
+      // console.log('computed', { resultFormular });
 
       copyRecord[form.name] = math.eval(resultFormular);
     });

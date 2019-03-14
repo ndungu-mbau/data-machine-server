@@ -49,7 +49,6 @@ const create = async (args, { db, ObjectId }) => {
       },
     };
 
-    console.log(action)
     hemera.act(action, (err, resp) => {
       if (err) {
         console.log("Error sending sms to ", entry.phoneNumber, coolNumber, err)
