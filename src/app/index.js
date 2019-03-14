@@ -25,13 +25,13 @@ import jobs from '../jobs';
 import { bulkAdd } from './etl-pipeline';
 
 const rateLimit = require("express-rate-limit");
- 
- 
+
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
 });
- 
+
 const createAccountLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour window
   max: 3, // start blocking after 5 requests
@@ -304,9 +304,9 @@ app.post(
     const { username, password } = req.body;
     const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitomeh@gmail.com']
 
-    console.log("authenticating management",username)
+    console.log("authenticating management", username)
     if (allowedAdmins.includes(username)) {
-      console.log("authing a legit manager",username)
+      console.log("authing a legit manager", username)
       const userData = await db
         .collection('user')
         .findOne({ email: username });
@@ -331,7 +331,7 @@ app.post(
         .status(401)
         .send({ message: 'Wrong username and password combination' });
     }
-    console.log("management username not found in users",username)
+    console.log("management username not found in users", username)
     return res.status(500).send("Unauthorised")
   },
 );
@@ -672,7 +672,7 @@ app.post('/submision', async (req, res) => {
     __agentMiddleName = ''
   } = entry
 
-  const upper = lower.replace(/^\w/, c => c.toUpperCase());
+  const upper = (lower) => lower.replace(/^\w/, c => c.toUpperCase());
 
   const ccPeople = ['kuriagitome@gmail.com', cleanCopy.__agentEmail]
   sendDocumentEmails({
