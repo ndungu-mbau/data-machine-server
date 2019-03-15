@@ -531,8 +531,13 @@ app.post(
 const launchOptions = {
   headless: true,
   pipe: true,
-  args: ['--headless', '--disable-gpu', '--full-memory-crash-report', '--unlimited-storage',
-    '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  args: [
+    '--headless',
+    '--disable-gpu',
+    '--full-memory-crash-report',
+    '--no-sandbox',
+    '--disk-cache-size=0'
+  ],
 }
 
 let browser;

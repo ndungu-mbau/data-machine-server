@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb'
 import config from '../../config'
 
-const { NODE_ENV } = process.env
+const { NODE_ENV = 'development' } = process.env
 
 let db;
 
@@ -12,12 +12,12 @@ MongoClient.connect(config[NODE_ENV].db.url, { useNewUrlParser: true }, (err, cl
 
 const dbWrite = async ({ collection, data }) => db.collection(collection).insertOne(data)
 
-export const createPage = async (page) => dbWrite({ collection:'page', data: page })
+export const createPage = async (page) => dbWrite({ collection: 'page', data: page })
 
-export const createGroup = async (group) => dbWrite({ collection:'group',data: group })
+export const createGroup = async (group) => dbWrite({ collection: 'group', data: group })
 
-export const createQuestion = async (question) => dbWrite({ collection:'question', data: question })
+export const createQuestion = async (question) => dbWrite({ collection: 'question', data: question })
 
-export const createProject = async (project) => dbWrite({ collection:'project', data: project })
+export const createProject = async (project) => dbWrite({ collection: 'project', data: project })
 
-export const createQuestionnaire = async (questionnaire) => dbWrite({ collection:'questionnaire', data: questionnaire})
+export const createQuestionnaire = async (questionnaire) => dbWrite({ collection: 'questionnaire', data: questionnaire })
