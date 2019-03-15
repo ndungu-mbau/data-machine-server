@@ -303,7 +303,7 @@ app.post(
   }),
   async (req, res) => {
     const { username, password } = req.body;
-    const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitomeh@gmail.com']
+    const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitome@gmail.com']
 
     console.log("authenticating management", username)
     if (allowedAdmins.includes(username)) {
