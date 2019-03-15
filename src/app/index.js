@@ -55,7 +55,7 @@ const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance()
 const moment = require('moment');
 const doT = require('dot');
 const math = require('mathjs');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-firefox');
 
 const { ObjectID } = require('mongodb');
 
@@ -542,9 +542,6 @@ const launchOptions = {
 
 let browser;
 
-var rimraf = require("rimraf");
-rimraf("/some/directory", function () { console.log("done"); });
-
 const clearTmp = () => {
   const dirPath = "/tmp/"
   fs.readdir(dirPath, function (err, files) {
@@ -563,7 +560,7 @@ const clearTmp = () => {
               });
             }
           });
-          
+
 
           // var livesUntil = new Date();
           // livesUntil.setHours(livesUntil.getHours() - 1);
@@ -579,7 +576,10 @@ const clearTmp = () => {
 
 
 const lauchNewInstance = async () => {
-  clearTmp()
+  console.log("clearing files")
+  if (NODE_ENV !== 'development')
+    clearTmp()
+
   console.log("launching new browser")
   browser = await puppeteer.launch(launchOptions);
 
@@ -601,7 +601,9 @@ const lauchNewInstance = async () => {
 //   });
 // })
 
-lauchNewInstance()
+lauchNewInstance().catch(err => {
+  console.log(err)
+})
 
 
 
@@ -1031,7 +1033,7 @@ const registrationAction = {
   cmd: 'saas-registration',
 };
 
-hemera.add(registrationAction, (args) => new Promise(async (resolve,reject)=>{
+hemera.add(registrationAction, (args) => new Promise(async (resolve, reject) => {
   const {
     password,
     email,
@@ -1143,7 +1145,7 @@ hemera.add(registrationAction, (args) => new Promise(async (resolve,reject)=>{
   // send out a process guide email
   // send out a download our app email
 
-  
+
 }));
 
 hemera.add({

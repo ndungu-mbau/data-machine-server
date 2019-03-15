@@ -33,6 +33,7 @@
     "node-cron": "^2.0.3",
     "nodemailer": "^4.4.1",
     "puppeteer": "^1.12.2",
+    "puppeteer-firefox": "^0.5.0",
     "sha1": "^1.1.1",
     "source-map-support": "^0.5.10",
     "splunk-sdk": "^1.8.4",
