@@ -576,19 +576,19 @@ const clearTmp = () => {
 
 
 
-const lauchNewInstance = async () => {
-  console.log("clearing files")
-  if (NODE_ENV !== 'development')
-    clearTmp()
+// const lauchNewInstance = async () => {
+//   console.log("clearing files")
+//   if (NODE_ENV !== 'development')
+//     clearTmp()
 
-  console.log("launching new browser")
-  browser = await puppeteer.launch(launchOptions);
+//   console.log("launching new browser")
+//   browser = await puppeteer.launch(launchOptions);
 
-  browser.on('disconnected', async (err) => {
-    console.log("chrome died", err)
-    // lauchNewInstance()
-  });
-}
+//   browser.on('disconnected', async (err) => {
+//     console.log("chrome died", err)
+//     // lauchNewInstance()
+//   });
+// }
 
 // puppeteer.launch(launchOptions).then(Ibrowser => {
 //   if (Ibrowser)
@@ -602,9 +602,9 @@ const lauchNewInstance = async () => {
 //   });
 // })
 
-lauchNewInstance().catch(err => {
-  console.log(err)
-})
+// lauchNewInstance().catch(err => {
+//   console.log(err)
+// })
 
 
 
@@ -613,7 +613,7 @@ const makePdf = async (path, params) => {
   const { MASTER_TOKEN, NODE_ENV } = process.env;
   const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
-
+  let browser = await puppeteer.launch(launchOptions);
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 926 });
   await page.goto(bookingUrl);
@@ -630,6 +630,8 @@ const makePdf = async (path, params) => {
       bottom: "100px"
     }
   });
+  browser.close()
+  clearTmp()
 }
 
 app.post('/submision', async (req, res) => {
