@@ -537,7 +537,7 @@ const makePdf = async (path, params, cb) => {
   const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
   try {
-    await getBrowserInstance().then(browser => {
+    await getBrowserInstance().then(async browser => {
       const page = await browser.newPage();
       await page.setViewport({ width: 1920, height: 926 });
       await page.goto(bookingUrl);
