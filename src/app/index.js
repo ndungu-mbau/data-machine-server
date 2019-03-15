@@ -583,7 +583,7 @@ const lauchNewInstance = async () => {
   console.log("launching new browser")
   browser = await puppeteer.launch(launchOptions);
 
-  browser.on('disconnected', async () => {
+  browser.on('disconnected', async (err) => {
     console.log("chrome died", err)
     // lauchNewInstance()
   });
@@ -1031,7 +1031,7 @@ const registrationAction = {
   cmd: 'saas-registration',
 };
 
-hemera.add(registrationAction, async (args) => {
+hemera.add(registrationAction, (args) => new Promise(async (resolve,reject)=>{
   const {
     password,
     email,
@@ -1080,6 +1080,17 @@ hemera.add(registrationAction, async (args) => {
     user: userid,
     destroyed: false
   }
+
+  // before starting the db saving things, first reply as thins might take sometime
+  resolve({
+    user: user.id,
+    settings: settings.id,
+    token: jwt.sign(
+      user
+      , config[NODE_ENV].hashingSecret,
+    ),
+  })
+
   // check for existing emails and throw errors
   const [existingUser] = await db
     .collection('user')
@@ -1132,15 +1143,8 @@ hemera.add(registrationAction, async (args) => {
   // send out a process guide email
   // send out a download our app email
 
-  return {
-    user: user.id,
-    settings: settings.id,
-    token: jwt.sign(
-      user
-      , config[NODE_ENV].hashingSecret,
-    ),
-  };
-});
+  
+}));
 
 hemera.add({
   topic: 'registration',
