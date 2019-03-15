@@ -56,6 +56,7 @@ const moment = require('moment');
 const doT = require('dot');
 const math = require('mathjs');
 const puppeteer = require('puppeteer-firefox');
+const rimraf = require('rimraf')
 
 const { ObjectID } = require('mongodb');
 
