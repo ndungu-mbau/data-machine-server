@@ -55,7 +55,7 @@ const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance()
 const moment = require('moment');
 const doT = require('dot');
 const math = require('mathjs');
-const puppeteer = require('puppeteer-firefox');
+const puppeteer = require('puppeteer');
 const rimraf = require('rimraf')
 
 const { ObjectID } = require('mongodb');
