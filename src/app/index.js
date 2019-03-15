@@ -537,25 +537,27 @@ const makePdf = async (path, params, cb) => {
   const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
   try {
-    let browser = await getBrowserInstance()
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1920, height: 926 });
-    await page.goto(bookingUrl);
-    await page.evaluate((MASTER_TOKEN) => {
-      localStorage.setItem('token', MASTER_TOKEN);
-    }, MASTER_TOKEN);
-    await page.goto(bookingUrl, { waitUntil: ['load', 'networkidle2'] });
-    console.log('===>', 'saving the pdf', path);
-    await page.pdf({
-      path,
-      format: 'A4',
-      margin: {
-        top: "100px",
-        bottom: "100px"
-      }
-    });
-    // call callback when we are sure
-    cb()
+    await getBrowserInstance().then(browser => {
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1920, height: 926 });
+      await page.goto(bookingUrl);
+      await page.evaluate((MASTER_TOKEN) => {
+        localStorage.setItem('token', MASTER_TOKEN);
+      }, MASTER_TOKEN);
+      await page.goto(bookingUrl, { waitUntil: ['load', 'networkidle2'] });
+      console.log('===>', 'saving the pdf', path);
+      await page.pdf({
+        path,
+        format: 'A4',
+        margin: {
+          top: "100px",
+          bottom: "100px"
+        }
+      });
+      // call callback when we are sure
+      cb()
+    })
+
   } catch (err) {
     console.error("DOC_GEN_FAIL", err.message, { path, params })
     // return makePdf(path, params, cb)
@@ -662,7 +664,7 @@ app.post('/submision', async (req, res) => {
   await makePdf(path, {
     q: cleanCopy.questionnaireId,
     a: entry._id
-  }, async() => {
+  }, async () => {
     // -------------------------------fetch project details to make a nice project body --------------------
     const project = await db.collection('project').findOne({
       _id: new ObjectID(entry.projectId)
@@ -1523,7 +1525,7 @@ app.get(
   async (req, res) => {
     const path = `./dist/${req.params.a}.pdf`
 
-    await makePdf(path, req.params, async() => {
+    await makePdf(path, req.params, async () => {
       res.setHeader('content-type', 'some/type');
       fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
     })
