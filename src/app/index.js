@@ -529,20 +529,6 @@ app.post(
   },
 );
 
-const launchOptions = {
-  headless: true,
-  pipe: true,
-  args: [
-    '--headless',
-    '--disable-gpu',
-    '--full-memory-crash-report',
-    '--no-sandbox',
-    '--disk-cache-size=0'
-  ],
-}
-
-let browser;
-
 const clearTmp = () => {
   const dirPath = "/tmp/"
   fs.readdir(dirPath, function (err, files) {
@@ -574,46 +560,13 @@ const clearTmp = () => {
   });
 }
 
-
-
-// const lauchNewInstance = async () => {
-//   console.log("clearing files")
-//   if (NODE_ENV !== 'development')
-//     clearTmp()
-
-//   console.log("launching new browser")
-//   browser = await puppeteer.launch(launchOptions);
-
-//   browser.on('disconnected', async (err) => {
-//     console.log("chrome died", err)
-//     // lauchNewInstance()
-//   });
-// }
-
-// puppeteer.launch(launchOptions).then(Ibrowser => {
-//   if (Ibrowser)
-//     console.log('launched chrome')
-
-
-//   browser = Ibrowser
-//   browser.on('disconnected', async (err) => {
-//     console.log("chrome died", err)
-
-//   });
-// })
-
-// lauchNewInstance().catch(err => {
-//   console.log(err)
-// })
-
-
-
+const {getBrowserInstance} = require('./browserInstance');
 
 const makePdf = async (path, params) => {
   const { MASTER_TOKEN, NODE_ENV } = process.env;
   const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
-  let browser = await puppeteer.launch(launchOptions);
+  let browser = await getBrowserInstance()
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 926 });
   await page.goto(bookingUrl);
