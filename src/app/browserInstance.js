@@ -1,15 +1,3 @@
-const pptr = require('puppeteer');
-let instance = null;
-const launchOptions = {
-    headless: true,
-    devTooks: false,
-    args: [
-        '--headless',
-        '--full-memory-crash-report',
-        '--no-sandbox',
-        '--disk-cache-size=0'
-    ],
-}
 const fs = require('fs')
 const rimraf = require('rimraf')
 
@@ -44,11 +32,26 @@ const clearTmp = () => {
     });
 }
 
+const pptr = require('puppeteer');
+let instance = null;
+const launchOptions = {
+    headless: true,
+    devTooks: false,
+    args: [
+        '--headless',
+        '--full-memory-crash-report',
+        '--no-sandbox',
+        '--disk-cache-size=0'
+    ],
+}
+
+const {CHROME_WS} = process.env
 
 module.exports.getBrowserInstance = async function () {
     if (!instance) {
         clearTmp()
-        instance = await pptr.launch(launchOptions);
+        
+        instance = await puppeteer.connect({ browserWSEndpoint: CHROME_WS });
     }
     return instance;
 }
