@@ -11,6 +11,8 @@ const launchOptions = {
         '--disk-cache-size=0'
     ],
 }
+const fs = require('fs')
+const rimraf = require('rimraf')
 
 const clearTmp = () => {
     const dirPath = "/tmp/"
