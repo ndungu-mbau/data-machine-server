@@ -1518,16 +1518,6 @@ app.get(
 
     res.setHeader('content-type', 'some/type');
     fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
-    const ccPeople = ['kuriagitome@gmail.com', 'muriithited@gmail.com']
-    sendDocumentEmails({
-      to: 'sirbranson67@gmail.com',
-      cc: ccPeople.join(","),
-      attachments: [{   // filename and content type is derived from path
-        filename: `${req.params.a}.pdf`,
-        content: fs.createReadStream(`./dist/${req.params.a}.pdf`),
-        contentType: 'application/pdf'
-      }]
-    })
   },
 );
 

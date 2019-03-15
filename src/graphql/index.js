@@ -37,10 +37,8 @@ MongoClient.connect(config[NODE_ENV].db.url, { useNewUrlParser: true }, (err, cl
 const myAuthenticationLookup = req => {
   try {
     return jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret)
-
-    
   } catch (err) {
-    // throw err
+
     try {
       return jwt.verify(req.headers.auth, config[NODE_ENV].managementHashingSecret)
     } catch (err) {
