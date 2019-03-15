@@ -529,36 +529,6 @@ app.post(
   },
 );
 
-const clearTmp = () => {
-  const dirPath = "/tmp/"
-  fs.readdir(dirPath, function (err, files) {
-    if (err) return console.log(err);
-    console.log("tmp has ", files.length, "files")
-    if (files.length > 0) {
-      files.forEach(function (file) {
-        var filePath = dirPath + file;
-        fs.stat(filePath, function (err, stat) {
-          if (err) return console.log(err);
-          console.log("unlinking", filePath)
-          fs.unlink(filePath, function (err) {
-            if (err) {
-              rimraf(filePath, function () {
-                // console.log("unlinked dir", filePath)
-              });
-            }
-          });
-
-
-          // var livesUntil = new Date();
-          // livesUntil.setHours(livesUntil.getHours() - 1);
-          // if (stat.ctime < livesUntil) {
-
-          // }
-        });
-      });
-    }
-  });
-}
 
 const {getBrowserInstance} = require('./browserInstance');
 
@@ -583,8 +553,6 @@ const makePdf = async (path, params) => {
       bottom: "100px"
     }
   });
-  browser.close()
-  clearTmp()
 }
 
 app.post('/submision', async (req, res) => {
@@ -702,7 +670,7 @@ app.post('/submision', async (req, res) => {
 
   const upper = (lower) => lower.replace(/^\w/, c => c.toUpperCase());
 
-  const ccPeople = ['kuriagitome@gmail.com', cleanCopy.__agentEmail]
+  const ccPeople = ['skuria@braiven.io', cleanCopy.__agentEmail]
   sendDocumentEmails({
     from: `"${upper(__agentFirstName.toLowerCase())} ${upper(__agentMiddleName.toLowerCase())} ${upper(__agentLastName.toLowerCase())} via Datakit " <${process.env.EMAIL_BASE}>`,
     to: 'sirbranson67@gmail.com',
