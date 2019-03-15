@@ -558,7 +558,7 @@ const makePdf = async (path, params, cb) => {
     cb()
   } catch (err) {
     console.error("DOC_GEN_FAIL", err.message, { path, params })
-    return makePdf(path, params, cb)
+    // return makePdf(path, params, cb)
   }
 }
 
