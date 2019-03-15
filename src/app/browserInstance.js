@@ -45,13 +45,22 @@ const launchOptions = {
     ],
 }
 
-const {CHROME_WS} = process.env
+const { CHROME_WS } = process.env
+
+const connect = async () => {
+    instance = await pptr.connect({ browserWSEndpoint: CHROME_WS });
+    instance.on("disconnected", () => {
+        console.log("chrome just died, making another one")
+        connect()
+    });
+    return instance
+}
 
 module.exports.getBrowserInstance = async function () {
     if (!instance) {
         clearTmp()
-        
-        instance = await pptr.connect({ browserWSEndpoint: CHROME_WS });
+
+        instance = await connect();
     }
     return instance;
 }
