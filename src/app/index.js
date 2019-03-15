@@ -542,9 +542,34 @@ const launchOptions = {
 
 let browser;
 
+const clearTmp = () => {
+  fs.readdir("/tmp", function (err, files) {
+    if (err) return console.log(err);
+    console.log("tmp has ", files.length, "files")
+    if (files.length > 0) {
+      files.forEach(function (file) {
+        var filePath = dirPath + file;
+        fs.stat(filePath, function (err, stat) {
+          if (err) return console.log(err);
+          console.log("unlinking", filePath)
+          fs.unlink(filePath, function (err) {
+            if (err) return console.log(err);
+          });
+          // var livesUntil = new Date();
+          // livesUntil.setHours(livesUntil.getHours() - 1);
+          // if (stat.ctime < livesUntil) {
+
+          // }
+        });
+      });
+    }
+  });
+}
+
 
 
 const lauchNewInstance = async () => {
+  clearTmp()
   console.log("launching new browser")
   browser = await puppeteer.launch(launchOptions);
 
