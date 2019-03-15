@@ -662,7 +662,7 @@ app.post('/submision', async (req, res) => {
   await makePdf(path, {
     q: cleanCopy.questionnaireId,
     a: entry._id
-  }, () => {
+  }, async() => {
     // -------------------------------fetch project details to make a nice project body --------------------
     const project = await db.collection('project').findOne({
       _id: new ObjectID(entry.projectId)
@@ -1523,7 +1523,7 @@ app.get(
   async (req, res) => {
     const path = `./dist/${req.params.a}.pdf`
 
-    await makePdf(path, req.params, () => {
+    await makePdf(path, req.params, async() => {
       res.setHeader('content-type', 'some/type');
       fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
     })
