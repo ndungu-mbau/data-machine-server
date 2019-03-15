@@ -542,8 +542,12 @@ const launchOptions = {
 
 let browser;
 
+var rimraf = require("rimraf");
+rimraf("/some/directory", function () { console.log("done"); });
+
 const clearTmp = () => {
-  fs.readdir("/tmp", function (err, files) {
+  const dirPath = "/tmp/"
+  fs.readdir(dirPath, function (err, files) {
     if (err) return console.log(err);
     console.log("tmp has ", files.length, "files")
     if (files.length > 0) {
@@ -553,8 +557,14 @@ const clearTmp = () => {
           if (err) return console.log(err);
           console.log("unlinking", filePath)
           fs.unlink(filePath, function (err) {
-            if (err) return console.log(err);
+            if (err) {
+              rimraf(filePath, function () {
+                // console.log("unlinked dir", filePath)
+              });
+            }
           });
+          
+
           // var livesUntil = new Date();
           // livesUntil.setHours(livesUntil.getHours() - 1);
           // if (stat.ctime < livesUntil) {
@@ -574,23 +584,24 @@ const lauchNewInstance = async () => {
   browser = await puppeteer.launch(launchOptions);
 
   browser.on('disconnected', async () => {
-    lauchNewInstance()
-  });
-}
-
-puppeteer.launch(launchOptions).then(Ibrowser => {
-  if (Ibrowser)
-    console.log('launched chrome')
-
-
-  browser = Ibrowser
-  browser.on('disconnected', async (err) => {
     console.log("chrome died", err)
     // lauchNewInstance()
   });
-}).catch(err => {
-  console.log("unable to start chrome", err)
-});
+}
+
+// puppeteer.launch(launchOptions).then(Ibrowser => {
+//   if (Ibrowser)
+//     console.log('launched chrome')
+
+
+//   browser = Ibrowser
+//   browser.on('disconnected', async (err) => {
+//     console.log("chrome died", err)
+
+//   });
+// })
+
+lauchNewInstance()
 
 
 
