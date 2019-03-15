@@ -32,8 +32,6 @@ export const sendMail = ({ from, to, subject, message, attachments, cc, bcc }) =
             bcc,
         })
 
-        
-
         if (attachments) {
             mailOptions.attachments = attachments;
         }

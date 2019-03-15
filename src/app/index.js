@@ -530,29 +530,36 @@ app.post(
 );
 
 
-const {getBrowserInstance} = require('./browserInstance');
+const { getBrowserInstance } = require('./browserInstance');
 
-const makePdf = async (path, params) => {
+const makePdf = async (path, params, cb) => {
   const { MASTER_TOKEN, NODE_ENV } = process.env;
   const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
-  let browser = await getBrowserInstance()
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1920, height: 926 });
-  await page.goto(bookingUrl);
-  await page.evaluate((MASTER_TOKEN) => {
-    localStorage.setItem('token', MASTER_TOKEN);
-  }, MASTER_TOKEN);
-  await page.goto(bookingUrl, { waitUntil: ['load', 'networkidle2'] });
-  console.log('===>', 'saving the pdf');
-  await page.pdf({
-    path,
-    format: 'A4',
-    margin: {
-      top: "100px",
-      bottom: "100px"
-    }
-  });
+  try {
+    let browser = await getBrowserInstance()
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 926 });
+    await page.goto(bookingUrl);
+    await page.evaluate((MASTER_TOKEN) => {
+      localStorage.setItem('token', MASTER_TOKEN);
+    }, MASTER_TOKEN);
+    await page.goto(bookingUrl, { waitUntil: ['load', 'networkidle2'] });
+    console.log('===>', 'saving the pdf', path);
+    await page.pdf({
+      path,
+      format: 'A4',
+      margin: {
+        top: "100px",
+        bottom: "100px"
+      }
+    });
+    // call callback when we are sure
+    cb()
+  } catch (err) {
+    console.error("DOC_GEN_FAIL", err.message, { path, params })
+    return makePdf(path, params, cb)
+  }
 }
 
 app.post('/submision', async (req, res) => {
@@ -655,28 +662,27 @@ app.post('/submision', async (req, res) => {
   await makePdf(path, {
     q: cleanCopy.questionnaireId,
     a: entry._id
-  })
+  }, () => {
+    // -------------------------------fetch project details to make a nice project body --------------------
+    const project = await db.collection('project').findOne({
+      _id: new ObjectID(entry.projectId)
+    });
 
-  // -------------------------------fetch project details to make a nice project body --------------------
-  const project = await db.collection('project').findOne({
-    _id: new ObjectID(entry.projectId)
-  });
+    const {
+      __agentFirstName = '',
+      __agentLastName = '',
+      __agentMiddleName = ''
+    } = entry
 
-  const {
-    __agentFirstName = '',
-    __agentLastName = '',
-    __agentMiddleName = ''
-  } = entry
+    const upper = (lower) => lower.replace(/^\w/, c => c.toUpperCase());
 
-  const upper = (lower) => lower.replace(/^\w/, c => c.toUpperCase());
-
-  const ccPeople = ['skuria@braiven.io', cleanCopy.__agentEmail]
-  sendDocumentEmails({
-    from: `"${upper(__agentFirstName.toLowerCase())} ${upper(__agentMiddleName.toLowerCase())} ${upper(__agentLastName.toLowerCase())} via Datakit " <${process.env.EMAIL_BASE}>`,
-    to: 'sirbranson67@gmail.com',
-    cc: ccPeople.join(","),
-    subject: `'${project.name}' Submission`,
-    message: `
+    const ccPeople = [cleanCopy.__agentEmail]
+    sendDocumentEmails({
+      from: `"${upper(__agentFirstName.toLowerCase())} ${upper(__agentMiddleName.toLowerCase())} ${upper(__agentLastName.toLowerCase())} via Datakit " <${process.env.EMAIL_BASE}>`,
+      cc: ccPeople.join(","),
+      bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
+      subject: `'${project.name}' Submission`,
+      message: `
       My ${upper(project.name.toLowerCase())} submission for is now ready for download as a pdf.
       <br>
       <br>
@@ -686,12 +692,15 @@ app.post('/submision', async (req, res) => {
       <br>
       Regards,
     `,
-    attachments: [{
-      filename: `${submited._id}.pdf`,
-      content: fs.createReadStream(path),
-      contentType: 'application/pdf'
-    }]
+      attachments: [{
+        filename: `${submited._id}.pdf`,
+        content: fs.createReadStream(path),
+        contentType: 'application/pdf'
+      }]
+    })
   })
+
+
 });
 
 const action = {
@@ -1514,10 +1523,12 @@ app.get(
   async (req, res) => {
     const path = `./dist/${req.params.a}.pdf`
 
-    await makePdf(path, req.params)
+    await makePdf(path, req.params, () => {
+      res.setHeader('content-type', 'some/type');
+      fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
+    })
 
-    res.setHeader('content-type', 'some/type');
-    fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
+
   },
 );
 
