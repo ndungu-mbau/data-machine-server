@@ -51,7 +51,7 @@ module.exports.getBrowserInstance = async function () {
     if (!instance) {
         clearTmp()
         
-        instance = await puppeteer.connect({ browserWSEndpoint: CHROME_WS });
+        instance = await pptr.connect({ browserWSEndpoint: CHROME_WS });
     }
     return instance;
 }
