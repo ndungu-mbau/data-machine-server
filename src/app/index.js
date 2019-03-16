@@ -645,17 +645,26 @@ app.post('/submision', async (req, res) => {
     .find({ _id: ObjectId(submission.questionnaireId) })
     .toArray();
 
+  const [project] = await db
+    .collection('project')
+    .find({ _id: ObjectId(submission.projectId) })
+    .toArray();
+
   const action = {
     topic: 'exec',
     cmd: questionnaire.name.replace(/\s/g, '_'),
-    data: submited,
+    data: {
+      submited,
+      questionnaire,
+      project
+    },
   };
 
   hemera.act(action, (err, resp) => {
     if (err) {
-      console.log('ERROR RUNNING SCRIPT');
+      console.log('ERROR RUNNING SCRIPT', action.cmd);
     } else {
-      console.log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
+      console.log(`SUCCESSFULY RUN SCRIPT ${action.cmd} for ${submited._id}`);
     }
   });
 
