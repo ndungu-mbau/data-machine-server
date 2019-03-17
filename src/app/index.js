@@ -689,7 +689,7 @@ app.post('/submision', async (req, res) => {
 
     const ccPeople = [cleanCopy.__agentEmail]
     sendDocumentEmails({
-      from: `"${upper(__agentFirstName.toLowerCase())} ${upper(__agentMiddleName.toLowerCase())} ${upper(__agentLastName.toLowerCase())} via Datakit " <${process.env.EMAIL_BASE}>`,
+      from: `"${upper(__agentFirstName.toLowerCase())} via Datakit " <${process.env.EMAIL_BASE}>`,
       cc: ccPeople.join(","),
       bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
       subject: `'${project.name}' Submission`,
