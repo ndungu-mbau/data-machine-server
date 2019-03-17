@@ -98,7 +98,7 @@ const update = async (args, { db, ObjectId }) => {
 const destroy = async (args, { db, ObjectId }) => {
   const entry = args[collection];
   return db.collection(collection)
-    .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } });
+    .deleteOne({ _id: new ObjectId(entry.id) });
 };
 
 const restore = async (args, { db, ObjectId }) => {
