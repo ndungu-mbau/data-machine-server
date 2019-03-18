@@ -50,7 +50,7 @@ const create = async (args, { db, ObjectId }) => {
     cmd: 'sms_nalm_treasury_pwc_1',
     data: {
       password: entry.password ? entry.password : tempPassword,
-      phone: coolNumber,
+      phone: entry.phoneNumber,
     },
   };
 
