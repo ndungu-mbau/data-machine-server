@@ -24,26 +24,26 @@ import {
 import jobs from '../jobs';
 import { bulkAdd } from './etl-pipeline';
 
-const rateLimit = require("express-rate-limit");
+const rateLimit = require('express-rate-limit');
 
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
 });
 
 const createAccountLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour window
   max: 3, // start blocking after 5 requests
   message:
-    "Too many accounts created from this IP, please try again after an hour"
+    'Too many accounts created from this IP, please try again after an hour',
 });
 
 const loginAccountLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour window
   max: 5, // start blocking after 5 requests
   message:
-    "Too login attempts this IP, please try again after an hour"
+    'Too login attempts this IP, please try again after an hour',
 });
 
 
@@ -56,7 +56,7 @@ const moment = require('moment');
 const doT = require('dot');
 const math = require('mathjs');
 const puppeteer = require('puppeteer');
-const rimraf = require('rimraf')
+const rimraf = require('rimraf');
 
 const { ObjectID } = require('mongodb');
 
@@ -80,11 +80,11 @@ const multer = Multer({
 let db;
 
 function makeShortPassword() {
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let text = '';
+  let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-  for (var i = 0; i < 4; i++)
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  for (let i = 0; i < 4; i++)
+    {text += possible.charAt(Math.floor(Math.random() * possible.length));}
 
   return text;
 }
@@ -140,7 +140,7 @@ app.use(
 app.use(morgan('combined'));
 //  apply to all requests
 // app.use(limiter);
-app.enable("trust proxy");
+app.enable('trust proxy');
 
 const getWeekBreakDown = (daysBack) => {
   const today = moment().toDate();
@@ -303,11 +303,11 @@ app.post(
   }),
   async (req, res) => {
     const { username, password } = req.body;
-    const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitome@gmail.com']
+    const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitome@gmail.com'];
 
-    console.log("authenticating management", username)
+    console.log('authenticating management', username);
     if (allowedAdmins.includes(username)) {
-      console.log("authing a legit manager", username)
+      console.log('authing a legit manager', username);
       const userData = await db
         .collection('user')
         .findOne({ email: username });
@@ -332,8 +332,8 @@ app.post(
         .status(401)
         .send({ message: 'Wrong username and password combination' });
     }
-    console.log("management username not found in users", username)
-    return res.status(500).send("Unauthorised")
+    console.log('management username not found in users', username);
+    return res.status(500).send('Unauthorised');
   },
 );
 
@@ -488,12 +488,12 @@ app.post(
 
     // ask for the country and use that here - then ask to confirm
     const number = phoneUtil.parseAndKeepRawInput(user.phoneNumber, 'KE');
-    const coolNumber = phoneUtil.format(number, PNF.E164)
+    const coolNumber = phoneUtil.format(number, PNF.E164);
 
     // check if user already exists
     const userData = await db
       .collection('user')
-      .findOne({ phoneNumber: coolNumber });
+      .findOne({ phoneNumber: user.phoneNumber });
 
     // console.log({ userData })
     if (userData) {
@@ -507,19 +507,18 @@ app.post(
       cmd: 'sms_nalm_treasury_pwc_1',
       data: {
         password: user.password ? user.password : makeShortPassword(),
-        phone: coolNumber
+        phone: coolNumber,
       },
     };
     hemera.act(action, (err, resp) => {
       if (err) {
-        console.log("Error sending sms to ", user.phoneNumber, coolNumber, err)
+        console.log('Error sending sms to ', user.phoneNumber, coolNumber, err);
       }
     });
 
     Object.assign(user, {
       _id: new ObjectId(),
       password: sha1(user.password),
-      phoneNumber: coolNumber,
       destroyed: false,
     });
 
@@ -533,15 +532,17 @@ app.post(
 const { getBrowserInstance } = require('./browserInstance');
 
 const makePdf = async (path, params, cb) => {
-  const { MASTER_TOKEN, NODE_ENV } = process.env;
+  const { MASTER_TOKEN } = process.env;
   const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
   try {
-    await getBrowserInstance().then(async browser => {
+    await getBrowserInstance().then(async (browser) => {
       const page = await browser.newPage();
       await page.setViewport({ width: 1920, height: 926 });
       await page.goto(bookingUrl);
+      // eslint-disable-next-line no-shadow
       await page.evaluate((MASTER_TOKEN) => {
+        // eslint-disable-next-line no-undef
         localStorage.setItem('token', MASTER_TOKEN);
       }, MASTER_TOKEN);
       await page.goto(bookingUrl, { waitUntil: ['load', 'networkidle2'] });
@@ -550,19 +551,18 @@ const makePdf = async (path, params, cb) => {
         path,
         format: 'A4',
         margin: {
-          top: "100px",
-          bottom: "100px"
-        }
+          top: '100px',
+          bottom: '100px',
+        },
       });
       // call callback when we are sure
-      cb()
-    })
-
+      cb();
+    });
   } catch (err) {
-    console.error("DOC_GEN_FAIL", err.message, { path, params })
+    console.error('DOC_GEN_FAIL', err.message, { path, params });
     // return makePdf(path, params, cb)
   }
-}
+};
 
 app.post('/submision', async (req, res) => {
   const submission = req.body;
@@ -577,6 +577,7 @@ app.post('/submision', async (req, res) => {
   if (existingSubmission) {
     return res.status(200).send({
       exists: true,
+      // eslint-disable-next-line no-underscore-dangle
       _id: existingSubmission._id,
     });
   }
@@ -614,7 +615,7 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
 
         console.log('=====>', cleanCopy[key]);
       }
@@ -656,7 +657,7 @@ app.post('/submision', async (req, res) => {
     data: {
       submited,
       questionnaire,
-      project
+      project,
     },
   };
 
@@ -668,29 +669,29 @@ app.post('/submision', async (req, res) => {
     }
   });
 
-  const path = `./dist/${submited._id}.pdf`
+  const path = `./dist/${submited._id}.pdf`;
 
   await makePdf(path, {
     q: cleanCopy.questionnaireId,
-    a: entry._id
+    a: entry._id,
   }, async () => {
     // -------------------------------fetch project details to make a nice project body --------------------
     const project = await db.collection('project').findOne({
-      _id: new ObjectID(entry.projectId)
+      _id: new ObjectID(entry.projectId),
     });
 
     const {
       __agentFirstName = '',
       __agentLastName = '',
-      __agentMiddleName = ''
-    } = entry
+      __agentMiddleName = '',
+    } = entry;
 
-    const upper = (lower) => lower.replace(/^\w/, c => c.toUpperCase());
+    const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
 
-    const ccPeople = [cleanCopy.__agentEmail]
+    const ccPeople = [cleanCopy.__agentEmail];
     sendDocumentEmails({
       from: `"${upper(__agentFirstName.toLowerCase())} via Datakit " <${process.env.EMAIL_BASE}>`,
-      cc: ccPeople.join(","),
+      cc: ccPeople.join(','),
       bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
       subject: `'${project.name}' Submission`,
       message: `
@@ -706,12 +707,10 @@ app.post('/submision', async (req, res) => {
       attachments: [{
         filename: `${submited._id}.pdf`,
         content: fs.createReadStream(path),
-        contentType: 'application/pdf'
-      }]
-    })
-  })
-
-
+        contentType: 'application/pdf',
+      }],
+    });
+  });
 });
 
 const action = {
@@ -925,8 +924,8 @@ hemera.add(action, async (args) => {
     db,
     files: ['job-sheet.json'],
     client: company._id.toString(),
-    user: user._id.toString()
-  })
+    user: user._id.toString(),
+  });
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user
@@ -977,13 +976,13 @@ const registrationAction = {
   cmd: 'saas-registration',
 };
 
-hemera.add(registrationAction, (args) => new Promise(async (resolve, reject) => {
+hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
   const {
     password,
     email,
     contact,
     firstName,
-    orgName
+    orgName,
   } = args.data;
 
 
@@ -1024,8 +1023,8 @@ hemera.add(registrationAction, (args) => new Promise(async (resolve, reject) => 
   const activation = {
     _id: new ObjectId(),
     user: userid,
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   // before starting the db saving things, first reply as thins might take sometime
   resolve({
@@ -1035,7 +1034,7 @@ hemera.add(registrationAction, (args) => new Promise(async (resolve, reject) => 
       user
       , config[NODE_ENV].hashingSecret,
     ),
-  })
+  });
 
   // check for existing emails and throw errors
   const [existingUser] = await db
@@ -1049,15 +1048,15 @@ hemera.add(registrationAction, (args) => new Promise(async (resolve, reject) => 
 
   // create base data
   await db.collection('user').insertOne(legacyUser);
-  await db.collection('company').insertOne(company)
-  await db.collection('activation').insertOne(activation)
+  await db.collection('company').insertOne(company);
+  await db.collection('activation').insertOne(activation);
 
   await bulkAdd({
     db,
     files: ['job-sheet.json'],
     client: company._id.toString(),
     user: user._id.toString(),
-  })
+  });
 
   // send out a welcome email
   registrationThanks({
@@ -1076,8 +1075,8 @@ hemera.add(registrationAction, (args) => new Promise(async (resolve, reject) => 
       host: process.env.NODE_ENV === 'production'
         ? 'https://app.braiven.io'
         : 'http://localhost:3000',
-    })
-  })
+    }),
+  });
 
   userCreatedAccount({
     to: 'sirbranson67@gmail.com',
@@ -1088,28 +1087,26 @@ hemera.add(registrationAction, (args) => new Promise(async (resolve, reject) => 
   // send out a sample project created email
   // send out a process guide email
   // send out a download our app email
-
-
 }));
 
 hemera.add({
   topic: 'registration',
-  cmd: 'activate-account-check'
+  cmd: 'activate-account-check',
 }, async (args) => {
-  const { id } = args
+  const { id } = args;
 
-  const [activation] = await db.collection('activation').find({ user: new ObjectId(id), destroyed: false }).toArray()
+  const [activation] = await db.collection('activation').find({ user: new ObjectId(id), destroyed: false }).toArray();
 
   if (!activation) {
-    throw new Error('Invalid activation details')
+    throw new Error('Invalid activation details');
   }
 
-  return true
-})
+  return true;
+});
 
 hemera.add({
   topic: 'registration',
-  cmd: 'activate-account'
+  cmd: 'activate-account',
 }, async (args) => {
   const {
     id,
@@ -1225,7 +1222,7 @@ hemera.add({
   };
 
   // check for existing emails and throw errors
-  /*const [existingUser] = await db
+  /* const [existingUser] = await db
     .collection('user')
     .find({ email: user.email })
     .toArray();
@@ -1235,14 +1232,14 @@ hemera.add({
   }*/
 
   // create base data
-  await db.collection('user').updateOne({ _id: userid }, { $set: legacyUser })
+  await db.collection('user').updateOne({ _id: userid }, { $set: legacyUser });
   await db.collection('settings').updateOne({ id: settings._id }, { $set: settings });
   await db.collection('company').updateOne({ _id: company_contact._id }, { $set: company });
 
   await db.collection('billing').insertOne(billing);
   await db.collection('saasUser').insertOne(user);
 
-  /*registrationThanks({
+  /* registrationThanks({
     to: user.email,
     data: Object.assign({}, legacyUser, {
       company: {
@@ -1273,7 +1270,7 @@ hemera.add({
       , config[NODE_ENV].hashingSecret,
     ),
   };
-})
+});
 
 app.get('/submision/:id', async (req, res) => {
   const submission = req.params;
@@ -1532,17 +1529,14 @@ app.get(
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
   async (req, res) => {
-    const path = `./dist/${req.params.a}.pdf`
+    const path = `./dist/${req.params.a}.pdf`;
 
     await makePdf(path, req.params, async () => {
       res.setHeader('content-type', 'some/type');
       fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
-    })
-
-
+    });
   },
 );
-
 
 
 app.use(errors());
