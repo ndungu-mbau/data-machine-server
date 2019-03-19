@@ -19,16 +19,24 @@ export default {
     // Show that duplicate records got dropped
     const users = await col.find({}).toArray();
     users.map(user => {
-   console.log(user)
-      var dateB = moment(new Date());
-      var dateC = moment(ObjectId(String(user._id)).getTimestamp());
-    //   var dateC = moment("2019-01-11");
-    var diff=dateB.diff(dateC, 'days')
-      if (diff === 40){
-        
-          console.log('user created 6 days ago',user)
-      }else{
-          console.log('')
+      //get dates
+      var dateB = moment(new Date()); //current date
+      var dateC = moment(ObjectId(String(user._id)).getTimestamp()); //date when object was created
+
+      var diff = dateB.diff(dateC, "days");//get the difference
+
+      if (diff === 40) { //if user was created 40 day ago check if he has been activated 
+        user.userActivated == false
+          ? db
+              .collection("user_deactivation")//if not activated add in user_deactivation
+              .replaceOne({ user }, { user }, { upsert: true })
+          : "";
+      } else {
+        db.collection("user_activated").replaceOne(//else add in user_activated
+          { user },
+          { user },
+          { upsert: true }
+        );
       }
     });
   },
