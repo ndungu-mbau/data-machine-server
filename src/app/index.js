@@ -14,16 +14,50 @@ import { MongoClient, ObjectId } from 'mongodb';
 import cron from 'node-cron';
 import {
   passwordResetEmail,
+  sendDocumentEmails,
   registrationThanks,
+  accountActivationEmail,
   userLoggedIn,
   userCreatedAccount,
   appUserLoggedIn,
 } from './emails/mailer';
 import jobs from '../jobs';
+import { bulkAdd } from './etl-pipeline';
+
+const rateLimit = require('express-rate-limit');
+
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+
+const createAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 3, // start blocking after 5 requests
+  message:
+    'Too many accounts created from this IP, please try again after an hour',
+});
+
+const loginAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 5, // start blocking after 5 requests
+  message:
+    'Too login attempts this IP, please try again after an hour',
+});
+
+
+const PNF = require('google-libphonenumber').PhoneNumberFormat;
+
+// Get an instance of `PhoneNumberUtil`.
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 
 const moment = require('moment');
 const doT = require('dot');
 const math = require('mathjs');
+const puppeteer = require('puppeteer');
+const rimraf = require('rimraf');
+
 const { ObjectID } = require('mongodb');
 
 const Hemera = require('nats-hemera');
@@ -37,13 +71,23 @@ const hemera = new Hemera(nats, {
 
 AWS.config.loadFromPath('aws_config.json');
 
-const { NODE_ENV = 'development',DISABLE_JOBS=false } = process.env;
+const { NODE_ENV = 'development', DISABLE_JOBS = false } = process.env;
 
 const multer = Multer({
   dest: 'uploads/',
 });
 
 let db;
+
+function makeShortPassword() {
+  let text = '';
+  let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (let i = 0; i < 4; i++)
+    {text += possible.charAt(Math.floor(Math.random() * possible.length));}
+
+  return text;
+}
 
 MongoClient.connect(
   config[NODE_ENV].db.url,
@@ -54,13 +98,13 @@ MongoClient.connect(
 
     // start the jobs, give access to the db instance
     jobs.map(({
-      name, schedule, work, options, emediate
+      name, schedule, work, options, emediate,
     }) => {
-      if(emediate === true){
+      if (emediate === true) {
         work({ db });
       }
 
-      if(NODE_ENV !== 'development' && !DISABLE_JOBS){
+      if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
         const task = cron.schedule(schedule, () => {
           try {
             work({ db });
@@ -94,6 +138,9 @@ app.use(
 );
 
 app.use(morgan('combined'));
+//  apply to all requests
+// app.use(limiter);
+app.enable('trust proxy');
 
 const getWeekBreakDown = (daysBack) => {
   const today = moment().toDate();
@@ -194,6 +241,7 @@ app.use('/health', (req, res) => res.send());
 
 app.post(
   '/auth/login',
+  loginAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       phone: Joi.string()
@@ -241,7 +289,57 @@ app.post(
 );
 
 app.post(
+  '/auth/login_management',
+  loginAccountLimiter,
+  celebrate({
+    body: Joi.object().keys({
+      username: Joi.string()
+        .required()
+        .error(new Error('Please provide a username')),
+      password: Joi.string()
+        .required()
+        .error(new Error('Please provide a password')),
+    }),
+  }),
+  async (req, res) => {
+    const { username, password } = req.body;
+    const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitome@gmail.com'];
+
+    console.log('authenticating management', username);
+    if (allowedAdmins.includes(username)) {
+      console.log('authing a legit manager', username);
+      const userData = await db
+        .collection('user')
+        .findOne({ email: username });
+
+      if (userData) {
+        if (userData.password === sha1(password)) {
+          appUserLoggedIn({
+            to: 'info@braiven.io',
+            data: {
+              userData,
+              phoneNumber: username,
+            },
+          });
+          return res.send(Object.assign(userData, {
+            password: undefined,
+            token: jwt.sign(userData, config[NODE_ENV].managementHashingSecret),
+          }));
+        }
+      }
+
+      return res
+        .status(401)
+        .send({ message: 'Wrong username and password combination' });
+    }
+    console.log('management username not found in users', username);
+    return res.status(500).send('Unauthorised');
+  },
+);
+
+app.post(
   '/saasAuth/login',
+  loginAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       email: Joi
@@ -373,6 +471,7 @@ app.post(
 
 app.post(
   '/auth/register',
+  createAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       password: Joi.string().required(),
@@ -387,6 +486,10 @@ app.post(
   async (req, res) => {
     const { body: user } = req;
 
+    // ask for the country and use that here - then ask to confirm
+    const number = phoneUtil.parseAndKeepRawInput(user.phoneNumber, 'KE');
+    const coolNumber = phoneUtil.format(number, PNF.E164);
+
     // check if user already exists
     const userData = await db
       .collection('user')
@@ -399,6 +502,20 @@ app.post(
         .send({ message: 'Phone number already used, trying to log in?' });
     }
 
+    const action = {
+      topic: 'exec',
+      cmd: 'sms_nalm_treasury_pwc_1',
+      data: {
+        password: user.password ? user.password : makeShortPassword(),
+        phone: coolNumber,
+      },
+    };
+    hemera.act(action, (err, resp) => {
+      if (err) {
+        console.log('Error sending sms to ', user.phoneNumber, coolNumber, err);
+      }
+    });
+
     Object.assign(user, {
       _id: new ObjectId(),
       password: sha1(user.password),
@@ -410,6 +527,42 @@ app.post(
     return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) });
   },
 );
+
+
+const { getBrowserInstance } = require('./browserInstance');
+
+const makePdf = async (path, params, cb) => {
+  const { MASTER_TOKEN } = process.env;
+  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
+  console.log(bookingUrl);
+  try {
+    await getBrowserInstance().then(async (browser) => {
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1920, height: 926 });
+      await page.goto(bookingUrl);
+      // eslint-disable-next-line no-shadow
+      await page.evaluate((MASTER_TOKEN) => {
+        // eslint-disable-next-line no-undef
+        localStorage.setItem('token', MASTER_TOKEN);
+      }, MASTER_TOKEN);
+      await page.goto(bookingUrl, { waitUntil: ['load', 'networkidle2'] });
+      console.log('===>', 'saving the pdf', path);
+      await page.pdf({
+        path,
+        format: 'A4',
+        margin: {
+          top: '100px',
+          bottom: '100px',
+        },
+      });
+      // call callback when we are sure
+      cb();
+    });
+  } catch (err) {
+    console.error('DOC_GEN_FAIL', err.message, { path, params });
+    // return makePdf(path, params, cb)
+  }
+};
 
 app.post('/submision', async (req, res) => {
   const submission = req.body;
@@ -424,6 +577,7 @@ app.post('/submision', async (req, res) => {
   if (existingSubmission) {
     return res.status(200).send({
       exists: true,
+      // eslint-disable-next-line no-underscore-dangle
       _id: existingSubmission._id,
     });
   }
@@ -461,21 +615,21 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
 
-        console.log("=====>", cleanCopy[key])
+        console.log('=====>', cleanCopy[key]);
       }
     }
-  })
-  console.log(JSON.stringify({ cleanCopy }, null, '\t'))
+  });
+  console.log(JSON.stringify({ cleanCopy }, null, '\t'));
 
 
   const entry = Object.assign({}, cleanCopy, {
+    _id: new ObjectID(),
     createdAt: new Date(),
     destroyed: false,
     userId: req.user ? req.user._id : undefined,
   });
-
 
 
   await db.collection('submision').insertOne(entry);
@@ -492,18 +646,70 @@ app.post('/submision', async (req, res) => {
     .find({ _id: ObjectId(submission.questionnaireId) })
     .toArray();
 
+  const [project] = await db
+    .collection('project')
+    .find({ _id: ObjectId(submission.projectId) })
+    .toArray();
+
   const action = {
     topic: 'exec',
     cmd: questionnaire.name.replace(/\s/g, '_'),
-    data: submited,
+    data: {
+      submited,
+      questionnaire,
+      project,
+    },
   };
 
   hemera.act(action, (err, resp) => {
     if (err) {
-      console.log('ERROR RUNNING SCRIPT');
+      console.log('ERROR RUNNING SCRIPT', action.cmd);
     } else {
-      console.log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
+      console.log(`SUCCESSFULY RUN SCRIPT ${action.cmd} for ${submited._id}`);
     }
+  });
+
+  const path = `./dist/${submited._id}.pdf`;
+
+  await makePdf(path, {
+    q: cleanCopy.questionnaireId,
+    a: entry._id,
+  }, async () => {
+    // -------------------------------fetch project details to make a nice project body --------------------
+    const project = await db.collection('project').findOne({
+      _id: new ObjectID(entry.projectId),
+    });
+
+    const {
+      __agentFirstName = '',
+      __agentLastName = '',
+      __agentMiddleName = '',
+    } = entry;
+
+    const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+
+    const ccPeople = [cleanCopy.__agentEmail];
+    sendDocumentEmails({
+      from: `"${upper(__agentFirstName.toLowerCase())} via Datakit " <${process.env.EMAIL_BASE}>`,
+      cc: ccPeople.join(','),
+      bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
+      subject: `'${project.name}' Submission`,
+      message: `
+      My ${upper(project.name.toLowerCase())} submission for is now ready for download as a pdf.
+      <br>
+      <br>
+
+      Please find the document attached to this email.
+      <br>
+      <br>
+      Regards,
+    `,
+      attachments: [{
+        filename: `${submited._id}.pdf`,
+        content: fs.createReadStream(path),
+        contentType: 'application/pdf',
+      }],
+    });
   });
 });
 
@@ -643,7 +849,7 @@ hemera.add(action, async (args) => {
   await db.collection('company').insertOne(company);
   // await db.collection('client').insertOne(client);
 
-  const questionnaire = {
+  /* const questionnaire = {
     _id: new ObjectID(),
     name: 'Sample questionnaire',
     client: company._id.toString(),
@@ -712,7 +918,14 @@ hemera.add(action, async (args) => {
   };
 
   // create questionnire things
-  await db.collection('question').insertOne(question);
+  await db.collection('question').insertOne(question); */
+
+  await bulkAdd({
+    db,
+    files: ['job-sheet.json'],
+    client: company._id.toString(),
+    user: user._id.toString(),
+  });
 
   // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
   // and stitch them together to create a login setupp experience for the user
@@ -740,6 +953,307 @@ hemera.add(action, async (args) => {
       email,
     },
   });
+  // send out a sample project created email
+  // send out a process guide email
+  // send out a download our app email
+
+  // start tracking this user for the next 30 days
+
+  return {
+    user: user.id,
+    company: company.id,
+    billing: billing.id,
+    settings: settings.id,
+    token: jwt.sign(
+      user
+      , config[NODE_ENV].hashingSecret,
+    ),
+  };
+});
+
+const registrationAction = {
+  topic: 'registration',
+  cmd: 'saas-registration',
+};
+
+hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
+  const {
+    password,
+    email,
+    contact,
+    firstName,
+    orgName,
+  } = args.data;
+
+
+  const userid = new ObjectID();
+
+  const user = {
+    _id: userid,
+    email,
+    phoneNumber: contact,
+    firstName,
+    destroyed: false,
+  };
+
+  const company = {
+    _id: new ObjectID(),
+    company_name: orgName,
+    contact,
+    createdBy: userid,
+    destroyed: false,
+  };
+
+  const settings = {
+    _id: user._id,
+    user: user._id,
+    destroyed: false,
+  };
+
+  const legacyUser = {
+    _id: user._id,
+    firstName: user.firstName,
+    phoneNumber: user.phoneNumber,
+    password: sha1(password),
+    email: user.email,
+    destroyed: false,
+    client: company._id,
+  };
+
+  const activation = {
+    _id: new ObjectId(),
+    user: userid,
+    destroyed: false,
+  };
+
+  // before starting the db saving things, first reply as thins might take sometime
+  resolve({
+    user: user.id,
+    settings: settings.id,
+    token: jwt.sign(
+      user
+      , config[NODE_ENV].hashingSecret,
+    ),
+  });
+
+  // check for existing emails and throw errors
+  const [existingUser] = await db
+    .collection('user')
+    .find({ email: user.email })
+    .toArray();
+
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }
+
+  // create base data
+  await db.collection('user').insertOne(legacyUser);
+  await db.collection('company').insertOne(company);
+  await db.collection('activation').insertOne(activation);
+
+  await bulkAdd({
+    db,
+    files: ['job-sheet.json'],
+    client: company._id.toString(),
+    user: user._id.toString(),
+  });
+
+  // send out a welcome email
+  registrationThanks({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      company: {
+        name: user.firstName,
+      },
+    }),
+  });
+
+  accountActivationEmail({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      id: legacyUser._id,
+      host: process.env.NODE_ENV === 'production'
+        ? 'https://app.braiven.io'
+        : 'http://localhost:3000',
+    }),
+  });
+
+  userCreatedAccount({
+    to: 'sirbranson67@gmail.com',
+    data: {
+      email,
+    },
+  });
+  // send out a sample project created email
+  // send out a process guide email
+  // send out a download our app email
+}));
+
+hemera.add({
+  topic: 'registration',
+  cmd: 'activate-account-check',
+}, async (args) => {
+  const { id } = args;
+
+  const [activation] = await db.collection('activation').find({ user: new ObjectId(id), destroyed: false }).toArray();
+
+  if (!activation) {
+    throw new Error('Invalid activation details');
+  }
+
+  return true;
+});
+
+hemera.add({
+  topic: 'registration',
+  cmd: 'activate-account',
+}, async (args) => {
+  const {
+    id,
+    password,
+
+    membership,
+    promotions,
+    accept,
+
+    card_holder_name,
+    card_number,
+    billing_card_exp_month,
+    billing_card_exp_year,
+    cvv,
+    address_line_1,
+    address_line_2,
+    zip_code,
+    billing_country,
+
+    email,
+    firstName,
+    middleName,
+    lastName,
+    address_1,
+    address_2,
+    city,
+    state,
+    zip,
+    country,
+
+    company_name,
+    company_registration_id,
+    company_email,
+    company_contact,
+    communications_email,
+    communications_sms,
+    contact,
+  } = args.data;
+
+
+  const userid = new ObjectID(id);
+
+  const company = {
+    _id: new ObjectID(),
+    company_name,
+    company_registration_id,
+    company_email,
+    company_contact,
+    communications_email,
+    communications_sms,
+    contact,
+    createdBy: userid,
+    destroyed: false,
+  };
+
+  const client = {
+    _id: new ObjectID(),
+    name: company_name,
+    contact,
+    createdBy: userid,
+    destroyed: false,
+  };
+
+  const user = {
+    _id: userid,
+    email,
+    phoneNumber: contact,
+    firstName,
+    middleName,
+    lastName,
+    address_1,
+    city,
+    state,
+    country,
+    client: company.id,
+    destroyed: false,
+  };
+
+  const settings = {
+    _id: user._id,
+    user: user._id,
+    membership,
+    promotions,
+    accept,
+    destroyed: false,
+  };
+
+  const billing = {
+    _id: new ObjectID(),
+    company: company._id,
+    user: user._id,
+    card_holder_name,
+    card_number,
+    billing_card_exp_month,
+    billing_card_exp_year,
+    cvv,
+    address_line_1,
+    address_line_2,
+    zip_code,
+    billing_country,
+  };
+
+  const legacyUser = {
+    _id: user._id,
+    firstName: user.firstName,
+    middleName: user.middleName,
+    lastName: user.lastName,
+    phoneNumber: company.contact,
+    password: sha1(password),
+    email: user.email,
+    destroyed: false,
+    client: company._id,
+  };
+
+  // check for existing emails and throw errors
+  /* const [existingUser] = await db
+    .collection('user')
+    .find({ email: user.email })
+    .toArray();
+
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }*/
+
+  // create base data
+  await db.collection('user').updateOne({ _id: userid }, { $set: legacyUser });
+  await db.collection('settings').updateOne({ id: settings._id }, { $set: settings });
+  await db.collection('company').updateOne({ _id: company_contact._id }, { $set: company });
+
+  await db.collection('billing').insertOne(billing);
+  await db.collection('saasUser').insertOne(user);
+
+  /* registrationThanks({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      company: {
+        name: company.company_name,
+      },
+    }),
+  });
+
+  userCreatedAccount({
+    to: 'sirbranson67@gmail.com',
+    data: {
+      email,
+    },
+  });*/
   // send out a sample project created email
   // send out a process guide email
   // send out a download our app email
@@ -863,8 +1377,8 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
       // )
 
       day = {
-        start,
-        end,
+        start: startTime,
+        end: endTime,
         count: data.length,
         // attatch data thats used on the admin ui
         data: data.map(({ _id, GPS_longitude: long, GPS_latitude: lat }) => ({ _id, long, lat })),
@@ -916,10 +1430,10 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     const copyRecord = {};
     computedProps.map((form) => {
       const tempFn = doT.template(form.formular || '');
-      console.log('computed', { formular: form.formular });
+      // console.log('computed', { formular: form.formular });
       const resultFormular = tempFn(row);
 
-      console.log('computed', { resultFormular });
+      // console.log('computed', { resultFormular });
 
       copyRecord[form.name] = math.eval(resultFormular);
     });
@@ -1010,6 +1524,26 @@ app.post(
   },
 );
 
+app.get(
+  '/printable/:q/:a',
+  bodyParser.urlencoded({ extended: false }),
+  bodyParser.json(),
+  async (req, res) => {
+    const path = `./dist/${req.params.a}.pdf`;
+
+    await makePdf(path, req.params, async () => {
+      res.setHeader('content-type', 'some/type');
+      fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
+    });
+  },
+);
+
+
 app.use(errors());
 
 export default app;
+
+// hemera.add({
+//   topic: 'printer',
+//   cmd: 'printSubmission',
+// }, async args => makeDoc(args));

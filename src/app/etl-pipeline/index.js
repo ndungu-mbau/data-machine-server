@@ -1,4 +1,5 @@
-import { items as projectData } from './job-sheet.json';
+import fs from 'fs'
+import path from 'path'
 import {
   createPage,
   createGroup,
@@ -9,67 +10,106 @@ import {
 
 import { ObjectId } from 'mongodb'
 
-const bulkAdd = async () => {
+fs.readAsync = (path) => new Promise((resolve, reject) => fs.readFile(path, (err, data) => {
+  if (err) reject(err)
+  resolve(data)
+})
+)
+
+export const bulkAdd = async ({ db, files: [filename], client, user }) => {
+
+  const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename)
+  const projectData = await fs.readAsync(filepath)
   const {
-    name,
-    pages
-  } = projectData
+    items: {
+      name,
+      pages
+    }
+  } = JSON.parse(projectData)
 
   const project = {
     _id: new ObjectId(),
     destroyed: false,
-    name
+    name,
+    client
   }
 
-  project.id = project._id
-  await createProject(project)
+  const team = {
+    _id: new ObjectId(),
+    name: 'Sample team',
+    client,
+    destroyed: false,
+  };
 
-  pages.forEach(({ name }) => {
-    const questionnaire = {
-      _id: new ObjectId(),
-      name,
-      project: newProject._id.toString(),
-      destroyed: false
-    }
+  const project_team = {
+    project: project._id.toString(),
+    team: team._id.toString(),
+    destroyed: false,
+  };
 
-    questionnaire.id = questionnaire._id
-    await createQuestionnaire(questionnaire)
+  const user_teams = {
+    user: user,
+    team: team._id.toString(),
+    destroyed: false,
+  };
+
+  await db.collection('team').insertOne(team);
+  await db.collection('project_teams').insertOne(project_team);
+  await db.collection('user_teams').insertOne(user_teams);
+
+  const questionnaire = {
+    _id: new ObjectId(),
+    name,
+    project: project._id.toString(),
+    destroyed: false,
+    client
+  }
+
+  questionnaire.id = questionnaire._id
+  await createQuestionnaire(questionnaire)
+
+  project.questionnaire = new ObjectId(questionnaire._id.toString())
+
+  //console.log(`ETL-PIPE: Project data ${JSON.stringify(project)}`)
+
+  for (const { name, groups } of pages) {
 
     const page = {
       _id: new ObjectId(),
       destroyed: false,
       name,
-      questionnaire
+      questionnaire: questionnaire._id.toString()
     }
 
     page.id = page._id;
     await createPage(page)
 
-    page.groups.forEach(({ name }) => {
+    for (const { name, questions } of groups) {
 
       const group = {
-        _id : new ObjectId(),
+        _id: new ObjectId(),
         name,
-        page: createdPage.id
+        page: page.id.toString(),
+        destroyed: false
       }
 
-      const createdGroup = await createGroup(group);
-      group.id = createdGroup.id;
+      group.id = group._id
+      await createGroup(group);
 
-      group.questions.forEach((question) => {
+      for (const question of questions) {
 
-        const question = Object.assign(question,{
+        Object.assign(question, {
           _id: new ObjectId(),
-          group: createdGroup.id,
+          group: group.id.toString(),
+          destroyed: false
         })
 
-        const createdQuestion = await createQuestion();
-        question.id = createdQuestion.id;
-      })
-    })
-  })
-}
+        question.id = question._id;
+        await createQuestion(question);
+      }
+    }
+  }
 
-export default {
-  bulkAdd
+  project.id = project._id
+  await createProject(project)
 }

@@ -21,14 +21,13 @@ const queries = `
 
 const user = async (_, { filter = {} } = {}, { db, ObjectId, user }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
-  console.log(user)
   const userDetailsForSearch = { _id: new ObjectId(user._id) }
 
-  console.log('finding user', { userDetailsForSearch })
+  // console.log('finding user', { userDetailsForSearch })
   const [userDetails] = await db.collection('user').find(userDetailsForSearch).toArray();
   const [saasUserDetails] = await db.collection('saasUser').find(userDetailsForSearch).toArray();
 
-  console.log('found user', { userDetails })
+  // console.log('found user', { userDetails })
   userDetails.id = userDetails._id;
   return Object.assign({}, userDetails, !saasUserDetails ? {} : {
     address: saasUserDetails.address_1,
@@ -75,8 +74,6 @@ const nested = {
       const teamsInfo = teams.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
-
-      console.log(teamsInfo);
 
       return teamsInfo;
     },

@@ -114,7 +114,6 @@ const QuestionnaireDashboards = questionnaireId => async (
   filter,
   { db },
 ) => {
-  console.log({ questionnaireId });
   const data = await db.collection('dashboard').find({ questionnaire: questionnaireId, destroyed: false }).toArray();
 
   if (!data) { return []; }
@@ -134,7 +133,6 @@ const QuestionnaireDashboards = questionnaireId => async (
 export const questionnaire = async ({ questionnaire } = {}, { id }, { db, ObjectId }) => {
   const data = await db.collection('questionnaire').findOne({ _id: new ObjectId(id), destroyed: false });
 
-  console.log({ data })
   return Object.assign({}, data, {
     id,
     pages: QuestionnairePages(id || questionnaire),
