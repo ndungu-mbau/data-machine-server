@@ -1,4 +1,4 @@
-'use strict'
+"use strict";
 import cron from "node-cron";
 import config from "../config";
 import * as moment from "moment";
@@ -13,7 +13,7 @@ const parameters = {
 export default {
   name: "DEACTIVATE_USERS",
   schedule: "* * * * *",
-  emediate:false,
+  emediate: false,
   async work({ db }) {
     console.log("running a task every minute");
     const col = db.collection("user");
