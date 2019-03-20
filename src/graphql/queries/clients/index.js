@@ -1,5 +1,4 @@
 import { root as questionnaireRoot } from "../questionnaires";
-import { ObjectId } from "mongodb";
 
 const type = `
   type stats{
@@ -31,12 +30,11 @@ const queries = `
   clients(filter:filter):[client]
 `;
 
-const client = async (_, { id }, { db }) => {
+const client = async (_, { id }, { db, ObjectId }) => {
   const data = await db.collection("company").findOne({
-    _id: ObjectId("5c7eb5d451828a1a98929ef9")
+    _id: ObjectId(id)
   });
 
-  console.log(data);
   return { id: data._id, ...data };
 };
 
@@ -126,13 +124,11 @@ const nested = {
       );
     },
     roles: async ({ id }, {}, { db, ObjectId }) => {
-      console.log(">> id passed", id);
       var o_id = new ObjectId(id);
       const data = await db
         .collection("roles")
         .find({ companyId: String(id) })
         .toArray();
-      console.log(data);
       return data.map(entry =>
         Object.assign({}, entry, {
           id: entry._id
