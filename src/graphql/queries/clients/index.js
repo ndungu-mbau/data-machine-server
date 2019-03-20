@@ -1,4 +1,4 @@
-import { root as questionnaireRoot } from '../questionnaires';
+import { root as questionnaireRoot } from "../questionnaires";
 
 const type = `
   type stats{
@@ -6,7 +6,9 @@ const type = `
     submissions: Float,
     teams: Float,
     users:Float,
-    fileUploads: Float
+    fileUploads: Float,
+    role:Float
+    
   }
 
   type client {
@@ -19,7 +21,8 @@ const type = `
     teams:[team],
     users:[user],
     billing:billing,
-    stats:stats
+    stats:stats,
+    roles:[role]
   }
 `;
 
@@ -30,75 +33,118 @@ const queries = `
 
 const client = async ({ id }, { datastore }) => {
   const entity = await datastore.get({
-    kind: 'clients',
-    path: ['clients', id],
-    id,
+    kind: "clients",
+    path: ["clients", id],
+    id
   });
 
   return Object.assign({}, entity[0], {
-    id,
+    id
   });
 };
 
 const clients = async (_, { filter = {} }, { db }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const data = await db.collection("client").find({ destroyed: false }).toArray();
+  const data = await db
+    .collection("client")
+    .find({ destroyed: false })
+    .toArray();
 
-  return data.map(entry => Object.assign({}, entry, {
-    id: entry._id
-  }));
+  return data.map(entry =>
+    Object.assign({}, entry, {
+      id: entry._id
+    })
+  );
 };
 
 const nested = {
   client: {
     teams: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("team").find({ client: id.toString(), destroyed: false }).toArray();
-      return data.map(entry => Object.assign({}, entry, {
-        id: entry._id,
-      }));
+      const data = await db
+        .collection("team")
+        .find({ client: id.toString(), destroyed: false })
+        .toArray();
+      return data.map(entry =>
+        Object.assign({}, entry, {
+          id: entry._id
+        })
+      );
     },
     stats: async ({ id }, { filter = {} }, { db }) => {
-      const teams = await db.collection("team").find({ client: id.toString(), destroyed: false }).count();
-      const projects = await db.collection("project").find({ client: id.toString(), destroyed: false }).count()
-      const users = await db.collection("user").find({ client: id, destroyed: false }).count()
-      const submissions = await db.collection("submision").find({ client: id.toString() }).count()
+      const teams = await db
+        .collection("team")
+        .find({ client: id.toString(), destroyed: false })
+        .count();
+      const projects = await db
+        .collection("project")
+        .find({ client: id.toString(), destroyed: false })
+        .count();
+      const users = await db
+        .collection("user")
+        .find({ client: id, destroyed: false })
+        .count();
+      const submissions = await db
+        .collection("submision")
+        .find({ client: id.toString() })
+        .count();
 
       return {
         teams,
         projects,
         users,
         submissions
-      }
+      };
     },
     users: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("user").find({ client: id }).toArray();
-      return data.map(entry => Object.assign({}, entry, {
-        id: entry._id,
-      }));
+      const data = await db
+        .collection("user")
+        .find({ client: id })
+        .toArray();
+      return data.map(entry =>
+        Object.assign({}, entry, {
+          id: entry._id
+        })
+      );
     },
     projects: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("project").find({ client: id.toString(), destroyed: false }).toArray();
-      return data.map(entry => Object.assign({}, entry, {
-        id: entry._id,
-      }));
+      const data = await db
+        .collection("project")
+        .find({ client: id.toString(), destroyed: false })
+        .toArray();
+      return data.map(entry =>
+        Object.assign({}, entry, {
+          id: entry._id
+        })
+      );
     },
     billing: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("billing").find({ client: id.toString(), destroyed: false }).toArray();
-      return data.map(entry => Object.assign({}, entry, {
-        id: entry._id,
-      }));
+      const data = await db
+        .collection("billing")
+        .find({ client: id.toString(), destroyed: false })
+        .toArray();
+      return data.map(entry =>
+        Object.assign({}, entry, {
+          id: entry._id
+        })
+      );
     },
+    roles: async ({ id }, { filter = {} }, { db }) => {
+      const data = await db
+        .collection("roles")
+        .find({ client: id.toString(), destroyed: false })
+        .toArray();
+      return data.map(entry =>
+        Object.assign({}, entry, {
+          id: entry._id
+        })
+      );
+    }
   }
-}
+};
 
 const root = {
   client,
-  clients,
+  clients
 };
 
-export {
-  type,
-  queries,
-  nested,
-  root,
-};
+export { type, queries, nested, root };
