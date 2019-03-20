@@ -1,4 +1,4 @@
-import { ObjectId } from  'mongodb'
+import { ObjectId } from "mongodb";
 import { from } from "apollo-link";
 const type = `
   type role {
@@ -17,32 +17,29 @@ const queries = `
   roles(filter:filter!):[role]
 `;
 
-const role = async (x,{id},{db}) => {
-if (id.length > 0 ){  
-  const res= await db.collection("roles").findOne({"_id": ObjectId("5c7f912df4a28e43bc7e65da")})
-  console.log(res._id)
-   return { id:res._id,userId:res.UserId ,role:res.role ,companyId:res.companyId }
-}
-
-
+const role = async (x, { id }, { db, ObjectId }) => {
+  console.log(id);
+  const data = await db
+    .collection("roles")
+    .find({ _id: ObjectId(id) })
+    .toArray();
+  console.log(data[0]._id);
+  return {
+    id: data[0]._id,
+    companyId: data[0].companyId,
+    userId: data[0].userId
+  };
 };
 
+const roles = async args => {
+  console.log("called");
+  console.log(id);
+  return [role];
+};
 
-const roles = async (args) => {
-  console.log("called")
-  console.log(id)
-  return [role]
-  };
-
-const root={
+const root = {
   role,
   roles
-}
-
-
-
-export {
-  type,
- queries,
- root
 };
+
+export { type, queries, root };
