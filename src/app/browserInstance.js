@@ -48,10 +48,9 @@ const launchOptions = {
 const { CHROME_WS } = process.env
 
 const connect = async () => {
-    // instance = await pptr.connect({ 
-    //     browserWSEndpoint: CHROME_WS 
-    // });
-    instance = await pptr.launch(launchOptions);
+    instance = await pptr.connect({ 
+        browserWSEndpoint: CHROME_WS 
+    });
     instance.on("disconnected", () => {
         console.log("chrome just died, making another one")
         connect()

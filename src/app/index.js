@@ -83,8 +83,7 @@ function makeShortPassword() {
   let text = '';
   let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-  for (let i = 0; i < 4; i++)
-    {text += possible.charAt(Math.floor(Math.random() * possible.length));}
+  for (let i = 0; i < 4; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)); }
 
   return text;
 }
@@ -532,7 +531,7 @@ app.post(
 const { getBrowserInstance } = require('./browserInstance');
 
 const makePdf = async (path, params, cb) => {
-  const { MASTER_TOKEN } = process.env;
+  const { MASTER_TOKEN, NODE_ENV } = process.env;
   const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
   try {
@@ -547,7 +546,7 @@ const makePdf = async (path, params, cb) => {
       }, MASTER_TOKEN);
       await page.goto(bookingUrl, {
         timeout: 5000,
-        waitUntil: ['load', 'networkidle2'] 
+        waitUntil: ['load', 'networkidle2']
       });
       console.log('===>', 'saving the pdf', path);
       await page.pdf({
@@ -618,7 +617,7 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
 
         console.log('=====>', cleanCopy[key]);
       }
