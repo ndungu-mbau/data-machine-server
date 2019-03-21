@@ -13,7 +13,7 @@ const parameters = {
 export default {
   name: "DEACTIVATE_USERS",
   schedule: "* * * * *",
-  emediate: false,
+  emediate: true,
   async work({ db }) {
     console.log("running a task every minute");
     const col = db.collection("user");
@@ -26,7 +26,7 @@ export default {
 
       var diff = dateB.diff(dateC, "days"); //get the difference
 
-      if (diff === 40) {
+      if (diff === 1) {
         //if user was created 40 day ago check if he has been activated
         user.userActivated == false
           ? db
@@ -34,12 +34,7 @@ export default {
               .replaceOne({ user }, { user }, { upsert: true })
           : "";
       } else {
-        db.collection("user_activated").replaceOne(
-          //else add in user_activated
-          { user },
-          { user },
-          { upsert: true }
-        );
+        return;
       }
     });
   },
