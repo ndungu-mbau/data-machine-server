@@ -5,7 +5,8 @@ const type = `
   id: String,
   userId: String,
   companyId:String,
-  role:String
+  role:String,
+  permissions:[String]
 
   }
 
