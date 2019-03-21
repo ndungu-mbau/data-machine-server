@@ -5,8 +5,8 @@ const type = `
       id: String,
       companyId: String,
       userId:String,
-      role:String
-     
+      role:String,
+      permissions:[String]
     }
   
     type roleMutations {

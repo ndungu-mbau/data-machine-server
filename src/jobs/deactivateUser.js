@@ -13,7 +13,7 @@ const parameters = {
 export default {
   name: "DEACTIVATE_USERS",
   schedule: "* * * * *",
-  emediate: true,
+  emediate: false,
   async work({ db }) {
     console.log("running a task every minute");
     const col = db.collection("user");
