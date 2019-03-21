@@ -545,7 +545,10 @@ const makePdf = async (path, params, cb) => {
         // eslint-disable-next-line no-undef
         localStorage.setItem('token', MASTER_TOKEN);
       }, MASTER_TOKEN);
-      await page.goto(bookingUrl, { waitUntil: ['load', 'networkidle2'] });
+      await page.goto(bookingUrl, {
+        networkIdleTimeout: 5000,
+        waitUntil: ['load', 'networkidle2'] 
+      });
       console.log('===>', 'saving the pdf', path);
       await page.pdf({
         path,
