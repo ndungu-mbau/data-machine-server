@@ -26,11 +26,11 @@ export default {
 
       var diff = dateB.diff(dateC, "days"); //get the difference
 
-      if (diff === 1) {
+      if (diff === 40) {
         //if user was created 40 day ago check if he has been activated
         user.userActivated == false
           ? db
-              .collection("user_deactivation") //if not activated add in user_deactivation
+              .collection("userDeactivated") //if not activated add in user_deactivation
               .replaceOne({ user }, { user }, { upsert: true })
           : "";
       } else {
