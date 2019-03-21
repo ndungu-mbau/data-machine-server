@@ -19,12 +19,10 @@ const queries = `
 `;
 
 const role = async (x, { id }, { db, ObjectId }) => {
-  console.log(id);
   const data = await db
     .collection("roles")
     .find({ _id: ObjectId(id) })
     .toArray();
-  console.log(data[0]._id);
   return {
     id: data[0]._id,
     companyId: data[0].companyId,
@@ -33,8 +31,6 @@ const role = async (x, { id }, { db, ObjectId }) => {
 };
 
 const roles = async args => {
-  console.log("called");
-  console.log(id);
   return [role];
 };
 
