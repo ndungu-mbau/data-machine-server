@@ -546,7 +546,7 @@ const makePdf = async (path, params, cb) => {
         localStorage.setItem('token', MASTER_TOKEN);
       }, MASTER_TOKEN);
       await page.goto(bookingUrl, {
-        networkIdleTimeout: 5000,
+        timeout: 5000,
         waitUntil: ['load', 'networkidle2'] 
       });
       console.log('===>', 'saving the pdf', path);
