@@ -25,7 +25,6 @@ server.installSubscriptionHandlers(httpServer);
 if (NODE_ENV !== 'test') {
   httpServer.listen(PORT, HOST, (err) => {
     ifError(err);
-    // eslint-disable-next-line no-console
     log.info(`🚀  "graph.braiven.io" has launched on http://${HOST}:${PORT}\n`, {
       NODE_ENV,
       PORT,

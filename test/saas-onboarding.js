@@ -263,9 +263,15 @@ describe('Books', () => {
           expect(res.body.errors).to.be.undefined;
           res.should.have.status(200);
           res.body.should.be.a('object');
-
-          console.log(JSON.stringify(res.body, null, '\t'));
-
+          res.body.data.users[0].should.exist;
+          res.body.data.user.should.exist;
+          res.body.data.user.id.should.exist;
+          res.body.data.user.client.should.exist;
+          res.body.data.user.client.id.should.exist;
+          res.body.data.user.client.projects[0].should.exist;
+          res.body.data.user.client.projects[0].questionnaire.should.exist;
+          res.body.data.user.client.projects[0].questionnaire.id.should.exist;
+          res.body.data.user.client.projects[0].questionnaire.pages[0].id.should.exist;
           done();
         });
     });

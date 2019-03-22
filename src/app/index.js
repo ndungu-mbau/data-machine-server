@@ -101,7 +101,9 @@ app.use(
   bodyParser.json(),
 );
 
-app.use(morgan('combined'));
+if (NODE_ENV !== 'test') {
+  app.use(morgan('combined'));
+}
 
 const getWeekBreakDown = (daysBack) => {
   const today = moment().toDate();
@@ -462,11 +464,15 @@ app.post('/submision', async (req, res) => {
       if (value.toString().includes('file://')) {
         const [, ext] = value.split('.');
 
+        const url = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/
+        ${submission.questionnaireId}_
+        ${key}_
+        ${submission.completionId}
+        ${ext ? `.${ext}` : ''}`;
+
         cleanCopy[
           key
-        ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
-          submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+        ] = url;
       }
     }
   });

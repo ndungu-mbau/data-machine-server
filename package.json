@@ -43,7 +43,7 @@
   "scripts": {
     "dev": " webpack -w & nodemon -r source-map-support/register -r dotenv/config dist | ./node_modules/.bin/bunyan",
     "build": "webpack -p",
-    "test": "yarn build && mocha --require source-map-support/register --require dotenv/config --reporter spec test/ --exit",
+    "test": "yarn build && NODE_ENV=test mocha --require source-map-support/register --require dotenv/config --reporter spec test/ --exit",
     "test:watch": "NODE_ENV=test nodemon --watch src --exec 'yarn test'",
     "deploy": "webpack -p && node -r source-map-support/register dist",
     "lint": "eslint src"
@@ -51,6 +51,7 @@
   "husky": {
     "hooks": {
       "pre-commit": "yarn lint",
+      "pre-push": "npm test",
       "lint": "yarn lint",
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
