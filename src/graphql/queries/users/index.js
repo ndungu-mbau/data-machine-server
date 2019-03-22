@@ -52,10 +52,9 @@ const users = async (_, args, { db }) => {
     .find({ destroyed: false })
     .toArray();
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+  }));
 };
 
 const nested = {
@@ -89,10 +88,9 @@ const nested = {
         })
         .toArray();
 
-      const teamsInfo = teams.map(entry =>
-        Object.assign({}, entry, {
-          id: entry._id,
-        }));
+      const teamsInfo = teams.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
 
       return teamsInfo;
     },
@@ -111,4 +109,6 @@ const root = {
   users,
 };
 
-export { type, queries, nested, root };
+export {
+  type, queries, nested, root,
+};

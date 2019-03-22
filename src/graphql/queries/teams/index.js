@@ -28,9 +28,13 @@ const team = async ({ id }, { datastore }) => {
   });
 };
 
-const projectQuestionnaire = questionnaireId =>
-  async (attrs, { datastore }) =>
-    questionnaireRoot.questionnaire({ id: questionnaireId }, { datastore });
+const projectQuestionnaire = questionnaireId => async (
+  attrs,
+  { datastore },
+) => questionnaireRoot.questionnaire(
+  { id: questionnaireId },
+  { datastore },
+);
 
 const teamProjects = teamId => async (filter, { datastore }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;

@@ -21,20 +21,19 @@ const mailOptions = {
   from: `"Datakit Support " <${process.env.EMAIL_BASE}>`,
 };
 
-export const sendMail = ({ to, subject, message }) =>
-  new Promise((resolve, reject) => {
-    mailOptions.to = to;
-    mailOptions.subject = subject;
-    mailOptions.html = message;
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, async (error, info) => {
-      if (error) {
-        return reject(error);
-      }
+export const sendMail = ({ to, subject, message }) => new Promise((resolve, reject) => {
+  mailOptions.to = to;
+  mailOptions.subject = subject;
+  mailOptions.html = message;
+  // send mail with defined transport object
+  transporter.sendMail(mailOptions, async (error, info) => {
+    if (error) {
+      return reject(error);
+    }
 
-      return resolve(info);
-    });
+    return resolve(info);
   });
+});
 
 
 const registrationThanks = async ({

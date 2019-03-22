@@ -173,39 +173,39 @@ const Query = {
 const Nested = {};
 
 Object.assign(
-  Nested
-  , clientQueriesNested
-  , teamUsersNested
-  , projectQueriesNested
-  , userNested
-  , questionnaireNested
-  , pagesNested
-  , groupsNested
-  , billingQueriesNested,
+  Nested,
+  clientQueriesNested,
+  teamUsersNested,
+  projectQueriesNested,
+  userNested,
+  questionnaireNested,
+  pagesNested,
+  groupsNested,
+  billingQueriesNested,
 );
 
 
 Object.assign(
-  Query
-  , rolesRoot
-  , projectRoot
-  , userRoot
-  , pageRoot
-  , groupRoot
-  , questionRoot
-  , optionsRoot
-  , clientRoot
-  , sentencesRoot
-  , dashboardsRoot
-  , layoutsRoot
-  , cpRoot
-  , cpdRoot
-  , chartsRoot
-  , constantsRoot
-  , aliasesRoot
-  , questionnaireRoot
-  , teamRoot
-  , billingRoot,
+  Query,
+  rolesRoot,
+  projectRoot,
+  userRoot,
+  pageRoot,
+  groupRoot,
+  questionRoot,
+  optionsRoot,
+  clientRoot,
+  sentencesRoot,
+  dashboardsRoot,
+  layoutsRoot,
+  cpRoot,
+  cpdRoot,
+  chartsRoot,
+  constantsRoot,
+  aliasesRoot,
+  questionnaireRoot,
+  teamRoot,
+  billingRoot,
 );
 
 const queryRoot = { Query, Nested };

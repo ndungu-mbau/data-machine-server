@@ -56,4 +56,6 @@ const restore = async (args, { db, ObjectId }) => {
     .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } });
 };
 
-export { create, update, destroy, restore };
+export {
+  create, update, destroy, restore,
+};

@@ -286,8 +286,8 @@ app.post(
         return res.send(Object.assign(userData, {
           password: undefined,
           token: jwt.sign(
-            saasUserData
-            , config[NODE_ENV].hashingSecret,
+            saasUserData,
+            config[NODE_ENV].hashingSecret,
           ),
         }));
       }
@@ -673,8 +673,8 @@ hemera.add(action, async (args) => {
     billing: billing.id,
     settings: settings.id,
     token: jwt.sign(
-      user
-      , config[NODE_ENV].hashingSecret,
+      user,
+      config[NODE_ENV].hashingSecret,
     ),
   };
 });

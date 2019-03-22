@@ -42,10 +42,9 @@ const clients = async (_, args, { db }) => {
     .find({ destroyed: false })
     .toArray();
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+  }));
 };
 
 const nested = {
@@ -55,10 +54,9 @@ const nested = {
         .collection('team')
         .find({ client: id.toString(), destroyed: false })
         .toArray();
-      return data.map(entry =>
-        Object.assign({}, entry, {
-          id: entry._id,
-        }));
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
     },
     stats: async ({ id }, args, { db }) => {
       const teams = await db
@@ -90,40 +88,36 @@ const nested = {
         .collection('user')
         .find({ client: id })
         .toArray();
-      return data.map(entry =>
-        Object.assign({}, entry, {
-          id: entry._id,
-        }));
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
     },
     projects: async ({ id }, args, { db }) => {
       const data = await db
         .collection('project')
         .find({ client: id.toString(), destroyed: false })
         .toArray();
-      return data.map(entry =>
-        Object.assign({}, entry, {
-          id: entry._id,
-        }));
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
     },
     billing: async ({ id }, args, { db }) => {
       const data = await db
         .collection('billing')
         .find({ client: id.toString(), destroyed: false })
         .toArray();
-      return data.map(entry =>
-        Object.assign({}, entry, {
-          id: entry._id,
-        }));
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
     },
     roles: async ({ id }, args, { db }) => {
       const data = await db
         .collection('roles')
         .find({ companyId: String(id) })
         .toArray();
-      return data.map(entry =>
-        Object.assign({}, entry, {
-          id: entry._id,
-        }));
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
     },
   },
 };
@@ -133,4 +127,6 @@ const root = {
   clients,
 };
 
-export { type, queries, nested, root };
+export {
+  type, queries, nested, root,
+};

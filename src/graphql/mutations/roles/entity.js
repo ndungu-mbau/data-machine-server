@@ -38,4 +38,6 @@ const restore = async (args, { db, ObjectId }) => {
     );
 };
 
-export { created, update, destroy, restore };
+export {
+  created, update, destroy, restore,
+};
