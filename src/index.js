@@ -26,15 +26,12 @@ if (NODE_ENV !== 'test') {
   httpServer.listen(PORT, HOST, (err) => {
     ifError(err);
     // eslint-disable-next-line no-console
-    log.info(`
-    🔧  Configured for ${NODE_ENV}.
-      => address: ${HOST}
-      => port: ${PORT}
-      => log: ${LOG_LEVEL}
-      => DB_URL: ${config[NODE_ENV].db.url}
-  
-    🚀  "graph.braiven.io" has launched on http://${HOST}:${PORT}
-    `);
+    log.info(`🚀  "graph.braiven.io" has launched on http://${HOST}:${PORT}\n`, {
+      NODE_ENV,
+      PORT,
+      LOG_LEVEL,
+      DB_URL: config[NODE_ENV].db.url,
+    });
   });
 }
 
