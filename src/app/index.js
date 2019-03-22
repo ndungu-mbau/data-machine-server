@@ -466,7 +466,7 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
       }
     }
   });
