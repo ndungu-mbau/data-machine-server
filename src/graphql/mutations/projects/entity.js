@@ -1,48 +1,49 @@
-const collection = "project"
+/* eslint-disable no-underscore-dangle */
+const collection = 'project';
 
 const create = async (args, { db, ObjectId }) => {
-  const entry = args[collection]
+  const entry = args[collection];
   Object.assign(entry, {
     _id: new ObjectId(),
-    destroyed: false
-  })
+    destroyed: false,
+  });
 
   if (entry.questionnaire === 'newBlank') {
     const questionnaire = {
       _id: new ObjectId(),
       name: entry.name,
       project: entry._id.toString(),
-      destroyed: false
-    }
+      destroyed: false,
+    };
 
-    entry.questionnaire = questionnaire._id
-    entry.id = entry._id
+    entry.questionnaire = questionnaire._id;
+    entry.id = entry._id;
 
-    await db.collection('questionnaire').insertOne(questionnaire)
-    await db.collection(collection).insertOne(entry)
+    await db.collection('questionnaire').insertOne(questionnaire);
+    await db.collection(collection).insertOne(entry);
 
-    return entry
+    return entry;
   }
 
   const questionnaire = {
     _id: new ObjectId(),
     name: entry.name,
     project: entry._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
-  await db.collection('questionnaire').insertOne(questionnaire)
-  entry.questionnaire = questionnaire._id
+  await db.collection('questionnaire').insertOne(questionnaire);
+  entry.questionnaire = questionnaire._id;
 
-  await db.collection(collection).insertOne(entry)
-  entry.id = entry._id
+  await db.collection(collection).insertOne(entry);
+  entry.id = entry._id;
 
   const page = {
     _id: new ObjectId(),
     name: 'Sample page',
     questionnaire: questionnaire._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   // create questionnire things
   await db.collection('page').insertOne(page);
@@ -51,10 +52,9 @@ const create = async (args, { db, ObjectId }) => {
     _id: new ObjectId(),
     name: 'Sample group',
     page: page._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
-  // create questionnire things
   await db.collection('group').insertOne(group);
 
   const question = {
@@ -62,28 +62,37 @@ const create = async (args, { db, ObjectId }) => {
     type: 'instruction',
     placeholder: 'Sample instruction',
     group: group._id.toString(),
-    destroyed: false
-  }
+    destroyed: false,
+  };
 
   // create questionnire things
   await db.collection('question').insertOne(question);
 
-  return entry
+  return entry;
 };
 
 const update = async (args, { db, ObjectId }) => {
-  const entry = args[collection]
-  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined }) })
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      { $set: Object.assign({}, entry, { id: undefined }) },
+    );
 };
 
 const destroy = async (args, { db, ObjectId }) => {
-  const entry = args[collection]
-  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } })
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      { $set: { destroyed: true } },
+    );
 };
 
 const restore = async (args, { db, ObjectId }) => {
-  const entry = args[collection]
-  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } })
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } });
 };
 
 export {

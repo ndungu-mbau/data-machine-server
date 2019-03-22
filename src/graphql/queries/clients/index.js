@@ -1,5 +1,4 @@
-import { root as questionnaireRoot } from "../questionnaires";
-
+/* eslint-disable no-underscore-dangle */
 const type = `
   type stats{
     projects: Float,
@@ -7,7 +6,6 @@ const type = `
     teams: Float,
     users:Float,
     fileUploads: Float
-    
   }
 
   type client {
@@ -31,55 +29,52 @@ const queries = `
 `;
 
 const client = async (_, { id }, { db, ObjectId }) => {
-  const data = await db.collection("company").findOne({
-    _id: ObjectId(id)
+  const data = await db.collection('company').findOne({
+    _id: ObjectId(id),
   });
 
   return { id: data._id, ...data };
 };
 
-const clients = async (_, { filter = {} }, { db }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
+const clients = async (_, args, { db }) => {
   const data = await db
-    .collection("client")
+    .collection('client')
     .find({ destroyed: false })
     .toArray();
 
   return data.map(entry =>
     Object.assign({}, entry, {
-      id: entry._id
-    })
-  );
+      id: entry._id,
+    }));
 };
 
 const nested = {
   client: {
-    teams: async ({ id }, { filter = {} }, { db }) => {
+    teams: async ({ id }, args, { db }) => {
       const data = await db
-        .collection("team")
+        .collection('team')
         .find({ client: id.toString(), destroyed: false })
         .toArray();
       return data.map(entry =>
         Object.assign({}, entry, {
-          id: entry._id
-        })
-      );
+          id: entry._id,
+        }));
     },
-    stats: async ({ id }, { filter = {} }, { db }) => {
+    stats: async ({ id }, args, { db }) => {
       const teams = await db
-        .collection("team")
+        .collection('team')
         .find({ client: id.toString(), destroyed: false })
         .count();
       const projects = await db
-        .collection("project")
+        .collection('project')
         .find({ client: id.toString(), destroyed: false })
         .count();
       const users = await db
-        .collection("user")
+        .collection('user')
         .find({ client: id, destroyed: false })
         .count();
       const submissions = await db
-        .collection("submision")
+        .collection('submision')
         .find({ client: id.toString() })
         .count();
 
@@ -87,60 +82,55 @@ const nested = {
         teams,
         projects,
         users,
-        submissions
+        submissions,
       };
     },
-    users: async ({ id }, { filter = {} }, { db }) => {
+    users: async ({ id }, args, { db }) => {
       const data = await db
-        .collection("user")
+        .collection('user')
         .find({ client: id })
         .toArray();
       return data.map(entry =>
         Object.assign({}, entry, {
-          id: entry._id
-        })
-      );
+          id: entry._id,
+        }));
     },
-    projects: async ({ id }, { filter = {} }, { db }) => {
+    projects: async ({ id }, args, { db }) => {
       const data = await db
-        .collection("project")
+        .collection('project')
         .find({ client: id.toString(), destroyed: false })
         .toArray();
       return data.map(entry =>
         Object.assign({}, entry, {
-          id: entry._id
-        })
-      );
+          id: entry._id,
+        }));
     },
-    billing: async ({ id }, { filter = {} }, { db }) => {
+    billing: async ({ id }, args, { db }) => {
       const data = await db
-        .collection("billing")
+        .collection('billing')
         .find({ client: id.toString(), destroyed: false })
         .toArray();
       return data.map(entry =>
         Object.assign({}, entry, {
-          id: entry._id
-        })
-      );
+          id: entry._id,
+        }));
     },
-    roles: async ({ id }, {}, { db, ObjectId }) => {
-      var o_id = new ObjectId(id);
+    roles: async ({ id }, args, { db }) => {
       const data = await db
-        .collection("roles")
+        .collection('roles')
         .find({ companyId: String(id) })
         .toArray();
       return data.map(entry =>
         Object.assign({}, entry, {
-          id: entry._id
-        })
-      );
-    }
-  }
+          id: entry._id,
+        }));
+    },
+  },
 };
 
 const root = {
   client,
-  clients
+  clients,
 };
 
 export { type, queries, nested, root };

@@ -1,18 +1,11 @@
-import cron from 'node-cron';
-import config from '../config'
-
 export default {
-    name: "TEST_JOB",
-    schedule: '* * * * *',
-    emediate:false,
-    async work({ db }) {
-        console.log('running a task every minute');
-        const col = db.collection('user');
-        // Show that duplicate records got dropped
-        const users = await col.find({}).toArray();
-        console.log({ users: users.length })
-    },
-    opts: {
-        schedule: true
-    }
-}
+  name: 'TEST_JOB',
+  schedule: '* * * * *',
+  emediate: false,
+  async work() {
+    // console.log('running a task every minute');
+  },
+  opts: {
+    schedule: true,
+  },
+};

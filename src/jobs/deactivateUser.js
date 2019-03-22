@@ -1,44 +1,35 @@
-"use strict";
-import cron from "node-cron";
-import config from "../config";
-import * as moment from "moment";
-import { ObjectId } from "mongodb";
-
-const parameters = {
-  time_unit: "months",
-  time_ammount: "2",
-  mail_name: "registration"
-};
+import * as moment from 'moment';
+import { ObjectId } from 'mongodb';
 
 export default {
-  name: "DEACTIVATE_USERS",
-  schedule: "* * * * *",
+  name: 'DEACTIVATE_USERS',
+  schedule: '* * * * *',
   emediate: false,
   async work({ db }) {
-    console.log("running a task every minute");
-    const col = db.collection("user");
+    console.log('running a task every minute');
+    const col = db.collection('user');
     // Show that duplicate records got dropped
     const users = await col.find({}).toArray();
-    users.map(user => {
-      //get dates
-      var dateB = moment(new Date()); //current date
-      var dateC = moment(ObjectId(String(user._id)).getTimestamp()); //date when object was created
+    users.forEach((user) => {
+      // get dates
+      const dateB = moment(new Date());
+      // eslint-disable-next-line no-underscore-dangle
+      const dateC = moment(ObjectId(String(user._id)).getTimestamp());
 
-      var diff = dateB.diff(dateC, "days"); //get the difference
+      const diff = dateB.diff(dateC, 'days'); // get the difference
 
       if (diff === 40) {
-        //if user was created 40 day ago check if he has been activated
-        user.userActivated == false
-          ? db
-              .collection("userDeactivated") //if not activated add in user_deactivation
-              .replaceOne({ user }, { user }, { upsert: true })
-          : "";
-      } else {
-        return;
+        // if user was created 40 day ago check if he has been activated
+        // eslint-disable-next-line no-unused-expressions
+        user.userActivated === false
+          ? (db
+            .collection('userDeactivated')
+            .replaceOne({ user }, { user }, { upsert: true }))
+          : '';
       }
     });
   },
   opts: {
-    schedule: true
-  }
+    schedule: true,
+  },
 };

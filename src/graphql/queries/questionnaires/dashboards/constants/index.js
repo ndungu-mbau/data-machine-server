@@ -11,31 +11,9 @@ const queries = `
   constants(filter:filter!):[constant]
 `;
 
-const constant = async ({ id }, { datastore }) => {
-  const entity = await datastore.get({
-    kind: 'constants',
-    path: ['constants', id],
-    id,
-  });
+const constant = () => { };
 
-  return Object.assign({}, entity[0], {
-    id,
-  });
-};
-
-const constants = async ({ filter }, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore
-    .createQuery('constants')
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
-  const entities = await datastore.runQuery(query);
-  return entities.shift().map(entry =>
-    Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
-    }),);
-};
+const constants = () => { };
 
 const root = {
   constant,

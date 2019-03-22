@@ -4,8 +4,6 @@ import { MongoClient, ObjectId } from 'mongodb';
 
 import { typeQueries, queryRoot } from './queries';
 import { typeMutations, mutationRoot } from './mutations';
-import { graphql, buildSchema } from 'graphql';
-
 
 import config from '../config';
 

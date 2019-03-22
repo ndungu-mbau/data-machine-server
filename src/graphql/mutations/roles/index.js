@@ -1,4 +1,4 @@
-import { created, update } from "./entity";
+import { created, update } from './entity';
 
 const type = `
     input newRole {
@@ -21,10 +21,10 @@ roleMutations:roleMutations
   `;
 
 const root = {
-  roleMutations: () => ({
+  roleMutations: {
     created,
-    update
-  })
+    update,
+  },
 };
 
 export { type, queries, root };

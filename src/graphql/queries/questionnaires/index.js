@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 const type = `
   type questionnaire {
     id: String,
@@ -131,14 +132,17 @@ const QuestionnaireDashboards = questionnaireId => async (
     }));
 };
 
-export const questionnaire = async ({ questionnaire } = {}, { id }, { db, ObjectId }) => {
+export const questionnaire = async (
+  { questionnaire: questionnaireEntry } = {},
+  { id },
+  { db, ObjectId },
+) => {
   const data = await db.collection('questionnaire').findOne({ _id: new ObjectId(id), destroyed: false });
 
-  console.log({ data })
   return Object.assign({}, data, {
     id,
-    pages: QuestionnairePages(id || questionnaire),
-    dashboards: QuestionnaireDashboards(id || questionnaire),
+    pages: QuestionnairePages(id || questionnaireEntry),
+    dashboards: QuestionnaireDashboards(id || questionnaireEntry),
   });
 };
 
@@ -164,13 +168,13 @@ const root = {
 
 const nested = {
   questionnaire: {
-    pages: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("page").find({ questionnaire: id.toString(), destroyed: false }).toArray();
+    pages: async ({ id }, args, { db }) => {
+      const data = await db.collection('page').find({ questionnaire: id.toString(), destroyed: false }).toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
-    }
-  }
-}
+    },
+  },
+};
 
 export { type, queries, root, nested };

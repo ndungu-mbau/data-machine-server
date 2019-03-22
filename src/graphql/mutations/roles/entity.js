@@ -1,36 +1,41 @@
-import sha1 from "sha1";
-
-const collection = "roles";
+/* eslint-disable no-underscore-dangle */
+const collection = 'roles';
 
 const created = async ({ companyId, userId, role }, { db, ObjectId }) => {
-  let roleObj = {
+  const roleObj = {
     _id: ObjectId(),
-    companyId: companyId,
-    userId: userId,
-    role: role.role
+    companyId,
+    userId,
+    role: role.role,
   };
 
-  let res = await db.collection(collection).insertOne(role);
+  const res = await db.collection(collection).insertOne(role);
   return { id: roleObj._id, ...res.ops[0] };
 };
 
 const update = async (args, { db, ObjectId }) => {
   const entry = args[collection];
-  return {};
+  const { id } = entry;
+  delete entry.id;
+  return db.collection(collection).updateOne({ _id: new ObjectId(id) }, { $set: entry });
 };
 
 const destroy = async (args, { db, ObjectId }) => {
   const entry = args[collection];
-  return db
-    .collection(collection)
-    .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } });
+  return db.collection(collection)
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      { $set: Object.assign({}, entry, { id: undefined, destroyed: true }) },
+    );
 };
 
 const restore = async (args, { db, ObjectId }) => {
   const entry = args[collection];
-  return db
-    .collection(collection)
-    .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } });
+  return db.collection(collection)
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      { $set: Object.assign({}, entry, { id: undefined, destroyed: false }) },
+    );
 };
 
 export { created, update, destroy, restore };

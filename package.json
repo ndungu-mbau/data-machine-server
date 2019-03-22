@@ -43,7 +43,8 @@
     "build": "webpack -p",
     "test": "yarn build && mocha --require source-map-support/register --require dotenv/config --reporter spec test/ --exit",
     "test:watch": "NODE_ENV=test nodemon --watch src --exec 'yarn test'",
-    "deploy": "webpack -p && node -r source-map-support/register dist"
+    "deploy": "webpack -p && node -r source-map-support/register dist",
+    "lint": "eslint src"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
@@ -55,7 +56,7 @@
     "chai": "^4.2.0",
     "chai-http": "^4.2.1",
     "dotenv": "^6.2.0",
-    "eslint": "^4.9.0",
+    "eslint": "^5.15.3",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",

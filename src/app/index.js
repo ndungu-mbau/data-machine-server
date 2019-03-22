@@ -1,15 +1,17 @@
+/* eslint-disable camelcase */
+/* eslint-disable no-underscore-dangle */
+
 import express from 'express';
 import morgan from 'morgan';
 import sha1 from 'sha1';
 import { celebrate, Joi, errors } from 'celebrate';
 import jwt from 'jsonwebtoken';
 import Multer from 'multer';
-import config from '../config';
+
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import fs from 'fs';
 import AWS from 'aws-sdk';
-import parser from './parser';
 import { MongoClient, ObjectId } from 'mongodb';
 import cron from 'node-cron';
 import {
@@ -19,8 +21,10 @@ import {
   userCreatedAccount,
   appUserLoggedIn,
 } from './emails/mailer';
+
+import config from '../config';
 import jobs from '../jobs';
-import { bulkAdd } from './etl-pipeline'
+import { bulkAdd } from './etl-pipeline';
 
 const moment = require('moment');
 const doT = require('dot');
@@ -38,7 +42,7 @@ const hemera = new Hemera(nats, {
 
 AWS.config.loadFromPath('aws_config.json');
 
-const { NODE_ENV = 'development',DISABLE_JOBS=false } = process.env;
+const { NODE_ENV = 'development', DISABLE_JOBS = false } = process.env;
 
 const multer = Multer({
   dest: 'uploads/',
@@ -52,24 +56,24 @@ MongoClient.connect(
   (err, client) => {
     if (err) throw err;
     db = client.db(config[NODE_ENV].db.name);
-    console.log("jobs started")
-    // start the jobs, give access to the db instance
-    jobs.map(({
-      name, schedule, work, options, emediate
+    // eslint-disable-next-line array-callback-return
+    jobs.forEach(({
+      name, schedule, work, options, emediate,
+    // eslint-disable-next-line consistent-return
     }) => {
-      if(emediate === true){
-        work({ db });
+      if (emediate === true) {
+        return work({ db });
       }
 
-      if(NODE_ENV !== 'development' && !DISABLE_JOBS){
+      if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
         const task = cron.schedule(schedule, () => {
           try {
             work({ db });
-          } catch (err) {
-            console.log(`Job ${name} failed with error ${err.message}`);
+          } catch (taskStartError) {
+            console.log(`Job ${name} failed with error ${taskStartError.message}`);
           }
         }, options);
-        task.start();
+        return task.start();
       }
     });
   },
@@ -114,6 +118,7 @@ const getWeekBreakDown = (daysBack) => {
   const weeks = {};
 
   let ctx = {};
+  // eslint-disable-next-line no-plusplus
   for (let count = 1; count < weekNumber + 1; count++) {
     let start;
     const daysInWeek = {};
@@ -135,6 +140,7 @@ const getWeekBreakDown = (daysBack) => {
 
     // get days between start and end
     let daysCtx = {};
+    // eslint-disable-next-line no-plusplus
     for (let dayCount = 1; dayCount < 8; dayCount++) {
       let dayStart;
 
@@ -178,7 +184,7 @@ const getDayBreakDown = ({ start, end }) => {
   // const x = moment(now).diff(moment(then))
   const dayNumber = moment(then).diff(moment(now), 'days');
 
-  let currentDay;
+  // eslint-disable-next-line no-plusplus
   for (let count = 0; count < dayNumber + 1; count++) {
     const t = moment(end)
       .subtract(count, 'day')
@@ -266,6 +272,7 @@ app.post(
     if (userData) {
       const saasUserData = await db
         .collection('user')
+        // eslint-disable-next-line no-underscore-dangle
         .findOne({ _id: userData._id });
 
       if (userData.password === sha1(password)) {
@@ -388,12 +395,10 @@ app.post(
   async (req, res) => {
     const { body: user } = req;
 
-    // check if user already exists
     const userData = await db
       .collection('user')
       .findOne({ phoneNumber: user.phoneNumber });
 
-    // console.log({ userData })
     if (userData) {
       return res
         .status(401)
@@ -415,8 +420,6 @@ app.post(
 app.post('/submision', async (req, res) => {
   const submission = req.body;
 
-  // console.log(JSON.stringify({ submission }, null, '\t'));
-
   const [existingSubmission] = await db
     .collection('submision')
     .find({ completionId: submission.completionId })
@@ -430,17 +433,16 @@ app.post('/submision', async (req, res) => {
   }
 
   const cleanCopy = {};
-  // find the files and use they data in the url to generate the url
+
+  // eslint-disable-next-line array-callback-return
   Object.entries(submission).map(([key, value]) => {
     if (value) {
       if (value === false) {
         cleanCopy[key] = 0;
-        return;
       }
 
       if (moment(value, moment.ISO_8601, true).isValid()) {
         cleanCopy[key] = moment(value).toDate();
-        return;
       }
 
       cleanCopy[
@@ -453,6 +455,7 @@ app.post('/submision', async (req, res) => {
   });
 
 
+  // eslint-disable-next-line array-callback-return
   Object.entries(submission).map(([key, value]) => {
     if (value) {
       if (value.toString().includes('file://')) {
@@ -462,22 +465,17 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
-
-        console.log("=====>", cleanCopy[key])
+        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
       }
     }
-  })
-  console.log(JSON.stringify({ cleanCopy }, null, '\t'))
-
+  });
 
   const entry = Object.assign({}, cleanCopy, {
     createdAt: new Date(),
     destroyed: false,
+    // eslint-disable-next-line no-underscore-dangle
     userId: req.user ? req.user._id : undefined,
   });
-
-
 
   await db.collection('submision').insertOne(entry);
 
@@ -499,7 +497,7 @@ app.post('/submision', async (req, res) => {
     data: submited,
   };
 
-  hemera.act(action, (err, resp) => {
+  return hemera.act(action, (err) => {
     if (err) {
       console.log('ERROR RUNNING SCRIPT');
     } else {
@@ -536,10 +534,8 @@ hemera.add(action, async (args) => {
     middleName,
     lastName,
     address_1,
-    address_2,
     city,
     state,
-    zip,
     country,
 
     company_name,
@@ -566,13 +562,13 @@ hemera.add(action, async (args) => {
     destroyed: false,
   };
 
-  const client = {
-    _id: new ObjectID(),
-    name: company_name,
-    contact,
-    createdBy: userid,
-    destroyed: false,
-  };
+  // const client = {
+  //   _id: new ObjectID(),
+  //   name: company_name,
+  //   contact,
+  //   createdBy: userid,
+  //   destroyed: false,
+  // };
 
   const user = {
     _id: userid,
@@ -623,10 +619,10 @@ hemera.add(action, async (args) => {
     email: user.email,
     destroyed: false,
     client: company._id,
-    userActivated:false
+    userActivated: false,
   };
 
-  const role={companyId:legacyUser.client ,UserId:legacyUser._id ,role:"admin" }
+  const role = { companyId: legacyUser.client, UserId: legacyUser._id, role: 'admin' };
 
   // check for existing emails and throw errors
   const [existingUser] = await db
@@ -640,7 +636,7 @@ hemera.add(action, async (args) => {
 
   // create base data
   await db.collection('user').insertOne(legacyUser);
-  await db.collection("roles").insertOne(role)
+  await db.collection('roles').insertOne(role);
   await db.collection('settings').insertOne(settings);
   await db.collection('billing').insertOne(billing);
   await db.collection('saasUser').insertOne(user);
@@ -648,91 +644,10 @@ hemera.add(action, async (args) => {
   await db.collection('company').insertOne(company);
   // await db.collection('client').insertOne(client);
 
-  /*const questionnaire = {
-    _id: new ObjectID(),
-    name: 'Sample questionnaire',
-    client: company._id.toString(),
-    destroyed: false,
-  };
-
-  const project = {
-    _id: new ObjectID(),
-    name: 'Sample project',
-    client: company._id.toString(),
-    questionnaire: questionnaire._id,
-    destroyed: false,
-  };
-
-  const team = {
-    _id: new ObjectID(),
-    name: 'Sample team',
-    client: company._id.toString(),
-    destroyed: false,
-  };
-
-  const project_team = {
-    project: project._id.toString(),
-    team: team._id.toString(),
-    destroyed: false,
-  };
-
-  const user_teams = {
-    user: user._id.toString(),
-    team: team._id.toString(),
-    destroyed: false,
-  };
-
-  await db.collection('project').insertOne(project);
-  await db.collection('team').insertOne(team);
-  await db.collection('questionnaire').insertOne(questionnaire);
-  await db.collection('project_teams').insertOne(project_team);
-  await db.collection('user_teams').insertOne(user_teams);
-
-  const page = {
-    _id: new ObjectID(),
-    name: 'Sample page',
-    questionnaire: questionnaire._id.toString(),
-    destroyed: false,
-  };
-
-  // create questionnire things
-  await db.collection('page').insertOne(page);
-
-  const group = {
-    _id: new ObjectID(),
-    name: 'Sample group',
-    page: page._id.toString(),
-    destroyed: false,
-  };
-
-  // create questionnire things
-  await db.collection('group').insertOne(group);
-
-  const question = {
-    _id: new ObjectID(),
-    type: 'instruction',
-    placeholder: 'Sample instruction',
-    group: group._id.toString(),
-    destroyed: false,
-  };
-
-  // create questionnire things
-  await db.collection('question').insertOne(question);*/
-
   await bulkAdd({
-    files:['job-sheet.json'],
-    client: company._id.toString()
-  })
-
-  // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
-  // and stitch them together to create a login setupp experience for the user
-
-  // console.log({
-  //   user: user._id,
-  //   company: company._id,
-  //   billing: billing._id,
-  //   settings: settings._id
-  // });
+    files: ['job-sheet.json'],
+    client: company._id.toString(),
+  });
 
   // send out a welcome email
   registrationThanks({
@@ -750,11 +665,6 @@ hemera.add(action, async (args) => {
       email,
     },
   });
-  // send out a sample project created email
-  // send out a process guide email
-  // send out a download our app email
-
-  // start tracking this user for the next 30 days
 
   return {
     user: user.id,
@@ -781,17 +691,17 @@ app.get('/submision/:id', async (req, res) => {
 });
 
 app.post('/query/:name', async (req, res) => {
-  const action = {
+  const remoteAction = {
     topic: 'exec',
     cmd: req.params.name,
     data: req.body,
   };
-  hemera.act(action, (err, resp) => {
+  hemera.act(remoteAction, (err, resp) => {
     if (err) {
       return res.status(500).send({ name: err.name, message: err.message });
       // return res.status(500).send(err)
     }
-    res.send(resp);
+    return res.send(resp);
   });
 });
 
@@ -804,7 +714,7 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
   const promises = [];
   Object.keys(weeks).map(async weekKey => Object.keys(weeks[weekKey].daysInWeek)
     .map(async (day) => {
-      promises.push(new Promise(async (resolve, reject) => {
+      promises.push(new Promise(async (resolve) => {
         const { start, end } = weeks[weekKey].daysInWeek[day];
         const submisions = await db
           .collection('submision')
@@ -827,7 +737,7 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
 
   const residue = await Promise.all(promises);
 
-  residue.map((x) => {
+  residue.forEach((x) => {
     weeks[x.weekKey].daysInWeek[x.day].completions = x.submisions;
   });
   res.send(weeks);
@@ -839,13 +749,6 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
     start: new Date(start),
     end: new Date(end),
   });
-
-  const randomCount = ({ min = 0, max = 10 }) => {
-    // and the formula is:
-    const random = Math.floor(Math.random() * (max - min + 1)) + min;
-
-    return random;
-  };
 
   const info = {};
 
@@ -860,17 +763,11 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
         $lte: endTime,
       };
 
-      // console.log(JSON.stringify(req.body, null, "\t"))
-
       const data = await db /* eslint-disable-line no-await-in-loop */
         .collection('submision')
         .find(Object.assign({}, req.body, {
           completedAt,
         })).toArray();
-
-      // console.log(completedAt, day, count,
-      //   moment.duration(moment(completedAt.$gte).diff(moment(completedAt.$lte))).humanize()
-      // )
 
       day = {
         start,
@@ -914,7 +811,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   data.map((dashboard) => {
     const [cpds, cps] = dashboard;
     compoundedProps.push(...cpds);
-    computedProps.push(...cps);
+    return computedProps.push(...cps);
   });
 
   const submisions = await db
@@ -926,12 +823,10 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     const copyRecord = {};
     computedProps.map((form) => {
       const tempFn = doT.template(form.formular || '');
-      console.log('computed', { formular: form.formular });
       const resultFormular = tempFn(row);
 
-      console.log('computed', { resultFormular });
-
       copyRecord[form.name] = math.eval(resultFormular);
+      return copyRecord;
     });
     Object.assign(copyRecord, row);
     return copyRecord;
@@ -944,16 +839,17 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
       const resultFormular = tempFn(compounded);
       const compiled = math.eval(resultFormular);
       compounded[c.name] = compiled;
-      return;
     }
 
     const values = computed
       .filter(row => row[c.field])
       .map(row => row[c.field]);
     const result = math[c.type](values);
+
     compounded[c.name] = typeof result === 'object' ? result[0] : result;
+    return compounded[c.name];
   });
-  res.send({
+  return res.send({
     computed,
     compounded,
   });
@@ -962,42 +858,12 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   // }
 });
 
-const lowLevelParser = (req, res) =>
-  new Promise((resolve, rej) => {
-    parser.parse(req, res, { dir: '/tmp' }, (fields, file) => {
-      resolve({ fields, file });
-    });
-  });
-
-const rename = (source, target) =>
-  new Promise((resolve, reject) => {
-    fs.rename(source, target, (err, res) => {
-      err ? reject(err) : resolve();
-    });
-  });
-
-const upload = (bucket, target) =>
-  new Promise((resolve, reject) => {
-    bucket.upload(target, (err, file) => {
-      if (!err) {
-        // console.log('upload successfull');
-        resolve(file);
-      } else {
-        // console.log(err);
-        reject(err);
-      }
-    });
-  });
-
 app.post(
   '/upload',
   multer.single('file'),
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
   async (req, res) => {
-    // console.log(req.body);
-    // console.log(req.file);
-
     const { questionnaire = '', tag = '', interviewId = '' } = req.body;
     const [, ext] = req.file.originalname.split('.');
 
@@ -1006,7 +872,6 @@ app.post(
       uri: `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${Key}`,
     });
 
-    // upload and save link in db, accessible via /questionnaireId/id
     const s3 = new AWS.S3();
     const fileData = fs.readFileSync(req.file.path);
 
@@ -1016,7 +881,7 @@ app.post(
       Body: fileData,
       ACL: 'public-read',
     };
-    await s3.putObject(params).promise();
+    return s3.putObject(params).promise();
   },
 );
 

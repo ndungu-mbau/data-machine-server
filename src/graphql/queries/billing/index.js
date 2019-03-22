@@ -1,5 +1,4 @@
-import { root as questionnaireRoot } from '../questionnaires';
-
+/* eslint-disable no-underscore-dangle */
 const type = `
   type billing {
     id: String,
@@ -34,9 +33,8 @@ const billing = async ({ id }, { datastore }) => {
   });
 };
 
-const billings = async (_, { filter = {} }, { db }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const data = await db.collection("billing").find({}).toArray();
+const billings = async (_, args, { db }) => {
+  const data = await db.collection('billing').find({}).toArray();
 
   return data.map(entry => Object.assign({}, entry, {
     id: entry._id,
@@ -45,22 +43,22 @@ const billings = async (_, { filter = {} }, { db }) => {
 
 const nested = {
   billing: {
-    user: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("user").find({
-        _id: id, destroyed: false
+    user: async ({ id }, args, { db }) => {
+      const data = await db.collection('user').find({
+        _id: id, destroyed: false,
       }).toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
     },
-    company: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("company").find({ _id: id, destroyed: false }).toArray();
+    company: async ({ id }, args, { db }) => {
+      const data = await db.collection('company').find({ _id: id, destroyed: false }).toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
-    }
-  }
-}
+    },
+  },
+};
 
 const root = {
   billing,
