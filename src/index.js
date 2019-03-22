@@ -2,10 +2,13 @@ import 'babel-polyfill';
 import 'source-map-support/register';
 import http from 'http';
 import { ifError } from 'assert';
+import bunyan from 'bunyan';
 
 import server from './graphql';
 import app from './app';
 import config from './config';
+
+const log = bunyan.createLogger({ name: 'main' });
 
 const {
   PORT = 4000,
@@ -23,7 +26,7 @@ if (NODE_ENV !== 'test') {
   httpServer.listen(PORT, HOST, (err) => {
     ifError(err);
     // eslint-disable-next-line no-console
-    console.log(`
+    log.info(`
     🔧  Configured for ${NODE_ENV}.
       => address: ${HOST}
       => port: ${PORT}

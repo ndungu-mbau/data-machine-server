@@ -28,21 +28,6 @@ export const sendMail = ({ to, subject, message }) =>
     mailOptions.html = message;
     // send mail with defined transport object
     transporter.sendMail(mailOptions, async (error, info) => {
-      // console.log({ error, info });
-      // async save the email send to our collection on google
-      // const emailSends = datastore.key('emailSends');
-
-      // await datastore.save({
-      //   key: emailSends,
-      //   data: Object.assign(
-      //     {},
-      //     { error },
-      //     info,
-      //     { subject },
-      //     { message, triggedAt: new Date().toISOString() },
-      //   ),
-      // });
-
       if (error) {
         return reject(error);
       }
@@ -59,8 +44,6 @@ const registrationThanks = async ({
 }) => {
   const tempFn = doT.template((await readFile('src/app/emails/registration-thanks.html', 'utf8')));
   const message = tempFn(data);
-  // console.log(resusltEmail)
-
   sendMail({
     to,
     subject,
@@ -88,9 +71,6 @@ const userLoggedIn = async ({
   subject = 'User logged in',
   data,
 }) => {
-  // const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
-  // var message = tempFn(data);
-
   sendMail({
     to,
     subject,
@@ -103,9 +83,6 @@ const appUserLoggedIn = async ({
   subject = 'User logged in to on the app',
   data,
 }) => {
-  // const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
-  // var message = tempFn(data);
-
   sendMail({
     to,
     subject,
@@ -118,9 +95,6 @@ const userCreatedAccount = async ({
   subject = 'User created account',
   data,
 }) => {
-  // const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
-  // var message = tempFn(data);
-
   sendMail({
     to,
     subject,

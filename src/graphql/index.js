@@ -1,19 +1,18 @@
 import { ApolloServer, gql } from 'apollo-server-express';
 import jwt from 'jsonwebtoken';
 import { MongoClient, ObjectId } from 'mongodb';
+import bunyan from 'bunyan';
 
 import { typeQueries, queryRoot } from './queries';
 import { typeMutations, mutationRoot } from './mutations';
 
 import config from '../config';
 
+const log = bunyan.createLogger({ name: 'app' });
+
 const {
   NODE_ENV = 'development',
 } = process.env;
-
-// const { graph: queriesGraph, root: queriesRoot } = queries
-// const { graph: mutationsGraph, root: mutationsRoot } = mutations
-// const { graph: subscriptionsGraph, root: subscriptionsRoot } = subscriptions
 
 const typeDefs = gql`
     ${typeQueries},
@@ -45,6 +44,7 @@ const context = ({ req }) => {
     return {
       user,
       db,
+      log,
       ObjectId,
     };
   }
@@ -58,8 +58,7 @@ const server = new ApolloServer({
   context,
   formatError(error) {
     if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
-      // logging the errors can help in development
-      console.error(error);
+      log.error(error);
     }
     return error;
   },

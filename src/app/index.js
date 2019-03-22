@@ -14,6 +14,7 @@ import fs from 'fs';
 import AWS from 'aws-sdk';
 import { MongoClient, ObjectId } from 'mongodb';
 import cron from 'node-cron';
+import bunyan from 'bunyan';
 import {
   passwordResetEmail,
   registrationThanks,
@@ -35,6 +36,8 @@ const Hemera = require('nats-hemera');
 const nats = require('nats').connect({
   url: process.env.NATS_URL,
 });
+
+const log = bunyan.createLogger({ name: 'app' });
 
 const hemera = new Hemera(nats, {
   logLevel: 'silent',
@@ -59,18 +62,18 @@ MongoClient.connect(
     // eslint-disable-next-line array-callback-return
     jobs.forEach(({
       name, schedule, work, options, emediate,
-    // eslint-disable-next-line consistent-return
+      // eslint-disable-next-line consistent-return
     }) => {
       if (emediate === true) {
-        return work({ db });
+        return work({ db, log });
       }
 
       if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
         const task = cron.schedule(schedule, () => {
           try {
-            work({ db });
+            work({ db, log });
           } catch (taskStartError) {
-            console.log(`Job ${name} failed with error ${taskStartError.message}`);
+            log.info(`Job ${name} failed with error ${taskStartError.message}`);
           }
         }, options);
         return task.start();
@@ -171,7 +174,6 @@ const getWeekBreakDown = (daysBack) => {
     };
   }
 
-  // console.log(JSON.stringify({ weeks }, null, '\t'))
   return weeks;
 };
 
@@ -181,7 +183,6 @@ const getDayBreakDown = ({ start, end }) => {
 
   const dayCountDays = {};
 
-  // const x = moment(now).diff(moment(then))
   const dayNumber = moment(then).diff(moment(now), 'days');
 
   // eslint-disable-next-line no-plusplus
@@ -465,7 +466,7 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
       }
     }
   });
@@ -499,9 +500,9 @@ app.post('/submision', async (req, res) => {
 
   return hemera.act(action, (err) => {
     if (err) {
-      console.log('ERROR RUNNING SCRIPT');
+      log('ERROR RUNNING SCRIPT');
     } else {
-      console.log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
+      log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
     }
   });
 });

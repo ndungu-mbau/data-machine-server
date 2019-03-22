@@ -115,7 +115,6 @@ const QuestionnaireDashboards = questionnaireId => async (
   filter,
   { db },
 ) => {
-  console.log({ questionnaireId });
   const data = await db.collection('dashboard').find({ questionnaire: questionnaireId, destroyed: false }).toArray();
 
   if (!data) { return []; }

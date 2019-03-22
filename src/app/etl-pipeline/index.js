@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { ObjectId } from 'mongodb';
+import bunyan from 'bunyan';
 import {
   createPage,
   createGroup,
@@ -9,6 +10,8 @@ import {
   createQuestionnaire,
 } from './db';
 
+const log = bunyan.createLogger({ name: 'etl-pipeline' });
+
 fs.readAsync = url => new Promise((resolve, reject) => fs.readFile(url, (err, data) => {
   if (err) reject(err);
   resolve(data);
@@ -16,6 +19,7 @@ fs.readAsync = url => new Promise((resolve, reject) => fs.readFile(url, (err, da
 
 // eslint-disable-next-line import/prefer-default-export
 export const bulkAdd = async ({ files: [filename], client }) => {
+  log.info('importing', filename, 'for', client);
   const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename);
   const projectData = await fs.readAsync(filepath);
   const {

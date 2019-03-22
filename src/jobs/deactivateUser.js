@@ -5,8 +5,8 @@ export default {
   name: 'DEACTIVATE_USERS',
   schedule: '* * * * *',
   emediate: false,
-  async work({ db }) {
-    console.log('running a task every minute');
+  async work({ db, log }) {
+    log.info('running a task every minute');
     const col = db.collection('user');
     // Show that duplicate records got dropped
     const users = await col.find({}).toArray();
