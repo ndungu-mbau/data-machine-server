@@ -43,20 +43,8 @@ export const sendMail = ({
 
   // send mail with defined transport object
   transporter.sendMail(mailOptions, async (error, info) => {
-    console.log({ error, info });
-    // async save the email send to our collection on google
-    // const emailSends = datastore.key('emailSends');
-
-    // await datastore.save({
-    //   key: emailSends,
-    //   data: Object.assign(
-    //     {},
-    //     { error },
-    //     info,
-    //     { subject },
-    //     { message, triggedAt: new Date().toISOString() },
-    //   ),
-    // });
+    // console.log({ error, info });
+    // async save the email send to our collection
 
     if (error) {
       return reject(error);
@@ -93,7 +81,7 @@ const accountActivationEmail = async ({
     to,
     subject,
     message,
-  }).catch(console.log);
+  });
 };
 
 const passwordResetEmail = async ({
@@ -147,25 +135,6 @@ const userCreatedAccount = async ({
   });
 };
 
-// registrationThanks({
-//     to: "sirbranson67@gmail.com",
-// data: {
-//     firstName:'Branson',
-//     lastName:'Gitomeh',
-//     company:{
-//         name:'braiven.io'
-//     }
-// }
-// })
-
-// passwordReset({
-//     to: "sirbranson67@gmail.com",
-//     data: {
-//         firstName:'Branson'
-//     }
-// })
-
-
 const sendDocumentEmails = ({
   to,
   cc,
@@ -183,7 +152,7 @@ const sendDocumentEmails = ({
     subject,
     message,
     attachments,
-  }).catch(console.log);
+  });
 };
 
 export {

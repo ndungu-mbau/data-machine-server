@@ -82,9 +82,12 @@ let db;
 
 function makeShortPassword() {
   let text = '';
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-  for (let i = 0; i < 4; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)); }
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < 4; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
 
   return text;
 }
@@ -306,9 +309,9 @@ app.post(
     const { username, password } = req.body;
     const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitome@gmail.com'];
 
-    console.log('authenticating management', username);
+    log.info('authenticating management', username);
     if (allowedAdmins.includes(username)) {
-      console.log('authing a legit manager', username);
+      log.info('authing a legit manager', username);
       const userData = await db
         .collection('user')
         .findOne({ email: username });
@@ -333,7 +336,7 @@ app.post(
         .status(401)
         .send({ message: 'Wrong username and password combination' });
     }
-    console.log('management username not found in users', username);
+    log.info('management username not found in users', username);
     return res.status(500).send('Unauthorised');
   },
 );

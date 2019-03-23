@@ -31,15 +31,14 @@ MongoClient.connect(config[NODE_ENV].db.url, { useNewUrlParser: true }, (err, cl
   db = client.db(config[NODE_ENV].db.name);
 });
 
-const myAuthenticationLookup = req => {
+const myAuthenticationLookup = (req) => {
   try {
-    return jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret)
-  } catch (err) {
-
+    return jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret);
+  } catch (authError) {
     try {
-      return jwt.verify(req.headers.auth, config[NODE_ENV].managementHashingSecret)
-    } catch (err) {
-      throw err
+      return jwt.verify(req.headers.auth, config[NODE_ENV].managementHashingSecret);
+    } catch (managementAuthErr) {
+      throw managementAuthErr;
     }
   }
 };
