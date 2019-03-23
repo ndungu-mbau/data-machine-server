@@ -21,12 +21,43 @@ const mailOptions = {
   from: `"Datakit Support " <${process.env.EMAIL_BASE}>`,
 };
 
-export const sendMail = ({ to, subject, message }) => new Promise((resolve, reject) => {
+export const sendMail = ({
+  from, to, subject, message, attachments, cc, bcc,
+}) => new Promise((resolve, reject) => {
   mailOptions.to = to;
   mailOptions.subject = subject;
   mailOptions.html = message;
+
+  Object.assign(mailOptions, {
+    cc,
+    bcc,
+  });
+
+  if (attachments) {
+    mailOptions.attachments = attachments;
+  }
+
+  if (from) {
+    mailOptions.from = from;
+  }
+
   // send mail with defined transport object
   transporter.sendMail(mailOptions, async (error, info) => {
+    console.log({ error, info });
+    // async save the email send to our collection on google
+    // const emailSends = datastore.key('emailSends');
+
+    // await datastore.save({
+    //   key: emailSends,
+    //   data: Object.assign(
+    //     {},
+    //     { error },
+    //     info,
+    //     { subject },
+    //     { message, triggedAt: new Date().toISOString() },
+    //   ),
+    // });
+
     if (error) {
       return reject(error);
     }
@@ -48,6 +79,21 @@ const registrationThanks = async ({
     subject,
     message,
   });
+};
+
+const accountActivationEmail = async ({
+  to,
+  subject = 'Activate your account',
+  data,
+}) => {
+  const tempFn = doT.template((await readFile('src/app/emails/activate-account.html', 'utf8')));
+  const message = tempFn(data);
+
+  sendMail({
+    to,
+    subject,
+    message,
+  }).catch(console.log);
 };
 
 const passwordResetEmail = async ({
@@ -119,10 +165,33 @@ const userCreatedAccount = async ({
 //     }
 // })
 
+
+const sendDocumentEmails = ({
+  to,
+  cc,
+  from,
+  bcc,
+  subject = 'Your document is now ready',
+  message,
+  attachments,
+}) => {
+  sendMail({
+    to,
+    from,
+    cc,
+    bcc,
+    subject,
+    message,
+    attachments,
+  }).catch(console.log);
+};
+
 export {
   registrationThanks,
+  accountActivationEmail,
   passwordResetEmail,
   userLoggedIn,
   userCreatedAccount,
   appUserLoggedIn,
+  sendDocumentEmails,
 };

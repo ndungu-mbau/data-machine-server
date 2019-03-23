@@ -18,13 +18,4 @@ const queries = `
   dashboards(filter:filter!):[dashboard]
 `;
 
-const dashboard = () => { };
-
-const dashboards = () => { };
-
-const root = {
-  dashboard,
-  dashboards,
-};
-
 export { type, queries, root };

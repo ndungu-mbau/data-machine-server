@@ -1,16 +1,15 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-underscore-dangle */
 import fs from 'fs';
 import path from 'path';
 import { ObjectId } from 'mongodb';
-import bunyan from 'bunyan';
 import {
   createPage,
-  createGroup,
   createQuestion,
   createProject,
   createQuestionnaire,
 } from './db';
 
-const log = bunyan.createLogger({ name: 'etl-pipeline' });
 
 fs.readAsync = url => new Promise((resolve, reject) => fs.readFile(url, (err, data) => {
   if (err) reject(err);
@@ -18,8 +17,9 @@ fs.readAsync = url => new Promise((resolve, reject) => fs.readFile(url, (err, da
 }));
 
 // eslint-disable-next-line import/prefer-default-export
-export const bulkAdd = async ({ files: [filename], client }) => {
-  log.info('importing', filename, 'for', client);
+export const bulkAdd = async ({
+  db, files: [filename], client, user,
+}) => {
   const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename);
   const projectData = await fs.readAsync(filepath);
   const {
@@ -36,6 +36,29 @@ export const bulkAdd = async ({ files: [filename], client }) => {
     client,
   };
 
+  const team = {
+    _id: new ObjectId(),
+    name: 'Sample team',
+    client,
+    destroyed: false,
+  };
+
+  const projectTeam = {
+    project: project._id.toString(),
+    team: team._id.toString(),
+    destroyed: false,
+  };
+
+  const userTeams = {
+    user,
+    team: team._id.toString(),
+    destroyed: false,
+  };
+
+  await db.collection('team').insertOne(team);
+  await db.collection('project_teams').insertOne(projectTeam);
+  await db.collection('user_teams').insertOne(userTeams);
+
   const questionnaire = {
     _id: new ObjectId(),
     name,
@@ -49,10 +72,6 @@ export const bulkAdd = async ({ files: [filename], client }) => {
   questionnaire.id = questionnaire._id;
   await createQuestionnaire(questionnaire);
 
-  // eslint-disable-next-line no-underscore-dangle
-  project.questionnaire = new ObjectId(questionnaire._id.toString());
-
-  // eslint-disable-next-line no-restricted-syntax
   for (const { name: pageName, groups } of pages) {
     const page = {
       _id: new ObjectId(),
@@ -67,34 +86,33 @@ export const bulkAdd = async ({ files: [filename], client }) => {
     createPage(page);
 
     // eslint-disable-next-line no-restricted-syntax
-    for (const { name: groupName, questions } of groups) {
-      const group = {
-        _id: new ObjectId(),
-        name: groupName,
-        page: page.id.toString(),
-        destroyed: false,
-      };
-
-      // eslint-disable-next-line no-underscore-dangle
-      group.id = group._id;
-      createGroup(group);
-
+    for (const { name: groupName } of groups) {
       // eslint-disable-next-line no-restricted-syntax
-      for (const question of questions) {
-        Object.assign(question, {
+      for (const { questions } of groups) {
+        const group = {
           _id: new ObjectId(),
-          group: group.id.toString(),
+          name: groupName,
+          page: page.id.toString(),
           destroyed: false,
-        });
+        };
 
-        // eslint-disable-next-line no-underscore-dangle
-        question.id = question._id;
-        createQuestion(question);
+        // eslint-disable-next-line no-restricted-syntax
+        for (const question of questions) {
+          Object.assign(question, {
+            _id: new ObjectId(),
+            group: group.id.toString(),
+            destroyed: false,
+          });
+
+          // eslint-disable-next-line no-underscore-dangle
+          question.id = question._id;
+          createQuestion(question);
+        }
       }
     }
-  }
 
-  // eslint-disable-next-line no-underscore-dangle
-  project.id = project._id;
-  createProject(project);
+    // eslint-disable-next-line no-underscore-dangle
+    project.id = project._id;
+    createProject(project);
+  }
 };

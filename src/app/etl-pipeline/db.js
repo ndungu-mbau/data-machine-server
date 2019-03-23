@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 import config from '../../config';
 
-const { NODE_ENV } = process.env;
+const { NODE_ENV = 'development' } = process.env;
 
 let db;
 
