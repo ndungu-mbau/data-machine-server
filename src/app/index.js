@@ -827,7 +827,12 @@ hemera.add(action, async (args) => {
     userActivated: false,
   };
 
-  const role = { companyId: legacyUser.client, UserId: legacyUser._id, role: 'admin' };
+  const role = {
+    client: company._id,
+    userId: legacyUser._id,
+    destroyed: false,
+    name: 'admin',
+  };
 
   // check for existing emails and throw errors
   const [existingUser] = await db
@@ -850,7 +855,8 @@ hemera.add(action, async (args) => {
   // await db.collection('client').insertOne(client);
 
   await bulkAdd({
-    files: ['job-sheet.json'],
+    db,
+    files: ['job-sheet.json', 'safety-checklist.json', 'construction-daily-report.json'],
     client: company._id.toString(),
   });
 
@@ -864,12 +870,12 @@ hemera.add(action, async (args) => {
     }),
   });
 
-  userCreatedAccount({
-    to: 'sirbranson67@gmail.com',
-    data: {
-      email,
-    },
-  });
+  // userCreatedAccount({
+  //   to: 'sirbranson67@gmail.com',
+  //   data: {
+  //     email,
+  //   },
+  // });
 
   return {
     user: user.id,
