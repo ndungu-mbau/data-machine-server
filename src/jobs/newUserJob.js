@@ -1,112 +1,114 @@
-import cron from "node-cron";
-import config from "../config";
-import validator from "validator";
-import { checkDocument } from "apollo-utilities";
-import { string } from "postcss-selector-parser";
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable guard-for-in */
+/* eslint-disable no-underscore-dangle */
+const _email = async (x) => {
+  const flags = [];
 
-const _email = async (x) =>{
-  const flags = []
-
-  if(x === ''){
+  if (x === '') {
     flags.push({
-      message:'blank'
-    })
+      message: 'blank',
+    });
   }
 
   return {
-    _email_flags:flags
-  }
-}
+    _email_flags: flags,
+  };
+};
 
-const _firstname = async (x) =>{
-  const flags = []
+const _firstname = async (x) => {
+  const flags = [];
 
-  if(x === ''){
+  if (x === '') {
     flags.push({
-      message:'blank'
-    })
+      message: 'blank',
+    });
   }
 
   return {
-    _firstname_flag:flags
-  }
-}
+    _firstname_flag: flags,
+  };
+};
 
-const _middlename = async (x) =>{
-  const flags = []
+const _middlename = async (x) => {
+  const flags = [];
 
-  if(x === ''){
+  if (x === '') {
     flags.push({
-      message:'blank'
-    })
+      message: 'blank',
+    });
   }
 
   return {
-    _middlename_flag:flags
-  }
-}
+    _middlename_flag: flags,
+  };
+};
 
-const _lastname = async (x) =>{
-  const flags = []
+const _lastname = async (x) => {
+  const flags = [];
 
-  if(x === ''){
+  if (x === '') {
     flags.push({
-      message:'blank'
-    })
+      message: 'blank',
+    });
   }
 
   return {
-    _lastname_flag:flags
-  }
-}
+    _lastname_flag: flags,
+  };
+};
 
 export default {
-  name: "NEW_USER",
-  schedule: "* * * * *",
-  emediate:false,
+  name: 'NEW_USER',
+  schedule: '* * * * *',
+  emediate: false,
   async work({ db }) {
     // first store all validations on a map for access when running
-    const validationsMap = {}
-    const users = await db.collection("user").find({}).toArray();
-    const user_validations = await db.collection("user_validation").find({}).toArray();
+    const validationsMap = {};
+    const users = await db.collection('user').find({}).toArray();
+    // eslint-disable-next-line camelcase
+    const user_validations = await db.collection('user_validation').find({}).toArray();
 
-    user_validations.map(val=>validationsMap[val.email]=val)
+    user_validations.forEach((val) => { validationsMap[val.email] = val; });
 
-    console.log("working with ",users.length )
-    for (const i in users){
-          const user = users[i]
+    for (const i in users) {
+      const user = users[i];
 
-          const {
-            email,
-            firstName,
-            middleName,
-            lastName
-          } = user
+      const {
+        email,
+        firstName,
+        middleName,
+        lastName,
+      } = user;
 
-          if(!email){
-            return;
-          }
+      if (!email) {
+        return;
+      }
 
-          const issues = {};
+      const issues = {};
 
-          Object.assign(
-            issues,
-            await _email(email),
-            await _firstname(firstName),
-            await _middlename(middleName),
-            await _lastname(lastName)
-          )
+      Object.assign(
+        issues,
+        // eslint-disable-next-line no-await-in-loop
+        await _email(email),
+        // eslint-disable-next-line no-await-in-loop
+        await _firstname(firstName),
+        // eslint-disable-next-line no-await-in-loop
+        await _middlename(middleName),
+        // eslint-disable-next-line no-await-in-loop
+        await _lastname(lastName),
+      );
 
-          let validusers = await db
-            .collection("user_validation")
-            .updateOne(
-              { email },
-              { $set:issues },
-              { upsert:true }
-            )
+      await db
+        .collection('user_validation')
+        .updateOne(
+          { email },
+          { $set: issues },
+          { upsert: true },
+        );
     }
   },
   opts: {
-    schedule: true
-  }
+    schedule: true,
+  },
 };

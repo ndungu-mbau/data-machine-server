@@ -1,21 +1,23 @@
 /* eslint-disable no-underscore-dangle */
-const collection = 'sentense';
+const collection = 'roles';
 
-const create = async (args, { db, ObjectId }) => {
-  const entry = args[collection];
-  entry._id = new ObjectId();
-  db.collection(collection).insertOne(entry);
-  entry.id = entry._id;
-  return entry;
+const created = async ({ companyId, userId, role }, { db, ObjectId }) => {
+  const roleObj = {
+    _id: ObjectId(),
+    companyId,
+    userId,
+    role: role.role,
+  };
+
+  const res = await db.collection(collection).insertOne(role);
+  return { id: roleObj._id, ...res.ops[0] };
 };
 
 const update = async (args, { db, ObjectId }) => {
   const entry = args[collection];
-  return db.collection(collection)
-    .updateOne(
-      { _id: new ObjectId(entry.id) },
-      { $set: Object.assign({}, entry, { id: undefined }) },
-    );
+  const { id } = entry;
+  delete entry.id;
+  return db.collection(collection).updateOne({ _id: new ObjectId(id) }, { $set: entry });
 };
 
 const destroy = async (args, { db, ObjectId }) => {
@@ -37,8 +39,5 @@ const restore = async (args, { db, ObjectId }) => {
 };
 
 export {
-  create,
-  update,
-  destroy,
-  restore,
+  created, update, destroy, restore,
 };

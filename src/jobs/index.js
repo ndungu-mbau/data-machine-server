@@ -1,10 +1,13 @@
-import testJob from "./testJob"
-import newUser from "./newUserJob"
-import emailJob from "./emailJob"
-const jobs = [
-    emailJob,
-    testJob,
-    newUser
-]
+import testJob from './testJob';
+import newUser from './newUserJob';
+import emailJob from './emailJob';
+import deactivateUser from './deactivateUser';
 
-export default jobs
+const jobs = [
+  emailJob,
+  testJob,
+  newUser,
+  deactivateUser,
+];
+
+export default jobs;

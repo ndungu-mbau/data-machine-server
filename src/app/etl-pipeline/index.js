@@ -1,38 +1,40 @@
-import fs from 'fs'
-import path from 'path'
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-underscore-dangle */
+import fs from 'fs';
+import path from 'path';
+import { ObjectId } from 'mongodb';
 import {
   createPage,
-  createGroup,
   createQuestion,
   createProject,
-  createQuestionnaire
-} from './db'
+  createQuestionnaire,
+} from './db';
 
-import { ObjectId } from 'mongodb'
 
-fs.readAsync = (path) => new Promise((resolve, reject) => fs.readFile(path, (err, data) => {
-  if (err) reject(err)
-  resolve(data)
-})
-)
+fs.readAsync = url => new Promise((resolve, reject) => fs.readFile(url, (err, data) => {
+  if (err) reject(err);
+  resolve(data);
+}));
 
-export const bulkAdd = async ({ db, files: [filename], client, user }) => {
-
-  const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename)
-  const projectData = await fs.readAsync(filepath)
+// eslint-disable-next-line import/prefer-default-export
+export const bulkAdd = async ({
+  db, files: [filename], client, user,
+}) => {
+  const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename);
+  const projectData = await fs.readAsync(filepath);
   const {
     items: {
       name,
-      pages
-    }
-  } = JSON.parse(projectData)
+      pages,
+    },
+  } = JSON.parse(projectData);
 
   const project = {
     _id: new ObjectId(),
     destroyed: false,
     name,
-    client
-  }
+    client,
+  };
 
   const team = {
     _id: new ObjectId(),
@@ -41,75 +43,76 @@ export const bulkAdd = async ({ db, files: [filename], client, user }) => {
     destroyed: false,
   };
 
-  const project_team = {
+  const projectTeam = {
     project: project._id.toString(),
     team: team._id.toString(),
     destroyed: false,
   };
 
-  const user_teams = {
-    user: user,
+  const userTeams = {
+    user,
     team: team._id.toString(),
     destroyed: false,
   };
 
   await db.collection('team').insertOne(team);
-  await db.collection('project_teams').insertOne(project_team);
-  await db.collection('user_teams').insertOne(user_teams);
+  await db.collection('project_teams').insertOne(projectTeam);
+  await db.collection('user_teams').insertOne(userTeams);
 
   const questionnaire = {
     _id: new ObjectId(),
     name,
+    // eslint-disable-next-line no-underscore-dangle
     project: project._id.toString(),
     destroyed: false,
-    client
-  }
+    client,
+  };
 
-  questionnaire.id = questionnaire._id
-  await createQuestionnaire(questionnaire)
+  // eslint-disable-next-line no-underscore-dangle
+  questionnaire.id = questionnaire._id;
+  await createQuestionnaire(questionnaire);
 
-  project.questionnaire = new ObjectId(questionnaire._id.toString())
-
-  //console.log(`ETL-PIPE: Project data ${JSON.stringify(project)}`)
-
-  for (const { name, groups } of pages) {
-
+  for (const { name: pageName, groups } of pages) {
     const page = {
       _id: new ObjectId(),
       destroyed: false,
-      name,
-      questionnaire: questionnaire._id.toString()
-    }
+      name: pageName,
+      // eslint-disable-next-line no-underscore-dangle
+      questionnaire: questionnaire._id.toString(),
+    };
 
+    // eslint-disable-next-line no-underscore-dangle
     page.id = page._id;
-    await createPage(page)
+    createPage(page);
 
-    for (const { name, questions } of groups) {
-
-      const group = {
-        _id: new ObjectId(),
-        name,
-        page: page.id.toString(),
-        destroyed: false
-      }
-
-      group.id = group._id
-      await createGroup(group);
-
-      for (const question of questions) {
-
-        Object.assign(question, {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const { name: groupName } of groups) {
+      // eslint-disable-next-line no-restricted-syntax
+      for (const { questions } of groups) {
+        const group = {
           _id: new ObjectId(),
-          group: group.id.toString(),
-          destroyed: false
-        })
+          name: groupName,
+          page: page.id.toString(),
+          destroyed: false,
+        };
 
-        question.id = question._id;
-        await createQuestion(question);
+        // eslint-disable-next-line no-restricted-syntax
+        for (const question of questions) {
+          Object.assign(question, {
+            _id: new ObjectId(),
+            group: group.id.toString(),
+            destroyed: false,
+          });
+
+          // eslint-disable-next-line no-underscore-dangle
+          question.id = question._id;
+          createQuestion(question);
+        }
       }
     }
-  }
 
-  project.id = project._id
-  await createProject(project)
-}
+    // eslint-disable-next-line no-underscore-dangle
+    project.id = project._id;
+    createProject(project);
+  }
+};

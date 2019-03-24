@@ -1,4 +1,6 @@
-import { create, update, destroy, restore } from './entity';
+import {
+  create, update, destroy, restore,
+} from './entity';
 
 const type = `
   input newcp {

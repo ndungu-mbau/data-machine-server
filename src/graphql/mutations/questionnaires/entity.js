@@ -1,28 +1,41 @@
-const collection = "questionnaire"
+/* eslint-disable no-underscore-dangle */
+const collection = 'questionnaire';
 
 const create = async (args, { db, ObjectId }) => {
-  const entry = args[collection]
+  const entry = args[collection];
   entry._id = new ObjectId();
-  db.collection(collection).insertOne(entry)
-  entry.id = entry._id
-  return entry
+  db.collection(collection).insertOne(entry);
+  entry.id = entry._id;
+  return entry;
 };
 
 const update = async (args, { db, ObjectId }) => {
-  const entry = args[collection]
-  const id = entry.id
-  delete entry.id
-  return await db.collection(collection).updateOne({ _id: new ObjectId(id) }, { $set: entry })
+  const entry = args[collection];
+  const { id } = entry;
+  delete entry.id;
+  return db.collection(collection).updateOne({ _id: new ObjectId(id) }, { $set: entry });
 };
 
-const destroy = async (args, { datastore }) => {
-  const entry = args[collection]
-  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined, destroyed: true }) })
+const destroy = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      {
+        $set: Object.assign({}, entry, { id: undefined, destroyed: true }),
+      },
+    );
 };
 
-const restore = async (args, { datastore }) => {
-  const entry = args[collection]
-  return await db.collection(collection).updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined, destroyed: false }) })
+const restore = async (args, { db, ObjectId }) => {
+  const entry = args[collection];
+  return db.collection(collection)
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      {
+        $set: Object.assign({}, entry, { id: undefined, destroyed: false }),
+      },
+    );
 };
 
 export {

@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 const type = `
   type page {
     id: String,
@@ -43,18 +44,18 @@ const root = {
 
 const nested = {
   page: {
-    groups: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("group").find({ page: id.toString(), destroyed: false }).toArray();
+    groups: async ({ id }, args, { db }) => {
+      const data = await db.collection('group').find({ page: id.toString(), destroyed: false }).toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
-    }
-  }
-}
+    },
+  },
+};
 
 export {
   type,
   queries,
   root,
-  nested
+  nested,
 };

@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { root as questionnaireRoot } from '../questionnaires';
 
 const type = `
@@ -27,9 +28,13 @@ const team = async ({ id }, { datastore }) => {
   });
 };
 
-const projectQuestionnaire = questionnaireId =>
-  async (attrs, { datastore }) =>
-    questionnaireRoot.questionnaire({ id: questionnaireId }, { datastore });
+const projectQuestionnaire = questionnaireId => async (
+  attrs,
+  { datastore },
+) => questionnaireRoot.questionnaire(
+  { id: questionnaireId },
+  { datastore },
+);
 
 const teamProjects = teamId => async (filter, { datastore }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
@@ -44,26 +49,10 @@ const teamProjects = teamId => async (filter, { datastore }) => {
   return entities.shift().map(entry => Object.assign({}, entry, {
     id: entry[datastore.KEY].id,
   }, {
-      questionnaire: projectQuestionnaire(entry.questionnaire),
-    }));
+    questionnaire: projectQuestionnaire(entry.questionnaire),
+  }));
 };
 
-const teamUsers = teamId => async (filter, { datastore }) => {
-  const { destroyed = false, offset = 0, limit = 100 } = filter;
-  const query = datastore.createQuery('user_teams')
-    .filter('team', teamId)
-    .filter('destroyed', destroyed)
-    .offset('offset', offset)
-    .limit('limit', limit);
-
-  const entities = await datastore.runQuery(query);
-
-  return entities.shift().map(entry => Object.assign({}, entry, {
-    id: entry[datastore.KEY].id,
-  }, {
-      questionnaire: projectQuestionnaire(entry.questionnaire),
-    }));
-};
 
 const teams = async ({ filter }, { datastore }) => {
   const { destroyed = false, offset = 0, limit = 100 } = filter;
@@ -84,8 +73,7 @@ const teams = async ({ filter }, { datastore }) => {
 
 const nested = {
   team: {
-    users: async ({ id }, { filter = {} }, { db, ObjectId }) => {
-      const { destroyed = false, offset = 0, limit = 100 } = filter;
+    users: async ({ id }, args, { db, ObjectId }) => {
       const relations = await db.collection('user_teams').find({ team: id.toString() }).toArray();
 
       const users = await db.collection('user').find({ _id: { $in: relations.map(relation => ObjectId(relation.user)) }, destroyed: false }).toArray();
@@ -94,8 +82,7 @@ const nested = {
         id: entry._id,
       }));
     },
-    projects: async ({ id }, { filter = {} }, { db, ObjectId }) => {
-      const { destroyed = false, offset = 0, limit = 100 } = filter;
+    projects: async ({ id }, args, { db, ObjectId }) => {
       const relations = await db.collection('project_teams').find({ team: id.toString() }).toArray();
 
       const projects = await db.collection('project').find({ _id: { $in: relations.map(relation => ObjectId(relation.project)) }, destroyed: false }).toArray();

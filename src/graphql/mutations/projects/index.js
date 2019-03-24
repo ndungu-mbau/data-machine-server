@@ -3,8 +3,6 @@ import {
   update,
   destroy,
   restore,
-  addTeam,
-  removeTeam
 } from './entity';
 
 const type = `
@@ -34,7 +32,7 @@ const root = {
     create,
     update,
     destroy,
-    restore
+    restore,
   }),
 };
 
