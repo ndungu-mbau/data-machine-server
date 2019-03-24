@@ -1,3 +1,7 @@
+services:
+- name: cache
+  image: redis
+  
 pipeline:
   restore-cache:
     image: drillster/drone-volume-cache
