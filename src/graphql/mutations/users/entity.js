@@ -37,8 +37,8 @@ const create = async (args, { db, ObjectId }) => {
     // eslint-disable-next-line no-underscore-dangle
     existingUser.id = existingUser._id;
     // eslint-disable-next-line no-console
-    console.log('User already exists,not sending sms ', coolNumber);
-    return existingUser;
+    console.log('User already exists,upserting', coolNumber);
+    // return existingUser;
   }
   // ask for the country and use that here - then ask to confirm
 
@@ -69,7 +69,11 @@ const create = async (args, { db, ObjectId }) => {
     client: new ObjectId(entry.client),
     destroyed: false,
   });
-  db.collection(collection).insertOne(entry);
+  await db.collection(collection).update(
+    { phoneNumber: entry.phoneNumber },
+    entry,
+    { upsert: true, safe: false },
+  );
   // eslint-disable-next-line no-underscore-dangle
   entry.id = entry._id;
   return entry;
