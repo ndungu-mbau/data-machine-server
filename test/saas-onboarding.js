@@ -124,7 +124,7 @@ describe('Books', () => {
           topic: 'registratin',
           cmd: 'saas',
           data: registrationData,
-        },
+        }, () => done(),
       );
     });
     it('should login to a saas user', (done) => {

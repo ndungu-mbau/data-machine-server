@@ -17,22 +17,21 @@ pipeline:
       - yarn install --pure-lockfile
   docker:
     image: plugins/docker
-    repo: registry.braiven.io/data-kit-gateway
-    tags: "${DRONE_COMMIT_SHA:0:7}"
+    repo: registry.braiven.io/data-machine-server
+    tags: latest
     registry: registry.braiven.io
+    tags: "${DRONE_COMMIT_SHA:0:7}"
     file: Dockerfile
     username: mozart
     password: password
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
 
   staging-deploy:
     image: peloton/drone-rancher
     url: https://ops.braiven.io/v2-beta
     access_key: 2B452DA2BD3F853C6DDF
     secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
-    service: staging/data-machine-saas
-    docker_image: registry.braiven.io/data-machine-saas:${DRONE_COMMIT_SHA:0:7}
+    service: staging/data-machine-server
+    docker_image: registry.braiven.io/data-machine-server:${DRONE_COMMIT_SHA:0:7}
     start_first: true
     confirm: true
     timeout: 1000
@@ -40,21 +39,21 @@ pipeline:
       branch:
       - develop
 
-  production-deploy:
+  production-reploy:
     image: peloton/drone-rancher
     url: https://ops.braiven.io/v2-beta
     access_key: 2B452DA2BD3F853C6DDF
     secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
-    service: public/data-kit-gateway
-    docker_image: registry.braiven.io/data-kit-gateway:${DRONE_COMMIT_SHA:0:7}
+    service: public/data-machine-server
+    docker_image: registry.braiven.io/data-machine-server:${DRONE_COMMIT_SHA:0:7}
     start_first: true
     confirm: true
-    timeout: 10000
+    timeout: 1000
     when:
       branch:
       - master
 
-  telegram_notif:
+  announce:
     image: appleboy/drone-telegram
     token: 572971694:AAFxccNJNhMcUIzQQIM9fCM6EUCnGs7WnHQ
     to: 21649399
@@ -67,13 +66,13 @@ pipeline:
       @{{commit.author}} <a href="{{build.Link}}">{{build.event}}ed</a> to <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}">{{repo.owner}}/{{repo.name}}</a>
 
       {{commit.email}}: {{commit.message}}
-
+      
       CI ✅ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
       {{else}}
         @{{commit.author}} <a href="{{build.Link}}">{{build.event}}ed</a> to <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}">{{repo.owner}}/{{repo.name}}</a>
 
         {{commit.email}}: {{commit.message}}
-
+        
         CI ❌ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
       {{/success}}
   rebuild-cache:
