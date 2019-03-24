@@ -119,6 +119,7 @@ import {
   type as roleType,
   queries as roleQueries,
   root as rolesRoot,
+  nested as rolesNested,
 } from './roles/index';
 
 
@@ -182,6 +183,7 @@ Object.assign(
   pagesNested,
   groupsNested,
   billingQueriesNested,
+  rolesNested,
 );
 
 

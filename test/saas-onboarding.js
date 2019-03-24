@@ -74,7 +74,9 @@ const registrationData = {
 
 let token;
 
-describe('Books', () => {
+// eslint-disable-next-line func-names
+describe('Books', function () {
+  this.timeout(5000);
   before((done) => {
     // connect to nats and mongodbi
     MongoClient.connect(
@@ -171,7 +173,8 @@ describe('Books', () => {
 
           // eslint-disable-next-line prefer-destructuring
           token = res.body.token;
-          done();
+
+          setTimeout(done, 2000);
         });
     });
     it('graph for org should be constructed', (done) => {
@@ -192,9 +195,20 @@ describe('Books', () => {
                 id,
                 name
               }
+              roles{
+                id,
+                name
+                company{
+                  id
+                }
+              }
               client {
                 id,
                 name,
+                roles{
+                  id,
+                  name
+                }
                 teams{
                   id,
                   name,
@@ -259,20 +273,44 @@ describe('Books', () => {
           expect(res).to.be.json;
           expect(res.body.errors).to.be.undefined;
           res.should.have.status(200);
+          expect(res.body).to.exist;
           res.body.should.be.a('object');
           res.body.data.users[0].should.exist;
           res.body.data.user.should.exist;
           res.body.data.user.id.should.exist;
           res.body.data.user.client.should.exist;
           res.body.data.user.client.id.should.exist;
-          // res.body.data.user.client.projects[0].should.exist;
-          // res.body.data.user.client.projects[0].questionnaire.should.exist;
-          // res.body.data.user.client.projects[0].questionnaire.id.should.exist;
-          // res.body.data.user.client.projects[0].questionnaire.pages[0].id.should.exist;
+
+          // user has been assigned the correct roles
+          res.body.data.user.client.roles.should.exist;
+          res.body.data.user.client.roles[0].id.should.exist;
+          res.body.data.user.client.roles[0].name.should.exist;
+
+          res.body.data.user.roles[0].name.should.exist;
+          res.body.data.user.roles[0].id.should.exist;
+          res.body.data.user.roles[0].company.id.should.exist;
+
+          // project one
+          res.body.data.user.client.projects[0].should.exist;
+          res.body.data.user.client.projects[0].questionnaire.should.exist;
+          res.body.data.user.client.projects[0].questionnaire.id.should.exist;
+          res.body.data.user.client.projects[0].questionnaire.pages[0].id.should.exist;
+
+          // project 2
+          res.body.data.user.client.projects[1].should.exist;
+          res.body.data.user.client.projects[1].questionnaire.should.exist;
+          res.body.data.user.client.projects[1].questionnaire.id.should.exist;
+          res.body.data.user.client.projects[1].questionnaire.pages[0].id.should.exist;
+
+          // project 3
+          res.body.data.user.client.projects[2].should.exist;
+          res.body.data.user.client.projects[2].questionnaire.should.exist;
+          res.body.data.user.client.projects[2].questionnaire.id.should.exist;
+          res.body.data.user.client.projects[2].questionnaire.pages[0].id.should.exist;
+
           done();
         });
     });
     // it("graph should fetch all the demo items needed", done => { done() })
   });
 });
-

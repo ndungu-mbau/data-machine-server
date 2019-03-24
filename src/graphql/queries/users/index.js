@@ -12,7 +12,7 @@ const type = `
     mobileMoneyNumber: String,
     teams:[team],
     client:client,
-    role:[role]
+    roles:[role]
   }
 `;
 
@@ -94,12 +94,15 @@ const nested = {
 
       return teamsInfo;
     },
-    role: async ({ id }, args, { db }) => {
+    roles: async ({ id }, args, { db }) => {
       const data = await db
         .collection('roles')
-        .find({ userId: id.toString() })
+        .find({ userId: id, destroyed: false })
         .toArray();
-      return data;
+
+      return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
     },
   },
 };

@@ -18,101 +18,101 @@ fs.readAsync = url => new Promise((resolve, reject) => fs.readFile(url, (err, da
 
 // eslint-disable-next-line import/prefer-default-export
 export const bulkAdd = async ({
-  db, files: [filename], client, user,
+  db, files, client, user,
 }) => {
-  const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', filename);
-  const projectData = await fs.readAsync(filepath);
-  const {
-    items: {
-      name,
-      pages,
-    },
-  } = JSON.parse(projectData);
+  files.map(async (filename) => {
+    const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', 'samples', filename);
+    const projectData = await fs.readAsync(filepath);
+    const {
+      items: {
+        name,
+        pages,
+      },
+    } = JSON.parse(projectData);
 
-  const project = {
-    _id: new ObjectId(),
-    destroyed: false,
-    name,
-    client,
-  };
-
-  const team = {
-    _id: new ObjectId(),
-    name: 'Sample team',
-    client,
-    destroyed: false,
-  };
-
-  const projectTeam = {
-    project: project._id.toString(),
-    team: team._id.toString(),
-    destroyed: false,
-  };
-
-  const userTeams = {
-    user,
-    team: team._id.toString(),
-    destroyed: false,
-  };
-
-  await db.collection('team').insertOne(team);
-  await db.collection('project_teams').insertOne(projectTeam);
-  await db.collection('user_teams').insertOne(userTeams);
-
-  const questionnaire = {
-    _id: new ObjectId(),
-    name,
-    // eslint-disable-next-line no-underscore-dangle
-    project: project._id.toString(),
-    destroyed: false,
-    client,
-  };
-
-  // eslint-disable-next-line no-underscore-dangle
-  questionnaire.id = questionnaire._id;
-  await createQuestionnaire(questionnaire);
-
-  for (const { name: pageName, groups } of pages) {
-    const page = {
+    const project = {
       _id: new ObjectId(),
       destroyed: false,
-      name: pageName,
-      // eslint-disable-next-line no-underscore-dangle
-      questionnaire: questionnaire._id.toString(),
+      name,
+      client,
     };
 
+    const team = {
+      _id: new ObjectId(),
+      name: 'Sample team',
+      client,
+      destroyed: false,
+    };
+
+    const projectTeam = {
+      project: project._id.toString(),
+      team: team._id.toString(),
+      destroyed: false,
+    };
+
+    const userTeams = {
+      user,
+      team: team._id.toString(),
+      destroyed: false,
+    };
+
+    await db.collection('team').insertOne(team);
+    await db.collection('project_teams').insertOne(projectTeam);
+    await db.collection('user_teams').insertOne(userTeams);
+
+    const questionnaire = {
+      _id: new ObjectId(),
+      name,
+      // eslint-disable-next-line no-underscore-dangle
+      project: project._id.toString(),
+      destroyed: false,
+      client,
+    };
+
+    project.questionnaire = questionnaire._id;
+
     // eslint-disable-next-line no-underscore-dangle
-    page.id = page._id;
-    createPage(page);
+    await createQuestionnaire(questionnaire);
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const { name: groupName } of groups) {
+    for (const { name: pageName, groups } of pages) {
+      const page = {
+        _id: new ObjectId(),
+        destroyed: false,
+        name: pageName,
+        // eslint-disable-next-line no-underscore-dangle
+        questionnaire: questionnaire._id.toString(),
+      };
+
+      // eslint-disable-next-line no-underscore-dangle
+      createPage(page);
+
       // eslint-disable-next-line no-restricted-syntax
-      for (const { questions } of groups) {
-        const group = {
-          _id: new ObjectId(),
-          name: groupName,
-          page: page.id.toString(),
-          destroyed: false,
-        };
-
+      for (const { name: groupName } of groups) {
         // eslint-disable-next-line no-restricted-syntax
-        for (const question of questions) {
-          Object.assign(question, {
+        for (const { questions } of groups) {
+          const group = {
             _id: new ObjectId(),
-            group: group.id.toString(),
+            name: groupName,
+            page: page._id.toString(),
             destroyed: false,
-          });
+          };
 
-          // eslint-disable-next-line no-underscore-dangle
-          question.id = question._id;
-          createQuestion(question);
+          // eslint-disable-next-line no-restricted-syntax
+          for (const question of questions) {
+            Object.assign(question, {
+              _id: new ObjectId(),
+              group: group._id.toString(),
+              destroyed: false,
+            });
+
+            // eslint-disable-next-line no-underscore-dangle
+            createQuestion(question);
+          }
         }
       }
-    }
 
-    // eslint-disable-next-line no-underscore-dangle
-    project.id = project._id;
-    createProject(project);
-  }
+      // eslint-disable-next-line no-underscore-dangle
+      createProject(project);
+    }
+  });
 };

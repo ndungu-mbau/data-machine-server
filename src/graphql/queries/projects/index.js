@@ -56,6 +56,11 @@ const nested = {
     },
     questionnaire: async ({ questionnaire }, args, { db }) => {
       const data = await db.collection('questionnaire').findOne({ _id: questionnaire, destroyed: false });
+
+      if (!data) {
+        return null;
+      }
+
       data.id = data._id;
       return data;
     },

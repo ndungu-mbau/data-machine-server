@@ -3,10 +3,11 @@
 const type = `
   type role {
     id: String,
-    userId: String,
-    companyId:String,
-    role:String,
-    permissions:[String]
+    user: user,
+    client:client,
+    name:String,
+    permissions:[String],
+    company:client
   }
 `;
 
@@ -16,15 +17,29 @@ const queries = `
 `;
 
 const role = async (x, { id }, { db, ObjectId }) => {
-  const data = await db
+  const roles = await db
     .collection('roles')
-    .find({ _id: ObjectId(id) })
+    .find({ _id: new ObjectId(id) })
     .toArray();
-  return {
-    id: data[0]._id,
-    companyId: data[0].companyId,
-    userId: data[0].userId,
-  };
+  return roles.map(r => Object.assign(r, {
+    // eslint-disable-next-line comma-dangle
+    id: r._id
+  }));
+};
+
+const nested = {
+  role: {
+    async company({ client }, args, { db }) {
+      const clientData = await db
+        .collection('company')
+        .findOne({ _id: client });
+
+      return Object.assign(clientData, {
+        // eslint-disable-next-line comma-dangle
+        id: clientData._id
+      });
+    },
+  },
 };
 
 const roles = () => [];
@@ -34,4 +49,9 @@ const root = {
   roles,
 };
 
-export { type, queries, root };
+export {
+  type,
+  queries,
+  root,
+  nested,
+};
