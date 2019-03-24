@@ -1,20 +1,4 @@
 pipeline:
-  restore-cache:
-    image: drillster/drone-volume-cache
-    restore: true
-    mount:
-      - ./.yarn-cache
-      - ./node_modules
-    volumes:
-      - /tmp/cache:/cache
-  install:
-    image: node:latest
-    commands:
-      - node -v
-      - npm -v
-      - yarn --version
-      - yarn config set cache-folder .yarn-cache
-      - yarn install --pure-lockfile
   docker:
     image: plugins/docker
     repo: registry.braiven.io/data-kit-gateway
@@ -29,21 +13,7 @@ pipeline:
       branch:
       - master
 
-  staging-deploy:
-    image: peloton/drone-rancher
-    url: https://ops.braiven.io/v2-beta
-    access_key: 2B452DA2BD3F853C6DDF
-    secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
-    service: staging/data-machine-saas
-    docker_image: registry.braiven.io/data-machine-saas:${DRONE_COMMIT_SHA:0:7}
-    start_first: true
-    confirm: true
-    timeout: 1000
-    when:
-      branch:
-      - develop
-
-  production-deploy:
+  rancher:
     image: peloton/drone-rancher
     url: https://ops.braiven.io/v2-beta
     access_key: 2B452DA2BD3F853C6DDF
@@ -79,13 +49,3 @@ pipeline:
 
         CI ❌ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
       {{/success}}
-  rebuild-cache:
-    image: drillster/drone-volume-cache
-    rebuild: true
-    mount:
-      - ./.yarn-cache
-      - ./node_modules
-    volumes:
-      - /tmp/cache:/cache
-    when:
-      branch: master
