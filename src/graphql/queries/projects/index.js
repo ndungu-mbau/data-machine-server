@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 const type = `
   type project {
     id: String,
@@ -46,21 +47,20 @@ const projects = async ({ filter }, { datastore }) => {
 
 const nested = {
   project: {
-    teams: async ({ id }, { filter = {} }, { db, ObjectId }) => {
-      const { destroyed = false, offset = 0, limit = 100 } = filter;
-      const relations = await db.collection('project_teams').find({ project: id.toString() }).toArray()
-      const teams = await db.collection('team').find({ _id: { $in: relations.map(relation => ObjectId(relation.team)) } }).toArray()
+    teams: async ({ id }, args, { db, ObjectId }) => {
+      const relations = await db.collection('project_teams').find({ project: id.toString() }).toArray();
+      const teams = await db.collection('team').find({ _id: { $in: relations.map(relation => ObjectId(relation.team)) } }).toArray();
       return teams.map(entry => Object.assign({}, entry, {
-        id: entry._id
+        id: entry._id,
       }));
     },
-    questionnaire: async ({ questionnaire }, { filter = {} }, { db, ObjectId }) => {
-      const data = await db.collection("questionnaire").findOne({ _id: questionnaire, destroyed: false });
-      data.id = data._id
-      return data
+    questionnaire: async ({ questionnaire }, args, { db }) => {
+      const data = await db.collection('questionnaire').findOne({ _id: questionnaire, destroyed: false });
+      data.id = data._id;
+      return data;
     },
-  }
-}
+  },
+};
 
 const root = {
   project,

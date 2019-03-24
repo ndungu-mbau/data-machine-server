@@ -13,15 +13,6 @@ import {
 } from './users';
 
 import {
-  nested as pagesNested
-} from './questionnaires/pages';
-
-import {
-  nested as groupsNested
-} from './questionnaires/pages/groups';
-
-
-import {
   type as clientType,
   queries as clientQueries,
   nested as clientQueriesNested,
@@ -53,6 +44,7 @@ import {
   type as pageType,
   queries as pageQueries,
   root as pageRoot,
+  nested as pagesNested,
 } from './questionnaires/pages';
 
 import {
@@ -101,6 +93,7 @@ import {
   type as groupType,
   queries as groupQueries,
   root as groupRoot,
+  nested as groupsNested,
 } from './questionnaires/pages/groups';
 
 import {
@@ -121,7 +114,16 @@ import {
   root as sentencesRoot,
 } from './questionnaires/pages/groups/questions/sentences';
 
-const typeQueries = `
+
+import {
+  type as roleType,
+  queries as roleQueries,
+  root as rolesRoot,
+} from './roles/index';
+
+
+const typeQueries = ` 
+  ${roleType}
   ${clientType},
   ${billingType},
   ${teamType},
@@ -142,6 +144,7 @@ const typeQueries = `
   ${sentencesType},
   type Query {
       hello: String,
+      ${roleQueries},
       ${clientQueries},
       ${billingQueries},
       ${teamQueries},
@@ -164,46 +167,47 @@ const typeQueries = `
   }`;
 
 const Query = {
-  hello: () => 'Hello too!'
+  hello: () => 'Hello too!',
 };
 
-const Nested = {}
+const Nested = {};
 
 Object.assign(
-  Nested
-  , clientQueriesNested
-  , teamUsersNested
-  , projectQueriesNested
-  , userNested
-  , questionnaireNested
-  , pagesNested
-  , groupsNested
-  , billingQueriesNested
-)
-
-
-Object.assign(
-  Query
-  , projectRoot
-  , userRoot
-  , pageRoot
-  , groupRoot
-  , questionRoot
-  , optionsRoot
-  , clientRoot
-  , sentencesRoot
-  , dashboardsRoot
-  , layoutsRoot
-  , cpRoot
-  , cpdRoot
-  , chartsRoot
-  , constantsRoot
-  , aliasesRoot
-  , questionnaireRoot
-  , teamRoot
-  , billingRoot
+  Nested,
+  clientQueriesNested,
+  teamUsersNested,
+  projectQueriesNested,
+  userNested,
+  questionnaireNested,
+  pagesNested,
+  groupsNested,
+  billingQueriesNested,
 );
 
-const queryRoot = { Query, Nested }
+
+Object.assign(
+  Query,
+  rolesRoot,
+  projectRoot,
+  userRoot,
+  pageRoot,
+  groupRoot,
+  questionRoot,
+  optionsRoot,
+  clientRoot,
+  sentencesRoot,
+  dashboardsRoot,
+  layoutsRoot,
+  cpRoot,
+  cpdRoot,
+  chartsRoot,
+  constantsRoot,
+  aliasesRoot,
+  questionnaireRoot,
+  teamRoot,
+  billingRoot,
+);
+
+const queryRoot = { Query, Nested };
 
 export { typeQueries, queryRoot };

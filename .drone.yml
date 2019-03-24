@@ -57,7 +57,7 @@ pipeline:
       branch:
       - master
 
-  announce:
+  telegram_notif:
     image: appleboy/drone-telegram
     token: 572971694:AAFxccNJNhMcUIzQQIM9fCM6EUCnGs7WnHQ
     to: 21649399

@@ -1,29 +1,60 @@
+/* eslint-disable camelcase */
+/* eslint-disable no-underscore-dangle */
+
 import express from 'express';
 import morgan from 'morgan';
 import sha1 from 'sha1';
 import { celebrate, Joi, errors } from 'celebrate';
 import jwt from 'jsonwebtoken';
 import Multer from 'multer';
-import config from '../config';
+
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import fs from 'fs';
 import AWS from 'aws-sdk';
-import parser from './parser';
 import { MongoClient, ObjectId } from 'mongodb';
 import cron from 'node-cron';
+import bunyan from 'bunyan';
 import {
   passwordResetEmail,
+  sendDocumentEmails,
   registrationThanks,
+  accountActivationEmail,
   userLoggedIn,
   userCreatedAccount,
   appUserLoggedIn,
 } from './emails/mailer';
+
+import config from '../config';
 import jobs from '../jobs';
+import { bulkAdd } from './etl-pipeline';
+
+const rateLimit = require('express-rate-limit');
+
+const createAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 3, // start blocking after 5 requests
+  message:
+    'Too many accounts created from this IP, please try again after an hour',
+});
+
+const loginAccountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 5, // start blocking after 5 requests
+  message:
+    'Too login attempts this IP, please try again after an hour',
+});
+
+
+const PNF = require('google-libphonenumber').PhoneNumberFormat;
+
+// Get an instance of `PhoneNumberUtil`.
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 
 const moment = require('moment');
 const doT = require('dot');
 const math = require('mathjs');
+
 const { ObjectID } = require('mongodb');
 
 const Hemera = require('nats-hemera');
@@ -31,13 +62,17 @@ const nats = require('nats').connect({
   url: process.env.NATS_URL,
 });
 
+const log = bunyan.createLogger({ name: 'app' });
+
 const hemera = new Hemera(nats, {
   logLevel: 'silent',
 });
 
 AWS.config.loadFromPath('aws_config.json');
 
-const { NODE_ENV = 'development',DISABLE_JOBS=false } = process.env;
+const {
+  NODE_ENV = 'development', EMAIL_BASE, MASTER_TOKEN, DISABLE_JOBS = false,
+} = process.env;
 
 const multer = Multer({
   dest: 'uploads/',
@@ -45,30 +80,42 @@ const multer = Multer({
 
 let db;
 
+function makeShortPassword() {
+  let text = '';
+  const possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < 4; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+
+  return text;
+}
+
 MongoClient.connect(
   config[NODE_ENV].db.url,
   { useNewUrlParser: true },
   (err, client) => {
     if (err) throw err;
     db = client.db(config[NODE_ENV].db.name);
-
-    // start the jobs, give access to the db instance
-    jobs.map(({
-      name, schedule, work, options, emediate
+    // eslint-disable-next-line array-callback-return
+    jobs.forEach(({
+      name, schedule, work, options, emediate,
+      // eslint-disable-next-line consistent-return
     }) => {
-      if(emediate === true){
-        work({ db });
+      if (emediate === true) {
+        return work({ db, log });
       }
 
-      if(NODE_ENV !== 'development' && !DISABLE_JOBS){
+      if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
         const task = cron.schedule(schedule, () => {
           try {
-            work({ db });
-          } catch (err) {
-            console.log(`Job ${name} failed with error ${err.message}`);
+            work({ db, log });
+          } catch (taskStartError) {
+            log.info(`Job ${name} failed with error ${taskStartError.message}`);
           }
         }, options);
-        task.start();
+        return task.start();
       }
     });
   },
@@ -93,7 +140,11 @@ app.use(
   bodyParser.json(),
 );
 
-app.use(morgan('combined'));
+if (NODE_ENV !== 'test') {
+  app.use(morgan('combined'));
+}
+
+app.enable('trust proxy');
 
 const getWeekBreakDown = (daysBack) => {
   const today = moment().toDate();
@@ -113,6 +164,7 @@ const getWeekBreakDown = (daysBack) => {
   const weeks = {};
 
   let ctx = {};
+  // eslint-disable-next-line no-plusplus
   for (let count = 1; count < weekNumber + 1; count++) {
     let start;
     const daysInWeek = {};
@@ -134,6 +186,7 @@ const getWeekBreakDown = (daysBack) => {
 
     // get days between start and end
     let daysCtx = {};
+    // eslint-disable-next-line no-plusplus
     for (let dayCount = 1; dayCount < 8; dayCount++) {
       let dayStart;
 
@@ -164,7 +217,6 @@ const getWeekBreakDown = (daysBack) => {
     };
   }
 
-  // console.log(JSON.stringify({ weeks }, null, '\t'))
   return weeks;
 };
 
@@ -174,10 +226,9 @@ const getDayBreakDown = ({ start, end }) => {
 
   const dayCountDays = {};
 
-  // const x = moment(now).diff(moment(then))
   const dayNumber = moment(then).diff(moment(now), 'days');
 
-  let currentDay;
+  // eslint-disable-next-line no-plusplus
   for (let count = 0; count < dayNumber + 1; count++) {
     const t = moment(end)
       .subtract(count, 'day')
@@ -194,6 +245,7 @@ app.use('/health', (req, res) => res.send());
 
 app.post(
   '/auth/login',
+  loginAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       phone: Joi.string()
@@ -241,7 +293,57 @@ app.post(
 );
 
 app.post(
+  '/auth/login_management',
+  loginAccountLimiter,
+  celebrate({
+    body: Joi.object().keys({
+      username: Joi.string()
+        .required()
+        .error(new Error('Please provide a username')),
+      password: Joi.string()
+        .required()
+        .error(new Error('Please provide a password')),
+    }),
+  }),
+  async (req, res) => {
+    const { username, password } = req.body;
+    const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitome@gmail.com'];
+
+    log.info('authenticating management', username);
+    if (allowedAdmins.includes(username)) {
+      log.info('authing a legit manager', username);
+      const userData = await db
+        .collection('user')
+        .findOne({ email: username });
+
+      if (userData) {
+        if (userData.password === sha1(password)) {
+          appUserLoggedIn({
+            to: 'info@braiven.io',
+            data: {
+              userData,
+              phoneNumber: username,
+            },
+          });
+          return res.send(Object.assign(userData, {
+            password: undefined,
+            token: jwt.sign(userData, config[NODE_ENV].managementHashingSecret),
+          }));
+        }
+      }
+
+      return res
+        .status(401)
+        .send({ message: 'Wrong username and password combination' });
+    }
+    log.info('management username not found in users', username);
+    return res.status(500).send('Unauthorised');
+  },
+);
+
+app.post(
   '/saasAuth/login',
+  loginAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       email: Joi
@@ -265,6 +367,7 @@ app.post(
     if (userData) {
       const saasUserData = await db
         .collection('user')
+        // eslint-disable-next-line no-underscore-dangle
         .findOne({ _id: userData._id });
 
       if (userData.password === sha1(password)) {
@@ -277,8 +380,8 @@ app.post(
         return res.send(Object.assign(userData, {
           password: undefined,
           token: jwt.sign(
-            saasUserData
-            , config[NODE_ENV].hashingSecret,
+            saasUserData,
+            config[NODE_ENV].hashingSecret,
           ),
         }));
       }
@@ -307,7 +410,7 @@ app.post(
       to: email,
       data: {
         id,
-        host: process.env.NODE_ENV === 'production'
+        host: NODE_ENV === 'production'
           ? 'https://app.braiven.io'
           : 'http://localhost:3000',
       },
@@ -373,6 +476,7 @@ app.post(
 
 app.post(
   '/auth/register',
+  createAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       password: Joi.string().required(),
@@ -387,17 +491,34 @@ app.post(
   async (req, res) => {
     const { body: user } = req;
 
+    // ask for the country and use that here - then ask to confirm
+    const number = phoneUtil.parseAndKeepRawInput(user.phoneNumber, 'KE');
+    const coolNumber = phoneUtil.format(number, PNF.E164);
+
     // check if user already exists
     const userData = await db
       .collection('user')
       .findOne({ phoneNumber: user.phoneNumber });
 
-    // console.log({ userData })
     if (userData) {
       return res
         .status(401)
         .send({ message: 'Phone number already used, trying to log in?' });
     }
+
+    const action = {
+      topic: 'exec',
+      cmd: 'sms_nalm_treasury_pwc_1',
+      data: {
+        password: user.password ? user.password : makeShortPassword(),
+        phone: coolNumber,
+      },
+    };
+    hemera.act(action, (err) => {
+      if (err) {
+        log.info('Error sending sms to ', user.phoneNumber, coolNumber, err);
+      }
+    });
 
     Object.assign(user, {
       _id: new ObjectId(),
@@ -411,10 +532,43 @@ app.post(
   },
 );
 
+
+const { getBrowserInstance } = require('./browserInstance');
+
+const makePdf = async (path, params, cb) => {
+  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
+  try {
+    await getBrowserInstance().then(async (browser) => {
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1920, height: 926 });
+      await page.goto(bookingUrl);
+      // eslint-disable-next-line no-shadow
+      await page.evaluate((MASTER_TOKEN) => {
+        // eslint-disable-next-line no-undef
+        localStorage.setItem('token', MASTER_TOKEN);
+      }, MASTER_TOKEN);
+      await page.goto(bookingUrl, {
+        timeout: 5000,
+        waitUntil: ['load', 'networkidle2'],
+      });
+      await page.pdf({
+        path,
+        format: 'A4',
+        margin: {
+          top: '100px',
+          bottom: '100px',
+        },
+      });
+      cb();
+    });
+  } catch (err) {
+    log.error('DOC_GEN_FAIL', err.message, { path, params });
+    // return makePdf(path, params, cb)
+  }
+};
+
 app.post('/submision', async (req, res) => {
   const submission = req.body;
-
-  console.log(JSON.stringify({ submission }, null, '\t'));
 
   const [existingSubmission] = await db
     .collection('submision')
@@ -424,32 +578,22 @@ app.post('/submision', async (req, res) => {
   if (existingSubmission) {
     return res.status(200).send({
       exists: true,
+      // eslint-disable-next-line no-underscore-dangle
       _id: existingSubmission._id,
     });
   }
 
   const cleanCopy = {};
-  // find the files and use they data in the url to generate the url
+
+  // eslint-disable-next-line array-callback-return
   Object.entries(submission).map(([key, value]) => {
     if (value) {
-      if (value.toString().includes('file://')) {
-        const [, ext] = value.split('.');
-
-        cleanCopy[
-          key
-        ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
-          submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
-      }
-
       if (value === false) {
         cleanCopy[key] = 0;
-        return;
       }
 
       if (moment(value, moment.ISO_8601, true).isValid()) {
         cleanCopy[key] = moment(value).toDate();
-        return;
       }
 
       cleanCopy[
@@ -461,9 +605,31 @@ app.post('/submision', async (req, res) => {
     }
   });
 
+
+  // eslint-disable-next-line array-callback-return
+  Object.entries(submission).map(([key, value]) => {
+    if (value) {
+      if (value.toString().includes('file://')) {
+        const [, ext] = value.split('.');
+
+        const url = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/
+        ${submission.questionnaireId}_
+        ${key}_
+        ${submission.completionId}
+        ${ext ? `.${ext}` : ''}`;
+
+        cleanCopy[
+          key
+        ] = url;
+      }
+    }
+  });
+
   const entry = Object.assign({}, cleanCopy, {
+    _id: new ObjectID(),
     createdAt: new Date(),
     destroyed: false,
+    // eslint-disable-next-line no-underscore-dangle
     userId: req.user ? req.user._id : undefined,
   });
 
@@ -481,18 +647,67 @@ app.post('/submision', async (req, res) => {
     .find({ _id: ObjectId(submission.questionnaireId) })
     .toArray();
 
+  const [project] = await db
+    .collection('project')
+    .find({ _id: ObjectId(submission.projectId) })
+    .toArray();
+
   const action = {
     topic: 'exec',
     cmd: questionnaire.name.replace(/\s/g, '_'),
-    data: submited,
+    data: {
+      submited,
+      questionnaire,
+      project,
+    },
   };
 
-  hemera.act(action, (err, resp) => {
+  hemera.act(action, (err) => {
     if (err) {
-      console.log('ERROR RUNNING SCRIPT');
+      log('ERROR RUNNING SCRIPT');
     } else {
-      console.log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
+      log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
     }
+  });
+
+  const path = `./dist/${submited._id}.pdf`;
+
+  return makePdf(path, {
+    q: cleanCopy.questionnaireId,
+    a: entry._id,
+  }, async () => {
+    const { name: projectName } = await db.collection('project').findOne({
+      _id: new ObjectID(entry.projectId),
+    });
+
+    const {
+      __agentFirstName = '',
+    } = entry;
+
+    const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+
+    const ccPeople = [cleanCopy.__agentEmail];
+    sendDocumentEmails({
+      from: `"${upper(__agentFirstName.toLowerCase())} via Datakit " <${EMAIL_BASE}>`,
+      cc: ccPeople.join(','),
+      bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
+      subject: `'${projectName}' Submission`,
+      message: `
+      My ${upper(projectName.toLowerCase())} submission for is now ready for download as a pdf.
+      <br>
+      <br>
+
+      Please find the document attached to this email.
+      <br>
+      <br>
+      Regards,
+    `,
+      attachments: [{
+        filename: `${submited._id}.pdf`,
+        content: fs.createReadStream(path),
+        contentType: 'application/pdf',
+      }],
+    });
   });
 });
 
@@ -524,10 +739,8 @@ hemera.add(action, async (args) => {
     middleName,
     lastName,
     address_1,
-    address_2,
     city,
     state,
-    zip,
     country,
 
     company_name,
@@ -554,13 +767,318 @@ hemera.add(action, async (args) => {
     destroyed: false,
   };
 
-  const client = {
+  // const client = {
+  //   _id: new ObjectID(),
+  //   name: company_name,
+  //   contact,
+  //   createdBy: userid,
+  //   destroyed: false,
+  // };
+
+  const user = {
+    _id: userid,
+    email,
+    phoneNumber: contact,
+    firstName,
+    middleName,
+    lastName,
+    address_1,
+    city,
+    state,
+    country,
+    client: company.id,
+    destroyed: false,
+  };
+
+  const settings = {
+    _id: user._id,
+    user: user._id,
+    membership,
+    promotions,
+    accept,
+    destroyed: false,
+  };
+
+  const billing = {
     _id: new ObjectID(),
-    name: company_name,
+    company: company._id,
+    user: user._id,
+    card_holder_name,
+    card_number,
+    billing_card_exp_month,
+    billing_card_exp_year,
+    cvv,
+    address_line_1,
+    address_line_2,
+    zip_code,
+    billing_country,
+  };
+
+  const legacyUser = {
+    _id: user._id,
+    firstName: user.firstName,
+    middleName: user.middleName,
+    lastName: user.lastName,
+    phoneNumber: company.contact,
+    password: sha1(password),
+    email: user.email,
+    destroyed: false,
+    client: company._id,
+    userActivated: false,
+  };
+
+  const role = { companyId: legacyUser.client, UserId: legacyUser._id, role: 'admin' };
+
+  // check for existing emails and throw errors
+  const [existingUser] = await db
+    .collection('user')
+    .find({ email: user.email })
+    .toArray();
+
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }
+
+  // create base data
+  await db.collection('user').insertOne(legacyUser);
+  await db.collection('roles').insertOne(role);
+  await db.collection('settings').insertOne(settings);
+  await db.collection('billing').insertOne(billing);
+  await db.collection('saasUser').insertOne(user);
+
+  await db.collection('company').insertOne(company);
+  // await db.collection('client').insertOne(client);
+
+  await bulkAdd({
+    files: ['job-sheet.json'],
+    client: company._id.toString(),
+  });
+
+  // send out a welcome email
+  registrationThanks({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      company: {
+        name: company.company_name,
+      },
+    }),
+  });
+
+  userCreatedAccount({
+    to: 'sirbranson67@gmail.com',
+    data: {
+      email,
+    },
+  });
+
+  return {
+    user: user.id,
+    company: company.id,
+    billing: billing.id,
+    settings: settings.id,
+    token: jwt.sign(
+      user,
+      config[NODE_ENV].hashingSecret,
+    ),
+  };
+});
+
+const registrationAction = {
+  topic: 'registration',
+  cmd: 'saas-registration',
+};
+
+hemera.add(registrationAction, args => new Promise(async (resolve) => {
+  const {
+    password,
+    email,
+    contact,
+    firstName,
+    orgName,
+  } = args.data;
+
+
+  const userid = new ObjectID();
+
+  const user = {
+    _id: userid,
+    email,
+    phoneNumber: contact,
+    firstName,
+    destroyed: false,
+  };
+
+  const company = {
+    _id: new ObjectID(),
+    company_name: orgName,
     contact,
     createdBy: userid,
     destroyed: false,
   };
+
+  const settings = {
+    _id: user._id,
+    user: user._id,
+    destroyed: false,
+  };
+
+  const legacyUser = {
+    _id: user._id,
+    firstName: user.firstName,
+    phoneNumber: user.phoneNumber,
+    password: sha1(password),
+    email: user.email,
+    destroyed: false,
+    client: company._id,
+  };
+
+  const activation = {
+    _id: new ObjectId(),
+    user: userid,
+    destroyed: false,
+  };
+
+  // before starting the db saving things, first reply as thins might take sometime
+  resolve({
+    user: user.id,
+    settings: settings.id,
+    token: jwt.sign(
+      user,
+      config[NODE_ENV].hashingSecret,
+    ),
+  });
+
+  // check for existing emails and throw errors
+  const [existingUser] = await db
+    .collection('user')
+    .find({ email: user.email })
+    .toArray();
+
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }
+
+  // create base data
+  await db.collection('user').insertOne(legacyUser);
+  await db.collection('company').insertOne(company);
+  await db.collection('activation').insertOne(activation);
+
+  await bulkAdd({
+    db,
+    files: ['job-sheet.json'],
+    client: company._id.toString(),
+    user: user._id.toString(),
+  });
+
+  // send out a welcome email
+  registrationThanks({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      company: {
+        name: user.firstName,
+      },
+    }),
+  });
+
+  accountActivationEmail({
+    to: user.email,
+    data: Object.assign({}, legacyUser, {
+      id: legacyUser._id,
+      host: NODE_ENV === 'production'
+        ? 'https://app.braiven.io'
+        : 'http://localhost:3000',
+    }),
+  });
+
+  userCreatedAccount({
+    to: 'sirbranson67@gmail.com',
+    data: {
+      email,
+    },
+  });
+  // send out a sample project created email
+  // send out a process guide email
+  // send out a download our app email
+}));
+
+hemera.add({
+  topic: 'registration',
+  cmd: 'activate-account-check',
+}, async (args) => {
+  const { id } = args;
+
+  const [activation] = await db.collection('activation').find({ user: new ObjectId(id), destroyed: false }).toArray();
+
+  if (!activation) {
+    throw new Error('Invalid activation details');
+  }
+
+  return true;
+});
+
+hemera.add({
+  topic: 'registration',
+  cmd: 'activate-account',
+}, async (args) => {
+  const {
+    id,
+    password,
+
+    membership,
+    promotions,
+    accept,
+
+    card_holder_name,
+    card_number,
+    billing_card_exp_month,
+    billing_card_exp_year,
+    cvv,
+    address_line_1,
+    address_line_2,
+    zip_code,
+    billing_country,
+
+    email,
+    firstName,
+    middleName,
+    lastName,
+    address_1,
+    city,
+    state,
+    country,
+
+    company_name,
+    company_registration_id,
+    company_email,
+    company_contact,
+    communications_email,
+    communications_sms,
+    contact,
+  } = args.data;
+
+
+  const userid = new ObjectID(id);
+
+  const company = {
+    _id: new ObjectID(),
+    company_name,
+    company_registration_id,
+    company_email,
+    company_contact,
+    communications_email,
+    communications_sms,
+    contact,
+    createdBy: userid,
+    destroyed: false,
+  };
+
+  // const client = {
+  //   _id: new ObjectID(),
+  //   name: company_name,
+  //   contact,
+  //   createdBy: userid,
+  //   destroyed: false,
+  // };
 
   const user = {
     _id: userid,
@@ -614,107 +1132,24 @@ hemera.add(action, async (args) => {
   };
 
   // check for existing emails and throw errors
-  const [existingUser] = await db
+  /* const [existingUser] = await db
     .collection('user')
     .find({ email: user.email })
     .toArray();
 
   if (existingUser) {
     throw new Error('User with this email already exists');
-  }
+  } */
 
   // create base data
-  await db.collection('user').insertOne(legacyUser);
-  await db.collection('settings').insertOne(settings);
+  await db.collection('user').updateOne({ _id: userid }, { $set: legacyUser });
+  await db.collection('settings').updateOne({ id: settings._id }, { $set: settings });
+  await db.collection('company').updateOne({ _id: company_contact._id }, { $set: company });
+
   await db.collection('billing').insertOne(billing);
   await db.collection('saasUser').insertOne(user);
 
-  await db.collection('company').insertOne(company);
-  // await db.collection('client').insertOne(client);
-
-  const questionnaire = {
-    _id: new ObjectID(),
-    name: 'Sample questionnaire',
-    client: company._id.toString(),
-    destroyed: false,
-  };
-
-  const project = {
-    _id: new ObjectID(),
-    name: 'Sample project',
-    client: company._id.toString(),
-    questionnaire: questionnaire._id,
-    destroyed: false,
-  };
-
-  const team = {
-    _id: new ObjectID(),
-    name: 'Sample team',
-    client: company._id.toString(),
-    destroyed: false,
-  };
-
-  const project_team = {
-    project: project._id.toString(),
-    team: team._id.toString(),
-    destroyed: false,
-  };
-
-  const user_teams = {
-    user: user._id.toString(),
-    team: team._id.toString(),
-    destroyed: false,
-  };
-
-  await db.collection('project').insertOne(project);
-  await db.collection('team').insertOne(team);
-  await db.collection('questionnaire').insertOne(questionnaire);
-  await db.collection('project_teams').insertOne(project_team);
-  await db.collection('user_teams').insertOne(user_teams);
-
-  const page = {
-    _id: new ObjectID(),
-    name: 'Sample page',
-    questionnaire: questionnaire._id.toString(),
-    destroyed: false,
-  };
-
-  // create questionnire things
-  await db.collection('page').insertOne(page);
-
-  const group = {
-    _id: new ObjectID(),
-    name: 'Sample group',
-    page: page._id.toString(),
-    destroyed: false,
-  };
-
-  // create questionnire things
-  await db.collection('group').insertOne(group);
-
-  const question = {
-    _id: new ObjectID(),
-    type: 'instruction',
-    placeholder: 'Sample instruction',
-    group: group._id.toString(),
-    destroyed: false,
-  };
-
-  // create questionnire things
-  await db.collection('question').insertOne(question);
-
-  // create a project, a team, a user, a team_user, a project_team, a questionnaire, page, group, question, dashboard, chart, cp, cds, constant, layout
-  // and stitch them together to create a login setupp experience for the user
-
-  // console.log({
-  //   user: user._id,
-  //   company: company._id,
-  //   billing: billing._id,
-  //   settings: settings._id
-  // });
-
-  // send out a welcome email
-  registrationThanks({
+  /* registrationThanks({
     to: user.email,
     data: Object.assign({}, legacyUser, {
       company: {
@@ -728,7 +1163,7 @@ hemera.add(action, async (args) => {
     data: {
       email,
     },
-  });
+  }); */
   // send out a sample project created email
   // send out a process guide email
   // send out a download our app email
@@ -741,8 +1176,8 @@ hemera.add(action, async (args) => {
     billing: billing.id,
     settings: settings.id,
     token: jwt.sign(
-      user
-      , config[NODE_ENV].hashingSecret,
+      user,
+      config[NODE_ENV].hashingSecret,
     ),
   };
 });
@@ -760,17 +1195,17 @@ app.get('/submision/:id', async (req, res) => {
 });
 
 app.post('/query/:name', async (req, res) => {
-  const action = {
+  const remoteAction = {
     topic: 'exec',
     cmd: req.params.name,
     data: req.body,
   };
-  hemera.act(action, (err, resp) => {
+  hemera.act(remoteAction, (err, resp) => {
     if (err) {
       return res.status(500).send({ name: err.name, message: err.message });
       // return res.status(500).send(err)
     }
-    res.send(resp);
+    return res.send(resp);
   });
 });
 
@@ -778,22 +1213,22 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
   const { days = 30 } = req.params;
   const weeks = getWeekBreakDown(days);
 
-  const { user: { phoneNumber = '' } = { phoneNumber: '' } } = req;
+  const { phoneNumber } = req.user;
 
   const promises = [];
   Object.keys(weeks).map(async weekKey => Object.keys(weeks[weekKey].daysInWeek)
     .map(async (day) => {
-      promises.push(new Promise(async (resolve, reject) => {
+      promises.push(new Promise(async (resolve) => {
         const { start, end } = weeks[weekKey].daysInWeek[day];
         const submisions = await db
           .collection('submision')
-          .find(Object.assign({
-            completedAt: {
+          .find({
+            createdAt: {
               $gte: start.toDate(),
               $lte: end.toDate(),
             },
-            phoneNumber,
-          }))
+            __agentPhoneNumber: phoneNumber,
+          })
           .count();
 
         resolve({
@@ -806,7 +1241,7 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
 
   const residue = await Promise.all(promises);
 
-  residue.map((x) => {
+  residue.forEach((x) => {
     weeks[x.weekKey].daysInWeek[x.day].completions = x.submisions;
   });
   res.send(weeks);
@@ -818,13 +1253,6 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
     start: new Date(start),
     end: new Date(end),
   });
-
-  const randomCount = ({ min = 0, max = 10 }) => {
-    // and the formula is:
-    const random = Math.floor(Math.random() * (max - min + 1)) + min;
-
-    return random;
-  };
 
   const info = {};
 
@@ -839,21 +1267,15 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
         $lte: endTime,
       };
 
-      // console.log(JSON.stringify(req.body, null, "\t"))
-
       const data = await db /* eslint-disable-line no-await-in-loop */
         .collection('submision')
         .find(Object.assign({}, req.body, {
           completedAt,
         })).toArray();
 
-      // console.log(completedAt, day, count,
-      //   moment.duration(moment(completedAt.$gte).diff(moment(completedAt.$lte))).humanize()
-      // )
-
       day = {
-        start,
-        end,
+        start: startTime,
+        end: endTime,
         count: data.length,
         // attatch data thats used on the admin ui
         data: data.map(({ _id, GPS_longitude: long, GPS_latitude: lat }) => ({ _id, long, lat })),
@@ -893,7 +1315,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   data.map((dashboard) => {
     const [cpds, cps] = dashboard;
     compoundedProps.push(...cpds);
-    computedProps.push(...cps);
+    return computedProps.push(...cps);
   });
 
   const submisions = await db
@@ -905,12 +1327,10 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     const copyRecord = {};
     computedProps.map((form) => {
       const tempFn = doT.template(form.formular || '');
-      console.log('computed', { formular: form.formular });
       const resultFormular = tempFn(row);
 
-      console.log('computed', { resultFormular });
-
       copyRecord[form.name] = math.eval(resultFormular);
+      return copyRecord;
     });
     Object.assign(copyRecord, row);
     return copyRecord;
@@ -923,16 +1343,17 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
       const resultFormular = tempFn(compounded);
       const compiled = math.eval(resultFormular);
       compounded[c.name] = compiled;
-      return;
     }
 
     const values = computed
       .filter(row => row[c.field])
       .map(row => row[c.field]);
     const result = math[c.type](values);
+
     compounded[c.name] = typeof result === 'object' ? result[0] : result;
+    return compounded[c.name];
   });
-  res.send({
+  return res.send({
     computed,
     compounded,
   });
@@ -941,42 +1362,12 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   // }
 });
 
-const lowLevelParser = (req, res) =>
-  new Promise((resolve, rej) => {
-    parser.parse(req, res, { dir: '/tmp' }, (fields, file) => {
-      resolve({ fields, file });
-    });
-  });
-
-const rename = (source, target) =>
-  new Promise((resolve, reject) => {
-    fs.rename(source, target, (err, res) => {
-      err ? reject(err) : resolve();
-    });
-  });
-
-const upload = (bucket, target) =>
-  new Promise((resolve, reject) => {
-    bucket.upload(target, (err, file) => {
-      if (!err) {
-        // console.log('upload successfull');
-        resolve(file);
-      } else {
-        // console.log(err);
-        reject(err);
-      }
-    });
-  });
-
 app.post(
   '/upload',
   multer.single('file'),
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
   async (req, res) => {
-    // console.log(req.body);
-    // console.log(req.file);
-
     const { questionnaire = '', tag = '', interviewId = '' } = req.body;
     const [, ext] = req.file.originalname.split('.');
 
@@ -985,7 +1376,6 @@ app.post(
       uri: `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${Key}`,
     });
 
-    // upload and save link in db, accessible via /questionnaireId/id
     const s3 = new AWS.S3();
     const fileData = fs.readFileSync(req.file.path);
 
@@ -995,10 +1385,30 @@ app.post(
       Body: fileData,
       ACL: 'public-read',
     };
-    await s3.putObject(params).promise();
+    return s3.putObject(params).promise();
   },
 );
+
+app.get(
+  '/printable/:q/:a',
+  bodyParser.urlencoded({ extended: false }),
+  bodyParser.json(),
+  async (req, res) => {
+    const path = `./dist/${req.params.a}.pdf`;
+
+    await makePdf(path, req.params, async () => {
+      res.setHeader('content-type', 'some/type');
+      fs.createReadStream(`./dist/${req.params.a}.pdf`).pipe(res);
+    });
+  },
+);
+
 
 app.use(errors());
 
 export default app;
+
+// hemera.add({
+//   topic: 'printer',
+//   cmd: 'printSubmission',
+// }, async args => makeDoc(args));
