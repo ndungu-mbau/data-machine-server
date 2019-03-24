@@ -15,12 +15,7 @@ pipeline:
       - yarn --version
       - yarn config set cache-folder .yarn-cache
       - yarn install --pure-lockfile
-  lint:
-    image: node:8.6.0
-    group: testing
-    commands:
-      - yarn run lint
-  publish-container:
+  docker:
     image: plugins/docker
     repo: registry.braiven.io/data-kit-gateway
     tags: "${DRONE_COMMIT_SHA:0:7}"
@@ -34,7 +29,21 @@ pipeline:
       branch:
       - master
 
-  deploy-to-cluster:
+  staging-deploy:
+    image: peloton/drone-rancher
+    url: https://ops.braiven.io/v2-beta
+    access_key: 2B452DA2BD3F853C6DDF
+    secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
+    service: staging/data-machine-saas
+    docker_image: registry.braiven.io/data-machine-saas:${DRONE_COMMIT_SHA:0:7}
+    start_first: true
+    confirm: true
+    timeout: 1000
+    when:
+      branch:
+      - develop
+
+  production-deploy:
     image: peloton/drone-rancher
     url: https://ops.braiven.io/v2-beta
     access_key: 2B452DA2BD3F853C6DDF
