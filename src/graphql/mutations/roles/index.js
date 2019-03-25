@@ -1,30 +1,33 @@
-import { created, update } from './entity';
+import {
+  create, update, destroy, restore,
+} from './entity';
 
 const type = `
-    input newRole {
-      id: String,
-      companyId: String,
-      userId:String,
-      role:String,
-      permissions:[String]
-    }
-  
-    type roleMutations {
-      created (role:newRole!):role,
-      update (role:newRole):role,
-    
-    }
-  `;
+  input newRole{
+    id: String,
+    userId:String,
+    clientId:String,
+    name:String,
+    permissions:[String],
+
+  }
+
+  type roleMutations {
+    create (newRole:newRole!):role,
+  }
+`;
 
 const queries = `
 roleMutations:roleMutations
-  `;
+`;
 
 const root = {
-  roleMutations: {
-    created,
+  roleMutations: () => ({
+    create,
     update,
-  },
+    destroy,
+    restore,
+  }),
 };
 
 export { type, queries, root };
