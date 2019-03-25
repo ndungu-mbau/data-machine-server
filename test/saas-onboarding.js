@@ -2,13 +2,11 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-undef */
 const chai = require('chai');
+var assert = chai.assert;
 const chaiHttp = require('chai-http');
 const { map } = require('async');
 
-const {
-  httpServer: server,
-  config,
-} = require('../dist');
+const { httpServer: server, config } = require('../dist');
 
 const { expect } = require('chai');
 require('chai').should();
@@ -18,20 +16,17 @@ const { MongoClient } = require('mongodb');
 let db;
 
 chai.use(chaiHttp);
+let objDetails = {};
 
-const {
-  NATS_URL,
-  NODE_ENV,
-  LOG_LEVEL = 'silent',
-} = process.env;
+const { NATS_URL, NODE_ENV, LOG_LEVEL = 'silent' } = process.env;
 
 const Hemera = require('nats-hemera');
 const nats = require('nats').connect({
-  url: NATS_URL,
+  url: NATS_URL
 });
 
 const hemera = new Hemera(nats, {
-  logLevel: LOG_LEVEL,
+  logLevel: LOG_LEVEL
 });
 
 const registrationData = {
@@ -41,14 +36,8 @@ const registrationData = {
   name: 'branson+gitomeh',
   contact: '+254711657108',
   address_1: '78024+nairobi',
-  city: [
-    'nairobi',
-    'nairobi',
-  ],
-  state: [
-    'Nairobi',
-    'Nairobi',
-  ],
+  city: ['nairobi', 'nairobi'],
+  state: ['Nairobi', 'Nairobi'],
   address_2: '78024+nairobi,+NA',
   zip: '78024',
   country: 'KE',
@@ -69,20 +58,20 @@ const registrationData = {
   billing_country: 'KE',
   membership: 'premium',
   promotions: 'on',
-  accept: 'on',
+  accept: 'on'
 };
 
 let token;
 
 // eslint-disable-next-line func-names
-describe('Books', function () {
+describe('Books', function() {
   this.timeout(5000);
-  before((done) => {
+  before(done => {
     // connect to nats and mongodbi
     MongoClient.connect(
       config[NODE_ENV].db.url,
       {
-        useNewUrlParser: true,
+        useNewUrlParser: true
         // server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
       },
       (err, database) => {
@@ -91,55 +80,65 @@ describe('Books', function () {
         db = database;
         const dbo = db.db(config[NODE_ENV].db.name);
         // delete the test collections then call done
-        dbo.listCollections()
-          .toArray((err, items) => {
-            if (err) throw err;
+        dbo.listCollections().toArray((err, items) => {
+          if (err) throw err;
 
-            if (items.length === 0) {
-              console.log(`No collections in database ${config[NODE_ENV].db.name}`);
-              return done();
-            }
+          if (items.length === 0) {
+            console.log(
+              `No collections in database ${config[NODE_ENV].db.name}`
+            );
+            return done();
+          }
 
-            map(items, (item, next) => {
-              dbo.dropCollection(item.name, (dropErr) => {
+          map(
+            items,
+            (item, next) => {
+              dbo.dropCollection(item.name, dropErr => {
                 if (dropErr) throw dropErr;
                 console.log('Dropped ', item.name);
                 next();
               });
-            }, (loopErr) => {
+            },
+            loopErr => {
               if (loopErr) console.error(loopErr.message);
               console.log('All collections dropped \n');
               done();
-            });
-          });
-      },
+            }
+          );
+        });
+      }
     );
   });
-  after((done) => {
+  after(done => {
     db.close();
     done();
   });
   describe('SAAS onboardding', () => {
-    it('should register from saas register', (done) => {
+    it('should register from saas register', done => {
       hemera.act(
         {
           topic: 'registratin',
           cmd: 'saas',
-          data: registrationData,
-        }, () => done(),
+          data: registrationData
+        },
+        () => done()
       );
     });
-    it('should login to a saas user', (done) => {
+    it('should login to a saas user', done => {
       chai
         .request(server)
         .post('/saasAuth/login')
         .send({
           email: registrationData.email,
-          password: registrationData.password,
+          password: registrationData.password
         })
         .end((err, res) => {
-          if (err) { console.log(err); }
-          if (res.body.message) { console.log(JSON.stringify(res.body.message, null, '\t')); }
+          if (err) {
+            console.log(err);
+          }
+          if (res.body.message) {
+            console.log(JSON.stringify(res.body.message, null, '\t'));
+          }
 
           expect(err).to.be.null;
           res.should.have.status(200);
@@ -153,16 +152,18 @@ describe('Books', function () {
           done();
         });
     });
-    it('should login to a mobile user', (done) => {
+    it('should login to a mobile user', done => {
       chai
         .request(server)
         .post('/auth/login')
         .send({
           phone: registrationData.contact,
-          password: registrationData.password,
+          password: registrationData.password
         })
         .end((err, res) => {
-          if (res.body.message) { console.log(JSON.stringify(res.body.message, null, '\t')); }
+          if (res.body.message) {
+            console.log(JSON.stringify(res.body.message, null, '\t'));
+          }
 
           expect(err).to.be.null;
           res.should.have.status(200);
@@ -177,7 +178,7 @@ describe('Books', function () {
           setTimeout(done, 2000);
         });
     });
-    it('graph for org should be constructed', (done) => {
+    it('graph for org should be constructed', done => {
       chai
         .request(server)
         .post('/graphql')
@@ -265,10 +266,12 @@ describe('Books', function () {
               }
             }
           }`,
-          variables: JSON.stringify({}),
+          variables: JSON.stringify({})
         })
         .end((err, res) => {
-          if (res.body.errors) { console.log(JSON.stringify(res.body.errors[0], null, '\t')); }
+          if (res.body.errors) {
+            console.log(JSON.stringify(res.body.errors[0], null, '\t'));
+          }
 
           expect(res).to.be.json;
           expect(res.body.errors).to.be.undefined;
@@ -294,23 +297,34 @@ describe('Books', function () {
           res.body.data.user.client.projects[0].should.exist;
           res.body.data.user.client.projects[0].questionnaire.should.exist;
           res.body.data.user.client.projects[0].questionnaire.id.should.exist;
-          res.body.data.user.client.projects[0].questionnaire.pages[0].id.should.exist;
+          res.body.data.user.client.projects[0].questionnaire.pages[0].id.should
+            .exist;
 
           // project 2
           res.body.data.user.client.projects[1].should.exist;
           res.body.data.user.client.projects[1].questionnaire.should.exist;
           res.body.data.user.client.projects[1].questionnaire.id.should.exist;
-          res.body.data.user.client.projects[1].questionnaire.pages[0].id.should.exist;
+          res.body.data.user.client.projects[1].questionnaire.pages[0].id.should
+            .exist;
 
           // project 3
           res.body.data.user.client.projects[2].should.exist;
           res.body.data.user.client.projects[2].questionnaire.should.exist;
           res.body.data.user.client.projects[2].questionnaire.id.should.exist;
-          res.body.data.user.client.projects[2].questionnaire.pages[0].id.should.exist;
+          res.body.data.user.client.projects[2].questionnaire.pages[0].id.should
+            .exist;
+
+          Object.assign(objDetails, {
+            ...res.body.data
+          });
 
           done();
         });
     });
     // it("graph should fetch all the demo items needed", done => { done() })
+    it('should check objDetail is not null', done => {
+      assert.notEqual(objDetails, null);
+      done();
+    });
   });
 });
