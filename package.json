@@ -17,8 +17,6 @@
     "express": "^4.16.1",
     "express-graphql": "^0.6.11",
     "express-mongo-db": "^2.0.4",
-    "express-rate-limit": "^3.4.0",
-    "google-libphonenumber": "^3.2.2",
     "graphql": "^0.11.7",
     "hemera-testsuite": "^4.1.0",
     "joi": "^13.1.0",
@@ -35,7 +33,6 @@
     "nodemailer": "^4.4.1",
     "pre-commit": "^1.2.2",
     "puppeteer": "^1.12.2",
-    "puppeteer-firefox": "^0.5.0",
     "sha1": "^1.1.1",
     "source-map-support": "^0.5.10",
     "splunk-sdk": "^1.8.4",
@@ -49,12 +46,11 @@
     "test": "yarn build && NODE_ENV=test mocha --require source-map-support/register --require dotenv/config --reporter spec test/ --exit",
     "test:watch": "NODE_ENV=test nodemon --watch src --exec 'yarn test'",
     "deploy": "webpack -p && node -r source-map-support/register dist",
-    "lint": "eslint src"
+    "lint": "eslint src  --fix"
   },
   "husky": {
     "hooks": {
       "pre-commit": "yarn lint",
-      "pre-push": "npm test",
       "lint": "yarn lint",
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
