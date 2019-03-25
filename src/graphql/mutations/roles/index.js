@@ -13,7 +13,7 @@ const type = `
   }
 
   type roleMutations {
-    create (newRole:newRole!):role,
+    create (role:newRole!):role,
   }
 `;
 

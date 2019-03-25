@@ -326,5 +326,40 @@ describe('Books', function() {
       assert.notEqual(objDetails, null);
       done();
     });
+    it('should check insert a new role ', done => {
+      chai
+        .request(server)
+        .post('/graphql')
+        .set('auth', token)
+        .send({
+          query: `
+        mutation($clientId: String,$userId:String,$name:String){
+          roleMutations{
+            create(newRole:{clientId:$clientId,userId:$userId,name:$name}){
+              client{
+                name
+                id
+                teams{
+                  id
+                }
+              }
+              user{
+                id
+               firstName
+              }
+            }
+          }
+        }`,
+          variables: JSON.stringify({
+            clientId: objDetails.user.client.id,
+            userId: objDetails.user.id,
+            name: 'admin'
+          })
+        })
+        .end((err, res) => {
+          console.log(res);
+        });
+      done();
+    });
   });
 });

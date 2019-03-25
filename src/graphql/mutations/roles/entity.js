@@ -1,34 +1,45 @@
 /* eslint-disable no-underscore-dangle */
 const collection = 'roles';
 
-const create = async (
-  { newRole: { userId, clientId, name } },
-  { db, ObjectId },
-) => {
-  const roleObj = {
+const create = async (args, { db, ObjectId }) => {
+  const entry = args;
+  Object.assign(entry, {
     _id: new ObjectId(),
-    userId,
-    clientId,
-    name,
     destroyed: false,
-  };
-
-  const res = await db.collection(collection).insertOne(roleObj);
-
-  const client = await db
-    .collection('company')
-    .findOne({ _id: new ObjectId(res.ops[0].clientId) });
-
-  const user = await db
-    .collection('user')
-    .findOne({ _id: new ObjectId(res.ops[0].userId) });
-
-  return {
-    id: res.ops[0]._id,
-    user: { id: user._id, ...user },
-    client: { id: client._id, ...client },
-  };
+  });
+  db.collection(collection).insertOne(entry);
+  entry.id = entry._id;
+  return entry;
 };
+
+// const create = async (
+//   { newRole: { userId, clientId, name } },
+//   { db, ObjectId },
+// ) => {
+//   const roleObj = {
+//     _id: new ObjectId(),
+//     userId,
+//     clientId,
+//     name,
+// //     destroyed: false,
+// //   };
+
+//   const res = await db.collection(collection).insertOne(roleObj);
+
+//   const client = await db
+//     .collection('company')
+//     .findOne({ _id: new ObjectId(res.ops[0].clientId) });
+
+//   const user = await db
+//     .collection('user')
+//     .findOne({ _id: new ObjectId(res.ops[0].userId) });
+
+//   return {
+//     id: res.ops[0]._id,
+//     user: { id: user._id, ...user },
+//     client: { id: client._id, ...client },
+//   };
+// };
 
 const update = async (args, { db, ObjectId }) => {
   const entry = args[collection];
