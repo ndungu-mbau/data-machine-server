@@ -1,3 +1,4 @@
+/* eslint-disable func-names */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-undef */
@@ -5,10 +6,6 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const { map } = require('async');
 
-const {
-  httpServer: server,
-  config,
-} = require('../dist');
 
 const { expect } = require('chai');
 require('chai').should();
@@ -29,6 +26,10 @@ const Hemera = require('nats-hemera');
 const nats = require('nats').connect({
   url: NATS_URL,
 });
+const {
+  httpServer: server,
+  config,
+} = require('../dist');
 
 const hemera = new Hemera(nats, {
   logLevel: LOG_LEVEL,
@@ -74,11 +75,14 @@ const registrationData = {
 
 let token;
 
-// eslint-disable-next-line func-names
-describe('Books', function () {
-  this.timeout(5000);
-  before((done) => {
+describe('Books', () => {
+  before(function (done) {
+    this.timeout(50000);
     // connect to nats and mongodbi
+    if (!config[NODE_ENV].db.url.includes('localhost')) {
+      throw new Error(`this database is NOT a local database \n\t ${config[NODE_ENV].db.url}`);
+    }
+
     MongoClient.connect(
       config[NODE_ENV].db.url,
       {
@@ -101,11 +105,13 @@ describe('Books', function () {
             }
 
             map(items, (item, next) => {
-              dbo.dropCollection(item.name, (dropErr) => {
-                if (dropErr) throw dropErr;
-                console.log('Dropped ', item.name);
-                next();
-              });
+              if (!item.name.includes('system')) {
+                dbo.dropCollection(item.name, (dropErr) => {
+                  if (dropErr) throw dropErr;
+                  console.log('Dropped ', item.name);
+                  next();
+                });
+              }
             }, (loopErr) => {
               if (loopErr) console.error(loopErr.message);
               console.log('All collections dropped \n');
