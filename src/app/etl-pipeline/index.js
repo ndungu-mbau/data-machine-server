@@ -20,6 +20,13 @@ fs.readAsync = url => new Promise((resolve, reject) => fs.readFile(url, (err, da
 export const bulkAdd = async ({
   db, files, client, user,
 }) => {
+  const team = {
+    _id: new ObjectId(),
+    name: 'Sample team',
+    client,
+    destroyed: false,
+  };
+  await db.collection('team').insertOne(team);
   files.map(async (filename) => {
     const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', 'samples', filename);
     const projectData = await fs.readAsync(filepath);
@@ -37,13 +44,6 @@ export const bulkAdd = async ({
       client,
     };
 
-    const team = {
-      _id: new ObjectId(),
-      name: 'Sample team',
-      client,
-      destroyed: false,
-    };
-
     const projectTeam = {
       project: project._id.toString(),
       team: team._id.toString(),
@@ -56,7 +56,6 @@ export const bulkAdd = async ({
       destroyed: false,
     };
 
-    await db.collection('team').insertOne(team);
     await db.collection('project_teams').insertOne(projectTeam);
     await db.collection('user_teams').insertOne(userTeams);
 
