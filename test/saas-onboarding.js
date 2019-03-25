@@ -326,39 +326,33 @@ describe('Books', function() {
       assert.notEqual(objDetails, null);
       done();
     });
-    it('should check insert a new role ', done => {
+    it('should insert a new role', done => {
       chai
         .request(server)
         .post('/graphql')
         .set('auth', token)
         .send({
-          query: `
-        mutation($clientId: String,$userId:String,$name:String){
+          query: `mutation ($role:newRole!){
           roleMutations{
-            create(newRole:{clientId:$clientId,userId:$userId,name:$name}){
-              client{
-                name
-                id
-                teams{
-                  id
-                }
-              }
-              user{
-                id
-               firstName
-              }
-            }
+             create(role:$role){
+               id
+            
+             }
           }
-        }`,
+         }
+          `,
           variables: JSON.stringify({
-            clientId: objDetails.user.client.id,
-            userId: objDetails.user.id,
-            name: 'admin'
+            role: {
+              clientId: objDetails.user.id,
+              userId: objDetails.user.client.id,
+              name: 'admin'
+            }
           })
         })
         .end((err, res) => {
-          console.log(res);
+          console.log(res.body.data.roleMutations.create);
         });
+
       done();
     });
   });

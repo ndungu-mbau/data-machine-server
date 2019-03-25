@@ -894,7 +894,7 @@ const registrationAction = {
   cmd: 'saas-registration',
 };
 
-hemera.add(registrationAction, args => new Promise(async (resolve) => {
+hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
   const {
     password,
     email,
@@ -944,6 +944,16 @@ hemera.add(registrationAction, args => new Promise(async (resolve) => {
     destroyed: false,
   };
 
+  // check for existing emails and throw errors
+  const [existingUser] = await db
+    .collection('user')
+    .find({ email: user.email })
+    .toArray();
+
+  if (existingUser) {
+    return reject(new Error('User with this email already exists'));
+  }
+
   // before starting the db saving things, first reply as thins might take sometime
   resolve({
     user: user.id,
@@ -954,16 +964,6 @@ hemera.add(registrationAction, args => new Promise(async (resolve) => {
     ),
   });
 
-  // check for existing emails and throw errors
-  const [existingUser] = await db
-    .collection('user')
-    .find({ email: user.email })
-    .toArray();
-
-  if (existingUser) {
-    throw new Error('User with this email already exists');
-  }
-
   // create base data
   await db.collection('user').insertOne(legacyUser);
   await db.collection('company').insertOne(company);
@@ -971,7 +971,7 @@ hemera.add(registrationAction, args => new Promise(async (resolve) => {
 
   await bulkAdd({
     db,
-    files: ['job-sheet.json'],
+    files: ['job-sheet.json', 'safety-checklist.json', 'construction-daily-report.json'],
     client: company._id.toString(),
     user: user._id.toString(),
   });
@@ -996,7 +996,7 @@ hemera.add(registrationAction, args => new Promise(async (resolve) => {
     }),
   });
 
-  userCreatedAccount({
+  return userCreatedAccount({
     to: 'sirbranson67@gmail.com',
     data: {
       email,

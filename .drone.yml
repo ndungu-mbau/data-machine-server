@@ -15,7 +15,7 @@ pipeline:
       - yarn --version
       - yarn config set cache-folder .yarn-cache
       - yarn install --pure-lockfile
-  docker:
+  build-container:
     image: plugins/docker
     repo: registry.braiven.io/data-machine-server
     tags: latest
