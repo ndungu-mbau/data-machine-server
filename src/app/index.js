@@ -4,14 +4,14 @@ import sha1 from 'sha1';
 import { celebrate, Joi, errors } from 'celebrate';
 import jwt from 'jsonwebtoken';
 import Multer from 'multer';
-import config from '../config';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import fs from 'fs';
 import AWS from 'aws-sdk';
-import parser from './parser';
 import { MongoClient, ObjectId } from 'mongodb';
 import cron from 'node-cron';
+import parser from './parser';
+import config from '../config';
 import {
   passwordResetEmail,
   sendDocumentEmails,
@@ -81,10 +81,9 @@ let db;
 
 function makeShortPassword() {
   let text = '';
-  let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-  for (let i = 0; i < 4; i++)
-    {text += possible.charAt(Math.floor(Math.random() * possible.length));}
+  for (let i = 0; i < 4; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)); }
 
   return text;
 }
@@ -375,8 +374,8 @@ app.post(
         return res.send(Object.assign(userData, {
           password: undefined,
           token: jwt.sign(
-            saasUserData
-            , config[NODE_ENV].hashingSecret,
+            saasUserData,
+            config[NODE_ENV].hashingSecret,
           ),
         }));
       }
@@ -532,7 +531,7 @@ app.post(
 const { getBrowserInstance } = require('./browserInstance');
 
 const makePdf = async (path, params, cb) => {
-  const { MASTER_TOKEN } = process.env;
+  const { MASTER_TOKEN, NODE_ENV } = process.env;
   const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
   try {
@@ -545,7 +544,10 @@ const makePdf = async (path, params, cb) => {
         // eslint-disable-next-line no-undef
         localStorage.setItem('token', MASTER_TOKEN);
       }, MASTER_TOKEN);
-      await page.goto(bookingUrl, { waitUntil: ['load', 'networkidle2'] });
+      await page.goto(bookingUrl, {
+        timeout: 5000,
+        waitUntil: ['load', 'networkidle2'],
+      });
       console.log('===>', 'saving the pdf', path);
       await page.pdf({
         path,
@@ -695,11 +697,7 @@ app.post('/submision', async (req, res) => {
       bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
       subject: `'${project.name}' Submission`,
       message: `
-      My ${upper(project.name.toLowerCase())} submission for is now ready for download as a pdf.
-      <br>
-      <br>
-
-      Please find the document attached to this email.
+      The submission by ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
       <br>
       <br>
       Regards,
@@ -965,8 +963,8 @@ hemera.add(action, async (args) => {
     billing: billing.id,
     settings: settings.id,
     token: jwt.sign(
-      user
-      , config[NODE_ENV].hashingSecret,
+      user,
+      config[NODE_ENV].hashingSecret,
     ),
   };
 });
@@ -1031,8 +1029,8 @@ hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
     user: user.id,
     settings: settings.id,
     token: jwt.sign(
-      user
-      , config[NODE_ENV].hashingSecret,
+      user,
+      config[NODE_ENV].hashingSecret,
     ),
   });
 
@@ -1229,7 +1227,7 @@ hemera.add({
 
   if (existingUser) {
     throw new Error('User with this email already exists');
-  }*/
+  } */
 
   // create base data
   await db.collection('user').updateOne({ _id: userid }, { $set: legacyUser });
@@ -1253,7 +1251,7 @@ hemera.add({
     data: {
       email,
     },
-  });*/
+  }); */
   // send out a sample project created email
   // send out a process guide email
   // send out a download our app email
@@ -1266,8 +1264,8 @@ hemera.add({
     billing: billing.id,
     settings: settings.id,
     token: jwt.sign(
-      user
-      , config[NODE_ENV].hashingSecret,
+      user,
+      config[NODE_ENV].hashingSecret,
     ),
   };
 });
@@ -1466,32 +1464,29 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   // }
 });
 
-const lowLevelParser = (req, res) =>
-  new Promise((resolve, rej) => {
-    parser.parse(req, res, { dir: '/tmp' }, (fields, file) => {
-      resolve({ fields, file });
-    });
+const lowLevelParser = (req, res) => new Promise((resolve, rej) => {
+  parser.parse(req, res, { dir: '/tmp' }, (fields, file) => {
+    resolve({ fields, file });
   });
+});
 
-const rename = (source, target) =>
-  new Promise((resolve, reject) => {
-    fs.rename(source, target, (err, res) => {
-      err ? reject(err) : resolve();
-    });
+const rename = (source, target) => new Promise((resolve, reject) => {
+  fs.rename(source, target, (err, res) => {
+    err ? reject(err) : resolve();
   });
+});
 
-const upload = (bucket, target) =>
-  new Promise((resolve, reject) => {
-    bucket.upload(target, (err, file) => {
-      if (!err) {
-        // console.log('upload successfull');
-        resolve(file);
-      } else {
-        // console.log(err);
-        reject(err);
-      }
-    });
+const upload = (bucket, target) => new Promise((resolve, reject) => {
+  bucket.upload(target, (err, file) => {
+    if (!err) {
+      // console.log('upload successfull');
+      resolve(file);
+    } else {
+      // console.log(err);
+      reject(err);
+    }
   });
+});
 
 app.post(
   '/upload',
