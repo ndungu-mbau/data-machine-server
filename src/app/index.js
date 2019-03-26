@@ -855,7 +855,10 @@ hemera.add(action, async (args) => {
   await db.collection('company').insertOne(company);
   // await db.collection('client').insertOne(client);
 
+
   emit({ action: actions.SAAS_USER_CREATED, data: legacyUser });
+
+  emit({ action: actions.CLIENT_CREATED, data: company });
 
 
   await bulkAdd({
