@@ -14,6 +14,7 @@ const type = `
 
   type roleMutations {
     create (role:newRole!):role,
+    update (role:newRole!):role,
   }
 `;
 
