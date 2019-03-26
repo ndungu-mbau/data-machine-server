@@ -22,45 +22,58 @@ const mailOptions = {
 };
 
 export const sendMail = ({
-  from, to, subject, message, attachments, cc, bcc,
-}) => new Promise((resolve, reject) => {
-  mailOptions.to = to;
-  mailOptions.subject = subject;
-  mailOptions.html = message;
-
-  Object.assign(mailOptions, {
-    cc,
-    bcc,
-  });
-
-  if (attachments) {
-    mailOptions.attachments = attachments;
+  from,
+  to,
+  subject,
+  message,
+  attachments,
+  cc,
+  bcc,
+}) => {
+  const { NODE_ENV } = process.env;
+  if (NODE_ENV === 'test') {
+    return true;
   }
+  Promise((resolve, reject) => {
+    mailOptions.to = to;
+    mailOptions.subject = subject;
+    mailOptions.html = message;
 
-  if (from) {
-    mailOptions.from = from;
-  }
+    Object.assign(mailOptions, {
+      cc,
+      bcc,
+    });
 
-  // send mail with defined transport object
-  transporter.sendMail(mailOptions, async (error, info) => {
-    // console.log({ error, info });
-    // async save the email send to our collection
-
-    if (error) {
-      return reject(error);
+    if (attachments) {
+      mailOptions.attachments = attachments;
     }
 
-    return resolve(info);
+    if (from) {
+      mailOptions.from = from;
+    }
+
+    // send mail with defined transport object
+    transporter.sendMail(mailOptions, async (error, info) => {
+      // console.log({ error, info });
+      // async save the email send to our collection
+
+      if (error) {
+        return reject(error);
+      }
+
+      return resolve(info);
+    });
   });
-});
-
-
+  return true;
+};
 const registrationThanks = async ({
   to,
   subject = 'Thank you for registering!',
   data,
 }) => {
-  const tempFn = doT.template((await readFile('src/app/emails/registration-thanks.html', 'utf8')));
+  const tempFn = doT.template(
+    await readFile('src/app/emails/registration-thanks.html', 'utf8'),
+  );
   const message = tempFn(data);
   sendMail({
     to,
@@ -74,7 +87,9 @@ const accountActivationEmail = async ({
   subject = 'Activate your account',
   data,
 }) => {
-  const tempFn = doT.template((await readFile('src/app/emails/activate-account.html', 'utf8')));
+  const tempFn = doT.template(
+    await readFile('src/app/emails/activate-account.html', 'utf8'),
+  );
   const message = tempFn(data);
 
   sendMail({
@@ -89,7 +104,9 @@ const passwordResetEmail = async ({
   subject = 'Reset your datakit password',
   data,
 }) => {
-  const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
+  const tempFn = doT.template(
+    await readFile('src/app/emails/password-reset.html', 'utf8'),
+  );
   const message = tempFn(data);
 
   sendMail({
@@ -99,11 +116,7 @@ const passwordResetEmail = async ({
   });
 };
 
-const userLoggedIn = async ({
-  to,
-  subject = 'User logged in',
-  data,
-}) => {
+const userLoggedIn = async ({ to, subject = 'User logged in', data }) => {
   sendMail({
     to,
     subject,
@@ -119,7 +132,13 @@ const appUserLoggedIn = async ({
   sendMail({
     to,
     subject,
-    message: `${data.phoneNumber} just logged in <br><br><br><pre>${JSON.stringify(data.userData, null, '\t')}</pre>`,
+    message: `${
+      data.phoneNumber
+    } just logged in <br><br><br><pre>${JSON.stringify(
+      data.userData,
+      null,
+      '\t',
+    )}</pre>`,
   });
 };
 

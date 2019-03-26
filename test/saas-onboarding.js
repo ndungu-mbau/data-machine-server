@@ -350,7 +350,7 @@ describe('Books', function() {
           })
         })
         .end((err, res) => {
-          console.log(res.body.data.roleMutations.create);
+          res.body.data.roleMutations.create.id.should.exist;
         });
 
       done();
