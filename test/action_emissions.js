@@ -16,7 +16,6 @@ const hemera = new Hemera(nats, {
 
 describe('my suite', () => {
     it('it tests saas user created actions', () => {
-
         hemera.add(
             {
                 pubsub$: true,
@@ -24,12 +23,9 @@ describe('my suite', () => {
                 cmd: 'SAAS_USER_CREATED'
             },
             function (req) {
-                console.log(req)
                 req.data._id.should.exist
-
             }
         )
-
     });
     it('it tests client user created actions', () => {
         hemera.add(
@@ -39,7 +35,6 @@ describe('my suite', () => {
                 cmd: 'CLIENT_CREATED'
             },
             function (req) {
-                console.log(">>", req)
                 req.data._id.should.exist
             }
         )
