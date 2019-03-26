@@ -1,3 +1,4 @@
+import emit from '../../../app/actions/index';
 /* eslint-disable no-underscore-dangle */
 const collection = 'client';
 
@@ -8,6 +9,7 @@ const create = async (args, { db, ObjectId }) => {
     destroyed: false,
   });
   db.collection(collection).insertOne(entry);
+  emit({ data: entry, action: 'CLIENT_CREATED' });
   entry.id = entry._id;
   return entry;
 };

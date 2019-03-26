@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
-
 import express from 'express';
 import morgan from 'morgan';
 import sha1 from 'sha1';
@@ -15,6 +14,8 @@ import AWS from 'aws-sdk';
 import { MongoClient, ObjectId } from 'mongodb';
 import cron from 'node-cron';
 import bunyan from 'bunyan';
+import actions from './actions/action_map';
+import emit from './actions/index';
 import {
   passwordResetEmail,
   sendDocumentEmails,
@@ -854,6 +855,12 @@ hemera.add(action, async (args) => {
   await db.collection('company').insertOne(company);
   // await db.collection('client').insertOne(client);
 
+
+  emit({ action: actions.SAAS_USER_CREATED, data: legacyUser });
+
+  emit({ action: actions.CLIENT_CREATED, data: company });
+
+
   await bulkAdd({
     db,
     files: ['job-sheet.json', 'safety-checklist.json', 'construction-daily-report.json'],
@@ -1154,6 +1161,7 @@ hemera.add({
 
   await db.collection('billing').insertOne(billing);
   await db.collection('saasUser').insertOne(user);
+
 
   /* registrationThanks({
     to: user.email,
