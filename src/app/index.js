@@ -692,17 +692,21 @@ app.post('/submision', async (req, res) => {
 
     const ccPeople = [cleanCopy.__agentEmail];
     sendDocumentEmails({
-      from: `"${upper(__agentFirstName.toLowerCase())} via Datakit " <${process.env.EMAIL_BASE}>`,
+      from: `"National Treasury via Datakit " <${process.env.EMAIL_BASE}>`,
       cc: ccPeople.join(','),
       bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
       subject: `'${project.name}' Submission`,
       message: `
+      Dear ${upper(__agentFirstName.toLowerCase())}
+      <br>
+      <br>
       The submission by ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
       <br>
       <br>
-      Regards,
+      Regards, The National Treasury
     `,
       attachments: [{
+        // eslint-disable-next-line no-underscore-dangle
         filename: `${submited._id}.pdf`,
         content: fs.createReadStream(path),
         contentType: 'application/pdf',
