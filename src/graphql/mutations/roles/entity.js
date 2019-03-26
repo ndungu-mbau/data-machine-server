@@ -5,7 +5,9 @@ const create = async (args, { db, ObjectId }) => {
   const entry = args[collection];
   Object.assign(entry, {
     _id: new ObjectId(),
-    destroyed: false,
+    userId: new ObjectId(entry.userId),
+    clientId: new ObjectId(entry.clientId),
+    destroyed: false
   });
   db.collection(collection).insertOne(entry);
   entry.id = entry._id;

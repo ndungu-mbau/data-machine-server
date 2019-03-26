@@ -18,7 +18,7 @@ const queries = `
 
 const role = async (x, { id }, { db, ObjectId }) => {
   const roles = await db
-    .collection('roles')
+    .collection('role')
     .find({ _id: new ObjectId(id) })
     .toArray();
   return roles.map(r => Object.assign(r, {

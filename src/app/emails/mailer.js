@@ -31,41 +31,40 @@ export const sendMail = ({
   attachments,
   cc,
   bcc
-}) =>
-  new Promise((resolve, reject) => {
-    if (NODE_ENV === 'test') {
-      resolve();
-    }
+}) => new Promise((resolve, reject) => {
+  if (NODE_ENV === 'test') {
+    resolve();
+  }
 
-    mailOptions.to = to;
-    mailOptions.subject = subject;
-    mailOptions.html = message;
+  mailOptions.to = to;
+  mailOptions.subject = subject;
+  mailOptions.html = message;
 
-    Object.assign(mailOptions, {
-      cc,
-      bcc
-    });
-
-    if (attachments) {
-      mailOptions.attachments = attachments;
-    }
-
-    if (from) {
-      mailOptions.from = from;
-    }
-
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, async (error, info) => {
-      // console.log({ error, info });
-      // async save the email send to our collection
-
-      if (error) {
-        return reject(error);
-      }
-
-      return resolve(info);
-    });
+  Object.assign(mailOptions, {
+    cc,
+    bcc
   });
+
+  if (attachments) {
+    mailOptions.attachments = attachments;
+  }
+
+  if (from) {
+    mailOptions.from = from;
+  }
+
+  // send mail with defined transport object
+  transporter.sendMail(mailOptions, async (error, info) => {
+    // console.log({ error, info });
+    // async save the email send to our collection
+
+    if (error) {
+      return reject(error);
+    }
+
+    return resolve(info);
+  });
+});
 
 const registrationThanks = async ({
   to,
@@ -135,11 +134,11 @@ const appUserLoggedIn = async ({
     subject,
     message: `${
       data.phoneNumber
-    } just logged in <br><br><br><pre>${JSON.stringify(
-      data.userData,
-      null,
-      '\t'
-    )}</pre>`
+      } just logged in <br><br><br><pre>${JSON.stringify(
+        data.userData,
+        null,
+        '\t'
+      )}</pre>`
   });
 };
 

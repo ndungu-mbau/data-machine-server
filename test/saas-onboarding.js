@@ -16,7 +16,10 @@ const { MongoClient } = require('mongodb');
 let db;
 
 chai.use(chaiHttp);
-let objDetails = {};
+
+let clientId;
+let userId;
+let roleId;
 
 const { NATS_URL, NODE_ENV, LOG_LEVEL = 'silent' } = process.env;
 
@@ -64,7 +67,7 @@ const registrationData = {
 let token;
 
 // eslint-disable-next-line func-names
-describe('Books', function() {
+describe('Books', function () {
   this.timeout(5000);
   before(done => {
     // connect to nats and mongodbi
@@ -314,18 +317,13 @@ describe('Books', function() {
           res.body.data.user.client.projects[2].questionnaire.pages[0].id.should
             .exist;
 
-          Object.assign(objDetails, {
-            ...res.body.data
-          });
+          clientId = res.body.data.user.client.id;
+          userId = res.body.data.user.id;
 
           done();
         });
     });
     // it("graph should fetch all the demo items needed", done => { done() })
-    it('should check objDetail is not null', done => {
-      assert.notEqual(objDetails, null);
-      done();
-    });
     it('should insert a new role', done => {
       chai
         .request(server)
@@ -336,23 +334,45 @@ describe('Books', function() {
           roleMutations{
              create(role:$role){
                id
-            
              }
           }
          }
           `,
           variables: JSON.stringify({
             role: {
-              clientId: objDetails.user.id,
-              userId: objDetails.user.client.id,
-              name: 'admin'
+              clientId,
+              userId,
+              name: 'insertedtestAdmin'
             }
           })
         })
         .end((err, res) => {
           res.body.data.roleMutations.create.id.should.exist;
+          roleId = res.body.data.roleMutations.create.id;
         });
 
+      done();
+    });
+    it('update the roles', done => {
+      chai
+        .request(server)
+        .post('/graphql')
+        .set('auth', token)
+        .send({
+          query: `mutation ($role:newRole!){
+            roleMutations{
+              update(role:$role){
+                id
+              }
+            }
+          }`,
+          variables: JSON.stringify({
+            role: {
+              id: roleId,
+              name: 'updateAdmin'
+            }
+          })
+        })
       done();
     });
   });
