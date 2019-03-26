@@ -96,7 +96,7 @@ const nested = {
     },
     roles: async ({ id }, args, { db }) => {
       const data = await db
-        .collection('roles')
+        .collection('role')
         .find({ userId: id, destroyed: false })
         .toArray();
 

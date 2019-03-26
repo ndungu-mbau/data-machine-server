@@ -3,6 +3,8 @@ import doT from 'dot';
 import { promisify } from 'util';
 import fs from 'fs';
 
+const { NODE_ENV } = process.env;
+
 const readFile = promisify(fs.readFile);
 
 // create reusable transporter object using the default SMTP transport
@@ -22,8 +24,18 @@ const mailOptions = {
 };
 
 export const sendMail = ({
-  from, to, subject, message, attachments, cc, bcc,
+  from,
+  to,
+  subject,
+  message,
+  attachments,
+  cc,
+  bcc,
 }) => new Promise((resolve, reject) => {
+  if (NODE_ENV === 'test') {
+    resolve();
+  }
+
   mailOptions.to = to;
   mailOptions.subject = subject;
   mailOptions.html = message;
@@ -54,13 +66,14 @@ export const sendMail = ({
   });
 });
 
-
 const registrationThanks = async ({
   to,
   subject = 'Thank you for registering!',
   data,
 }) => {
-  const tempFn = doT.template((await readFile('src/app/emails/registration-thanks.html', 'utf8')));
+  const tempFn = doT.template(
+    await readFile('src/app/emails/registration-thanks.html', 'utf8'),
+  );
   const message = tempFn(data);
   sendMail({
     to,
@@ -74,7 +87,9 @@ const accountActivationEmail = async ({
   subject = 'Activate your account',
   data,
 }) => {
-  const tempFn = doT.template((await readFile('src/app/emails/activate-account.html', 'utf8')));
+  const tempFn = doT.template(
+    await readFile('src/app/emails/activate-account.html', 'utf8'),
+  );
   const message = tempFn(data);
 
   sendMail({
@@ -89,7 +104,9 @@ const passwordResetEmail = async ({
   subject = 'Reset your datakit password',
   data,
 }) => {
-  const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
+  const tempFn = doT.template(
+    await readFile('src/app/emails/password-reset.html', 'utf8'),
+  );
   const message = tempFn(data);
 
   sendMail({
@@ -99,11 +116,7 @@ const passwordResetEmail = async ({
   });
 };
 
-const userLoggedIn = async ({
-  to,
-  subject = 'User logged in',
-  data,
-}) => {
+const userLoggedIn = async ({ to, subject = 'User logged in', data }) => {
   sendMail({
     to,
     subject,
@@ -119,7 +132,13 @@ const appUserLoggedIn = async ({
   sendMail({
     to,
     subject,
-    message: `${data.phoneNumber} just logged in <br><br><br><pre>${JSON.stringify(data.userData, null, '\t')}</pre>`,
+    message: `${
+      data.phoneNumber
+    } just logged in <br><br><br><pre>${JSON.stringify(
+      data.userData,
+      null,
+      '\t',
+    )}</pre>`,
   });
 };
 

@@ -846,7 +846,7 @@ hemera.add(action, async (args) => {
 
   // create base data
   await db.collection('user').insertOne(legacyUser);
-  await db.collection('roles').insertOne(role);
+  await db.collection('role').insertOne(role);
   await db.collection('settings').insertOne(settings);
   await db.collection('billing').insertOne(billing);
   await db.collection('saasUser').insertOne(user);
