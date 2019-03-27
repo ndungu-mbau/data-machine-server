@@ -3,12 +3,7 @@ const type = `
     id: String,
     name: String,
     destroyed: Boolean,
-    submissionGroupSubmissions: [submissionGroupSubmissions]
-  }
-
-  type submissionGroupSubmissions{
-    submissionGroup: String,
-    sumbission: String
+    submissions: [String]
   }
 
   input filter {
@@ -19,7 +14,7 @@ const type = `
 `;
 
 const queries = `
-  submissionGroups(): [submissionGroup]
+  submissionGroups(filter:filter!): [submissionGroup]
   submissionGroup(id: String): submissionGroup
 `;
 
@@ -38,7 +33,11 @@ const root = {
 
 const nested = {
   submissionGroupSubmissions: ({ id }, _, { db, ObjectId }) => {
-    return db.collection("submission-group-submissions").find({ submissionGroup : new ObjectId(id)}).toArray
+    return db
+      .collection("submission-group-submissions")
+      .find({ submissionGroup : new ObjectId(id)})
+      .toArray()
+      .reduce((acc, curr) => acc.append(curr.submission), [])
   }
 }
 
