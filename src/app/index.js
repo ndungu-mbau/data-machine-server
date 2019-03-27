@@ -701,7 +701,7 @@ app.post('/submision', async (req, res) => {
       Dear ${upper(__agentFirstName.toLowerCase())},
       <br>
       <br>
-      The submission by ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
+      The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
       <br>
       <br>
       Regards, The National Treasury
