@@ -13,15 +13,6 @@ import {
 } from './users';
 
 import {
-  nested as pagesNested
-} from './questionnaires/pages';
-
-import {
-  nested as groupsNested
-} from './questionnaires/pages/groups';
-
-
-import {
   type as clientType,
   queries as clientQueries,
   nested as clientQueriesNested,
@@ -53,6 +44,7 @@ import {
   type as pageType,
   queries as pageQueries,
   root as pageRoot,
+  nested as pagesNested,
 } from './questionnaires/pages';
 
 import {
@@ -101,6 +93,7 @@ import {
   type as groupType,
   queries as groupQueries,
   root as groupRoot,
+  nested as groupsNested,
 } from './questionnaires/pages/groups';
 
 import {
@@ -128,7 +121,16 @@ import {
   nested as submissionGroupsNested
 } from './submission-groups';
 
+import {
+  type as roleType,
+  queries as roleQueries,
+  root as rolesRoot,
+  nested as rolesNested,
+} from './roles/index';
+
+
 const typeQueries = `
+  ${roleType}
   ${clientType},
   ${billingType},
   ${teamType},
@@ -150,6 +152,7 @@ const typeQueries = `
   ${submissionGroupsType},
   type Query {
       hello: String,
+      ${roleQueries},
       ${clientQueries},
       ${billingQueries},
       ${teamQueries},
@@ -173,10 +176,10 @@ const typeQueries = `
   }`;
 
 const Query = {
-  hello: () => 'Hello too!'
+  hello: () => 'Hello too!',
 };
 
-const Nested = {}
+const Nested = {};
 
 Object.assign(
   Nested
@@ -189,11 +192,13 @@ Object.assign(
   , groupsNested
   , billingQueriesNested
   , submissionGroupsNested
+  , rolesNested
 )
 
 
 Object.assign(
   Query
+  , rolesRoot
   , projectRoot
   , userRoot
   , pageRoot
@@ -215,6 +220,6 @@ Object.assign(
   , submissionGroupsRoot
 );
 
-const queryRoot = { Query, Nested }
+const queryRoot = { Query, Nested };
 
 export { typeQueries, queryRoot };

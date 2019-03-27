@@ -1,21 +1,18 @@
 import { ApolloServer, gql } from 'apollo-server-express';
 import jwt from 'jsonwebtoken';
 import { MongoClient, ObjectId } from 'mongodb';
+import bunyan from 'bunyan';
 
 import { typeQueries, queryRoot } from './queries';
 import { typeMutations, mutationRoot } from './mutations';
-import { graphql, buildSchema } from 'graphql';
-
 
 import config from '../config';
+
+const log = bunyan.createLogger({ name: 'app' });
 
 const {
   NODE_ENV = 'development',
 } = process.env;
-
-// const { graph: queriesGraph, root: queriesRoot } = queries
-// const { graph: mutationsGraph, root: mutationsRoot } = mutations
-// const { graph: subscriptionsGraph, root: subscriptionsRoot } = subscriptions
 
 const typeDefs = gql`
     ${typeQueries},
@@ -34,15 +31,14 @@ MongoClient.connect(config[NODE_ENV].db.url, { useNewUrlParser: true }, (err, cl
   db = client.db(config[NODE_ENV].db.name);
 });
 
-const myAuthenticationLookup = req => {
+const myAuthenticationLookup = (req) => {
   try {
-    return jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret)
-  } catch (err) {
-
+    return jwt.verify(req.headers.auth, config[NODE_ENV].hashingSecret);
+  } catch (authError) {
     try {
-      return jwt.verify(req.headers.auth, config[NODE_ENV].managementHashingSecret)
-    } catch (err) {
-      throw err
+      return jwt.verify(req.headers.auth, config[NODE_ENV].managementHashingSecret);
+    } catch (managementAuthErr) {
+      throw managementAuthErr;
     }
   }
 };
@@ -58,6 +54,7 @@ const context = ({ req }) => {
     return {
       user,
       db,
+      log,
       ObjectId,
     };
   }
@@ -71,8 +68,7 @@ const server = new ApolloServer({
   context,
   formatError(error) {
     if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
-      // logging the errors can help in development
-      console.error(error);
+      log.error(error);
     }
     return error;
   },

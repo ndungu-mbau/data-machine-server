@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 const collection = 'alias';
 
 const create = async (args, { db, ObjectId }) => {

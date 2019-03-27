@@ -11,6 +11,12 @@ import {
 } from './clients';
 
 import {
+  type as rolesType,
+  queries as roleMutations,
+  root as roleRoot,
+} from './roles';
+
+import {
   type as teamsType,
   queries as teamsMutations,
   root as teamsRoot,
@@ -57,7 +63,6 @@ import {
   queries as cpdMutations,
   root as cpdRoot,
 } from './questionnaires/dashboards/cpd';
-
 
 import {
   type as chartType,
@@ -126,6 +131,7 @@ ${optionsType},
 ${questionsType},
 ${sentenceType},
 ${submissionGroupsType},
+${rolesType},
 type Mutation {
     honk: String,
     ${clientsMutations}
@@ -147,6 +153,7 @@ type Mutation {
     ${optionsMutations},
     ${sentenceMutations},
     ${submissionGroupsMutations}
+    ${roleMutations}
 }`;
 
 const mutationRoot = { honk: () => 'Hello world students!' };
@@ -169,5 +176,6 @@ Object.assign(mutationRoot, constantRoot);
 Object.assign(mutationRoot, layoutRoot);
 Object.assign(mutationRoot, dashboardRoot);
 Object.assign(mutationRoot, submissionGroupsRoot)
+Object.assign(mutationRoot, roleRoot);
 
 export { typeMutations, mutationRoot };

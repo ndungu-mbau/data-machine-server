@@ -1,28 +1,54 @@
 pipeline:
-  docker:
+  restore-cache:
+    image: drillster/drone-volume-cache
+    restore: true
+    mount:
+      - ./.yarn-cache
+      - ./node_modules
+    volumes:
+      - /tmp/cache:/cache
+  install:
+    image: node:latest
+    commands:
+      - node -v
+      - npm -v
+      - yarn --version
+      - yarn config set cache-folder .yarn-cache
+      - yarn install --pure-lockfile
+  build-container:
     image: plugins/docker
-    repo: registry.braiven.io/data-kit-gateway
-    tags: "${DRONE_COMMIT_SHA:0:7}"
+    repo: registry.braiven.io/data-machine-server
+    tags: latest
     registry: registry.braiven.io
+    tags: "${DRONE_COMMIT_SHA:0:7}"
     file: Dockerfile
     username: mozart
     password: password
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    when:
-      branch:
-      - master
 
-  rancher:
+  staging-deploy:
     image: peloton/drone-rancher
     url: https://ops.braiven.io/v2-beta
     access_key: 2B452DA2BD3F853C6DDF
     secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
-    service: public/data-kit-gateway
-    docker_image: registry.braiven.io/data-kit-gateway:${DRONE_COMMIT_SHA:0:7}
+    service: staging/data-machine-server
+    docker_image: registry.braiven.io/data-machine-server:${DRONE_COMMIT_SHA:0:7}
     start_first: true
     confirm: true
-    timeout: 10000
+    timeout: 1000
+    when:
+      branch:
+      - develop
+
+  production-reploy:
+    image: peloton/drone-rancher
+    url: https://ops.braiven.io/v2-beta
+    access_key: 2B452DA2BD3F853C6DDF
+    secret_key: 1fKWj3xFet1PcpRqCSfm8NhBoaiWt6mGW4UuUUEM
+    service: public/data-machine-server
+    docker_image: registry.braiven.io/data-machine-server:${DRONE_COMMIT_SHA:0:7}
+    start_first: true
+    confirm: true
+    timeout: 1000
     when:
       branch:
       - master
@@ -40,12 +66,22 @@ pipeline:
       @{{commit.author}} <a href="{{build.Link}}">{{build.event}}ed</a> to <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}">{{repo.owner}}/{{repo.name}}</a>
 
       {{commit.email}}: {{commit.message}}
-
+      
       CI ✅ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
       {{else}}
         @{{commit.author}} <a href="{{build.Link}}">{{build.event}}ed</a> to <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}">{{repo.owner}}/{{repo.name}}</a>
 
         {{commit.email}}: {{commit.message}}
-
+        
         CI ❌ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
       {{/success}}
+  rebuild-cache:
+    image: drillster/drone-volume-cache
+    rebuild: true
+    mount:
+      - ./.yarn-cache
+      - ./node_modules
+    volumes:
+      - /tmp/cache:/cache
+    when:
+      branch: master

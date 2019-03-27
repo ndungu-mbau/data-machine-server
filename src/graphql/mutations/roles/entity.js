@@ -1,9 +1,14 @@
 /* eslint-disable no-underscore-dangle */
-const collection = 'sentense';
+const collection = 'role';
 
 const create = async (args, { db, ObjectId }) => {
   const entry = args[collection];
-  entry._id = new ObjectId();
+  Object.assign(entry, {
+    _id: new ObjectId(),
+    userId: new ObjectId(entry.userId),
+    clientId: new ObjectId(entry.clientId),
+    destroyed: false,
+  });
   db.collection(collection).insertOne(entry);
   entry.id = entry._id;
   return entry;
@@ -11,16 +16,17 @@ const create = async (args, { db, ObjectId }) => {
 
 const update = async (args, { db, ObjectId }) => {
   const entry = args[collection];
-  return db.collection(collection)
-    .updateOne(
-      { _id: new ObjectId(entry.id) },
-      { $set: Object.assign({}, entry, { id: undefined }) },
-    );
+  const { id } = entry;
+  delete entry.id;
+  return db
+    .collection(collection)
+    .updateOne({ _id: new ObjectId(id) }, { $set: entry });
 };
 
 const destroy = async (args, { db, ObjectId }) => {
   const entry = args[collection];
-  return db.collection(collection)
+  return db
+    .collection(collection)
     .updateOne(
       { _id: new ObjectId(entry.id) },
       { $set: Object.assign({}, entry, { id: undefined, destroyed: true }) },
@@ -29,7 +35,8 @@ const destroy = async (args, { db, ObjectId }) => {
 
 const restore = async (args, { db, ObjectId }) => {
   const entry = args[collection];
-  return db.collection(collection)
+  return db
+    .collection(collection)
     .updateOne(
       { _id: new ObjectId(entry.id) },
       { $set: Object.assign({}, entry, { id: undefined, destroyed: false }) },
@@ -37,8 +44,5 @@ const restore = async (args, { db, ObjectId }) => {
 };
 
 export {
-  create,
-  update,
-  destroy,
-  restore,
+  create, update, destroy, restore,
 };

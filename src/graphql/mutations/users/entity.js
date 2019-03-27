@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import sha1 from 'sha1';
 
 const PNF = require('google-libphonenumber').PhoneNumberFormat;
@@ -20,12 +21,15 @@ function makeShortPassword() {
   let text = '';
   const possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-  for (let i = 0; i < 4; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)); }
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < 4; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
 
   return text;
 }
 
-const create = async (args, { db, ObjectId }) => {
+const create = async (args, { db, ObjectId, log }) => {
   const entry = args[collection];
 
   const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
@@ -55,11 +59,11 @@ const create = async (args, { db, ObjectId }) => {
   };
 
   // eslint-disable-next-line no-console
-  console.log(action);
+  log.info(action);
 
   hemera.act(action, (err) => {
     if (err) {
-      console.log('Error sending sms to ', entry.phoneNumber, coolNumber, err);
+      log.info('Error sending sms to ', entry.phoneNumber, coolNumber, err);
     }
   });
 
@@ -97,7 +101,10 @@ const update = async (args, { db, ObjectId }) => {
       });
   }
   return db.collection(collection)
-    .updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined }) });
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      { $set: Object.assign({}, entry, { id: undefined }) },
+    );
 };
 
 const destroy = async (args, { db, ObjectId }) => {

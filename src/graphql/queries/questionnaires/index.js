@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 const type = `
   type questionnaire {
     id: String,
@@ -17,31 +18,28 @@ const queries = `
 const GroupQuestions = groupId => async (filter, { db }) => {
   const data = await db.collection('question').find({ group: groupId.toString(), destroyed: false }).toArray();
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-      options: entry.options ? JSON.parse(JSON.stringify(entry.options)) : null,
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+    options: entry.options ? JSON.parse(JSON.stringify(entry.options)) : null,
+  }));
 };
 
 const PageGroups = pageId => async (filter, { db }) => {
   const data = await db.collection('group').find({ page: pageId.toString(), destroyed: false }).toArray();
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-      questions: GroupQuestions(entry._id),
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+    questions: GroupQuestions(entry._id),
+  }));
 };
 
 const QuestionnairePages = questionnaireId => async (filter, { db }) => {
   const data = await db.collection('page').find({ questionnaire: questionnaireId, destroyed: false }).toArray();
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-      groups: PageGroups(entry._id),
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+    groups: PageGroups(entry._id),
+  }));
 };
 
 const dashboardLayouts = dashboardId => async (filter, { db }) => {
@@ -60,10 +58,9 @@ const dashboardCps = dashboardId => async (filter, { db }) => {
 
   if (!data) { return []; }
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+  }));
 };
 
 const dashboardCpds = dashboardId => async (filter, { db }) => {
@@ -71,10 +68,9 @@ const dashboardCpds = dashboardId => async (filter, { db }) => {
 
   if (!data) { return []; }
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+  }));
 };
 
 const dashboardAliases = dashboardId => async (filter, { db }) => {
@@ -82,10 +78,9 @@ const dashboardAliases = dashboardId => async (filter, { db }) => {
 
   if (!data) { return []; }
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+  }));
 };
 
 const dashboardCharts = dashboardId => async (filter, { db }) => {
@@ -93,10 +88,9 @@ const dashboardCharts = dashboardId => async (filter, { db }) => {
 
   if (!data) { return []; }
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+  }));
 };
 
 const dashboardConstants = dashboardId => async (filter, { db }) => {
@@ -104,10 +98,9 @@ const dashboardConstants = dashboardId => async (filter, { db }) => {
 
   if (!data) { return []; }
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+  }));
 };
 
 const QuestionnaireDashboards = questionnaireId => async (
@@ -118,25 +111,28 @@ const QuestionnaireDashboards = questionnaireId => async (
 
   if (!data) { return []; }
 
-  return data.map(entry =>
-    Object.assign({}, entry, {
-      id: entry._id,
-      layout: dashboardLayouts(entry._id.toString()),
-      cps: dashboardCps(entry._id.toString()),
-      cpds: dashboardCpds(entry._id.toString()),
-      aliases: dashboardAliases(entry._id.toString()),
-      charts: dashboardCharts(entry._id.toString()),
-      constants: dashboardConstants(entry._id.toString()),
-    }));
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+    layout: dashboardLayouts(entry._id.toString()),
+    cps: dashboardCps(entry._id.toString()),
+    cpds: dashboardCpds(entry._id.toString()),
+    aliases: dashboardAliases(entry._id.toString()),
+    charts: dashboardCharts(entry._id.toString()),
+    constants: dashboardConstants(entry._id.toString()),
+  }));
 };
 
-export const questionnaire = async ({ questionnaire } = {}, { id }, { db, ObjectId }) => {
+export const questionnaire = async (
+  { questionnaire: questionnaireEntry } = {},
+  { id },
+  { db, ObjectId },
+) => {
   const data = await db.collection('questionnaire').findOne({ _id: new ObjectId(id), destroyed: false });
 
   return Object.assign({}, data, {
     id,
-    pages: QuestionnairePages(id || questionnaire),
-    dashboards: QuestionnaireDashboards(id || questionnaire),
+    pages: QuestionnairePages(id || questionnaireEntry),
+    dashboards: QuestionnaireDashboards(id || questionnaireEntry),
   });
 };
 
@@ -148,11 +144,10 @@ const questionnaires = async ({ filter = {} }, { datastore }) => {
     .offset('offset', offset)
     .limit('limit', limit);
   const entities = await datastore.runQuery(query);
-  return entities.shift().map(entry =>
-    Object.assign({}, entry, {
-      id: entry[datastore.KEY].id,
-      pages: QuestionnairePages(entry.questionnaire),
-    }));
+  return entities.shift().map(entry => Object.assign({}, entry, {
+    id: entry[datastore.KEY].id,
+    pages: QuestionnairePages(entry.questionnaire),
+  }));
 };
 
 const root = {
@@ -162,13 +157,15 @@ const root = {
 
 const nested = {
   questionnaire: {
-    pages: async ({ id }, { filter = {} }, { db }) => {
-      const data = await db.collection("page").find({ questionnaire: id.toString(), destroyed: false }).toArray();
+    pages: async ({ id }, args, { db }) => {
+      const data = await db.collection('page').find({ questionnaire: id.toString(), destroyed: false }).toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
-    }
-  }
-}
+    },
+  },
+};
 
-export { type, queries, root, nested };
+export {
+  type, queries, root, nested,
+};
