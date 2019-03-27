@@ -689,7 +689,7 @@ app.post('/submision', async (req, res) => {
     const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
 
     // eslint-disable-next-line no-underscore-dangle
-    const ccPeople = ['athony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
+    const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
     sendDocumentEmails({
       from: `"National Treasury via Braiven Datakit " <${process.env.EMAIL_BASE}>`,
       // eslint-disable-next-line no-underscore-dangle
