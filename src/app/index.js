@@ -6,7 +6,6 @@ import sha1 from 'sha1';
 import { celebrate, Joi, errors } from 'celebrate';
 import jwt from 'jsonwebtoken';
 import Multer from 'multer';
-
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import fs from 'fs';
@@ -687,23 +686,26 @@ app.post('/submision', async (req, res) => {
 
     const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
 
-    const ccPeople = [cleanCopy.__agentEmail];
+    // eslint-disable-next-line no-underscore-dangle
+    const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
     sendDocumentEmails({
-      from: `"${upper(__agentFirstName.toLowerCase())} via Datakit " <${EMAIL_BASE}>`,
+      from: `"National Treasury via Braiven Datakit " <${EMAIL_BASE}>`,
+      // eslint-disable-next-line no-underscore-dangle
+      to: cleanCopy.__agentEmail,
       cc: ccPeople.join(','),
       bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
       subject: `'${projectName}' Submission`,
       message: `
-      My ${upper(projectName.toLowerCase())} submission for is now ready for download as a pdf.
+      Dear ${upper(__agentFirstName.toLowerCase())},
       <br>
       <br>
-
-      Please find the document attached to this email.
+      The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
       <br>
       <br>
-      Regards,
+      Regards, The National Treasury
     `,
       attachments: [{
+        // eslint-disable-next-line no-underscore-dangle
         filename: `${submited._id}.pdf`,
         content: fs.createReadStream(path),
         contentType: 'application/pdf',
