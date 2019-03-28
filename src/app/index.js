@@ -562,7 +562,7 @@ const makePdf = async (path, params, cb) => {
     });
   } catch (err) {
     console.error('DOC_GEN_FAIL', err.message, { path, params });
-    return makePdf(path, params, cb)
+    // return makePdf(path, params, cb)
   }
 };
 
@@ -671,6 +671,13 @@ app.post('/submision', async (req, res) => {
     }
   });
 
+  const { DISABLE_PDF_GENERATION } = process.env
+
+  if (parseInt(DISABLE_PDF_GENERATION)) {
+    console.log("*** DISABLE_PDF_GENERATION pdf generation is disabled, ")
+    return;
+  }
+
   const path = `./dist/${submited._id}.pdf`;
 
   await makePdf(path, {
@@ -717,13 +724,13 @@ app.post('/submision', async (req, res) => {
       });
 
       await db.collection('submision-emails').insertOne(mailResponse);
-    } catch(err) {
+    } catch (err) {
       await db.collection('submision-email-failures').insertOne(err);
     }
   });
 });
 
-app.get('/resend_submission_action/:submissionId', async (req, res) => {
+app.post('/resend_submission_action/:submissionId', async (req, res) => {
   console.log("regenerating document for ", req.params.submissionId)
   const entry = await db.collection('submision').findOne({
     _id: new ObjectID(req.params.submissionId),
@@ -754,13 +761,31 @@ app.get('/resend_submission_action/:submissionId', async (req, res) => {
 
     const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
 
+    let ccPeople;
+    let bccPeople;
+    let to;
+
     // eslint-disable-next-line no-underscore-dangle
-    const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
-    const bccPeople = ['sirbranson67@gmail.com', 'skuria@braiven.io']
-    sendDocumentEmails({
+    const { DISABLE_PDF_GENERATION } = process.env
+
+    if (parseInt(DISABLE_PDF_GENERATION)) {
+      console.log("*** DISABLE_PDF_GENERATION pdf generation is disabled, ")
+    }
+
+    if (!req.body.real) {
+      to = 'sirbranson67@gmail.com'
+      ccPeople = [];
+      bccPeople = []
+    } else {
+      to = entry.__agentEmail
+      ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
+      bccPeople = ['sirbranson67@gmail.com', 'skuria@braiven.io']
+    }
+
+    const emailSendRes = await sendDocumentEmails({
       from: `"National Treasury via Braiven Datakit " <${process.env.EMAIL_BASE}>`,
       // eslint-disable-next-line no-underscore-dangle
-      to: entry.__agentEmail,
+      to,
       cc: ccPeople.join(','),
       bcc: bccPeople.join(','),
       subject: `'${project.name}' Submission`,
@@ -780,6 +805,10 @@ app.get('/resend_submission_action/:submissionId', async (req, res) => {
         contentType: 'application/pdf',
       }],
     });
+
+    return res.status(200).send({
+      emailSendRes
+    })
   });
 })
 
