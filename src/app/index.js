@@ -302,7 +302,7 @@ app.post(
   }),
   async (req, res) => {
     const { username, password } = req.body;
-    const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitome@gmail.com'];
+    const allowedAdmins = ['gitomehbranson@gmail.com', 'kuriagitome@gmail.com'];
 
     console.log('authenticating management', username);
     if (allowedAdmins.includes(username)) {
@@ -366,7 +366,7 @@ app.post(
 
       if (userData.password === sha1(password)) {
         userLoggedIn({
-          to: 'sirbranson67@gmail.com',
+          to: 'gitomehbranson@gmail.com',
           data: {
             email,
           },
@@ -704,7 +704,7 @@ app.post('/submision', async (req, res) => {
         // eslint-disable-next-line no-underscore-dangle
         to: cleanCopy.__agentEmail,
         cc: ccPeople.join(','),
-        bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
+        bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
         subject: `'${project.name}' Submission`,
         message: `
         Dear ${upper(__agentFirstName.toLowerCase())},
@@ -773,13 +773,13 @@ app.post('/resend_submission_action/:submissionId', async (req, res) => {
     }
 
     if (!req.body.real) {
-      to = 'sirbranson67@gmail.com'
+      to = 'gitomehbranson@gmail.com'
       ccPeople = [];
       bccPeople = []
     } else {
       to = entry.__agentEmail
       ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
-      bccPeople = ['sirbranson67@gmail.com', 'skuria@braiven.io']
+      bccPeople = ['gitomehbranson@gmail.com', 'skuria@braiven.io']
     }
 
     const emailSendRes = await sendDocumentEmails({
@@ -1047,7 +1047,7 @@ hemera.add(action, async (args) => {
   });
 
   userCreatedAccount({
-    to: 'sirbranson67@gmail.com',
+    to: 'gitomehbranson@gmail.com',
     data: {
       email,
     },
@@ -1178,7 +1178,7 @@ hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
   });
 
   userCreatedAccount({
-    to: 'sirbranson67@gmail.com',
+    to: 'gitomehbranson@gmail.com',
     data: {
       email,
     },
@@ -1348,7 +1348,7 @@ hemera.add({
   });
 
   userCreatedAccount({
-    to: 'sirbranson67@gmail.com',
+    to: 'gitomehbranson@gmail.com',
     data: {
       email,
     },
