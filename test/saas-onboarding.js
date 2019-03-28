@@ -33,6 +33,9 @@ const hemera = new Hemera(nats, {
 });
 
 const registrationData = {
+  firstName: "sir",
+  middleName: "Branson",
+  lastName: "Gitomeh",
   username: 'branson',
   password: 'passw',
   email: 'sirbranson67@gmail.com',
@@ -324,6 +327,42 @@ describe('Books', function () {
         });
     });
     // it("graph should fetch all the demo items needed", done => { done() })
+    it("it should  insert a new user", done => {
+      chai
+        .request(server)
+        .post('/graphql')
+        .set('auth', token)
+        .send({
+          query: `
+        mutation($user:newUser!){
+          userMutations{
+              create(user:$user){
+            id
+          }
+          }
+        }
+        `,
+          variables: JSON.stringify({
+            user: {
+              firstName: "David",
+              middleName: "Mungai",
+              lastName: "M",
+              email: "mungahdaudi@gmail.com",
+              city: "Nairobi",
+              address: "12345",
+              phoneNumber: "1234567",
+              mobileMoneyNumber: "1234567",
+              password: "1234567",
+              client: clientId
+            }
+          })
+        })
+        .end((err, res) => {
+          res.body.data.userMutations.create.id.should.exist
+        })
+
+      done()
+    })
     it('should insert a new role', done => {
       chai
         .request(server)
