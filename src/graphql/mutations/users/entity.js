@@ -1,6 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 import sha1 from 'sha1';
 
+import emit from '../../../app/actions/index';
+import actions from '../../../app/actions/action_map';
+
 const PNF = require('google-libphonenumber').PhoneNumberFormat;
 
 // Get an instance of `PhoneNumberUtil`.
@@ -78,6 +81,8 @@ const create = async (args, { db, ObjectId, log }) => {
     entry,
     { upsert: true, safe: false },
   );
+
+  emit({ action: actions.USER_CREATED, data: entry });
   // eslint-disable-next-line no-underscore-dangle
   entry.id = entry._id;
   return entry;
