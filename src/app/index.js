@@ -532,7 +532,7 @@ const { getBrowserInstance } = require('./browserInstance');
 
 const makePdf = async (path, params, cb) => {
   const { MASTER_TOKEN, NODE_ENV } = process.env;
-  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
+  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3002' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
   console.log(bookingUrl);
   try {
     await getBrowserInstance().then(async (browser) => {
@@ -562,7 +562,7 @@ const makePdf = async (path, params, cb) => {
     });
   } catch (err) {
     console.error('DOC_GEN_FAIL', err.message, { path, params });
-    // return makePdf(path, params, cb)
+    return makePdf(path, params, cb)
   }
 };
 
@@ -617,7 +617,7 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
 
         console.log('=====>', cleanCopy[key]);
       }
@@ -690,10 +690,76 @@ app.post('/submision', async (req, res) => {
 
     // eslint-disable-next-line no-underscore-dangle
     const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
+
+    try {
+      const mailResponse = await sendDocumentEmails({
+        from: `"National Treasury via Braiven Datakit " <${process.env.EMAIL_BASE}>`,
+        // eslint-disable-next-line no-underscore-dangle
+        to: cleanCopy.__agentEmail,
+        cc: ccPeople.join(','),
+        bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
+        subject: `'${project.name}' Submission`,
+        message: `
+        Dear ${upper(__agentFirstName.toLowerCase())},
+        <br>
+        <br>
+        The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
+        <br>
+        <br>
+        Regards, The National Treasury
+      `,
+        attachments: [{
+          // eslint-disable-next-line no-underscore-dangle
+          filename: `${submited._id}.pdf`,
+          content: fs.createReadStream(path),
+          contentType: 'application/pdf',
+        }],
+      });
+
+      await db.collection('submision-emails').insertOne(mailResponse);
+    } catch(err) {
+      await db.collection('submision-email-failures').insertOne(err);
+    }
+  });
+});
+
+app.get('/resend_submission_action/:submissionId', async (req, res) => {
+  console.log("regenerating document for ", req.params.submissionId)
+  const entry = await db.collection('submision').findOne({
+    _id: new ObjectID(req.params.submissionId),
+  });
+
+  console.log({ entry })
+
+  if (!entry) {
+    return res.status(404).send({ message: "could not find the submission" })
+  }
+
+  console.log("found the document", req.params.submissionId)
+
+  const path = `./dist/${entry._id}.pdf`;
+
+  await makePdf(path, {
+    q: entry.questionnaireId,
+    a: req.params.submissionId,
+  }, async () => {
+    // -------------------------------fetch project details to make a nice project body --------------------
+    const project = await db.collection('project').findOne({
+      _id: new ObjectID(entry.projectId),
+    });
+
+    const {
+      __agentFirstName = '',
+    } = entry;
+
+    const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+
+    // eslint-disable-next-line no-underscore-dangle
+    const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
     sendDocumentEmails({
       from: `"National Treasury via Braiven Datakit " <${process.env.EMAIL_BASE}>`,
       // eslint-disable-next-line no-underscore-dangle
-      to: cleanCopy.__agentEmail,
+      to: entry.__agentEmail,
       cc: ccPeople.join(','),
       bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
       subject: `'${project.name}' Submission`,
@@ -708,13 +774,13 @@ app.post('/submision', async (req, res) => {
     `,
       attachments: [{
         // eslint-disable-next-line no-underscore-dangle
-        filename: `${submited._id}.pdf`,
+        filename: `${entry._id}.pdf`,
         content: fs.createReadStream(path),
         contentType: 'application/pdf',
       }],
     });
   });
-});
+})
 
 const action = {
   topic: 'registratin',
@@ -1499,9 +1565,6 @@ app.post(
   bodyParser.urlencoded({ extended: false }),
   bodyParser.json(),
   async (req, res) => {
-    // console.log(req.body);
-    // console.log(req.file);
-
     const { questionnaire = '', tag = '', interviewId = '' } = req.body;
     const [, ext] = req.file.originalname.split('.');
 

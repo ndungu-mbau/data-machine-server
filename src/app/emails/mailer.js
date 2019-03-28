@@ -44,21 +44,6 @@ export const sendMail = ({ from, to, subject, message, attachments, cc, bcc }) =
 
         // send mail with defined transport object
         transporter.sendMail(mailOptions, async (error, info) => {
-            console.log({ error, info });
-            // async save the email send to our collection on google
-            // const emailSends = datastore.key('emailSends');
-
-            // await datastore.save({
-            //   key: emailSends,
-            //   data: Object.assign(
-            //     {},
-            //     { error },
-            //     info,
-            //     { subject },
-            //     { message, triggedAt: new Date().toISOString() },
-            //   ),
-            // });
-
             if (error) {
                 return reject(error);
             }
@@ -77,11 +62,11 @@ const registrationThanks = async ({
     var message = tempFn(data);
     // console.log(resusltEmail)
 
-    sendMail({
+    return sendMail({
         to,
         subject,
         message
-    }).catch(console.log)
+    })
 }
 
 const accountActivationEmail = async ({
@@ -92,11 +77,11 @@ const accountActivationEmail = async ({
   const tempFn = doT.template((await readFile('src/app/emails/activate-account.html', 'utf8')));
   var message = tempFn(data);
 
-  sendMail({
+  return sendMail({
       to,
       subject,
       message
-  }).catch(console.log)
+  })
 }
 
 const passwordResetEmail = async ({
@@ -107,11 +92,11 @@ const passwordResetEmail = async ({
     const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
     var message = tempFn(data);
 
-    sendMail({
+    return sendMail({
         to,
         subject,
         message
-    }).catch(console.log)
+    })
 }
 
 const userLoggedIn = async ({
@@ -122,11 +107,11 @@ const userLoggedIn = async ({
     // const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
     // var message = tempFn(data);
 
-    sendMail({
+    return sendMail({
         to,
         subject,
         message: data.email + " just logged in"
-    }).catch(console.log)
+    })
 }
 
 const appUserLoggedIn = async ({
@@ -187,17 +172,15 @@ const sendDocumentEmails = ({
     subject = `Your document is now ready`,
     message,
     attachments
-}) => {
-    sendMail({
-        to,
-        from,
-        cc,
-        bcc,
-        subject,
-        message,
-        attachments
-    }).catch(console.log)
-}
+}) => sendMail({
+    to,
+    from,
+    cc,
+    bcc,
+    subject,
+    message,
+    attachments
+})
 
 export {
     registrationThanks,
