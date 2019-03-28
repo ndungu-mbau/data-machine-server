@@ -756,12 +756,13 @@ app.get('/resend_submission_action/:submissionId', async (req, res) => {
 
     // eslint-disable-next-line no-underscore-dangle
     const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
+    const bccPeople = ['sirbranson67@gmail.com', 'skuria@braiven.io']
     sendDocumentEmails({
       from: `"National Treasury via Braiven Datakit " <${process.env.EMAIL_BASE}>`,
       // eslint-disable-next-line no-underscore-dangle
       to: entry.__agentEmail,
       cc: ccPeople.join(','),
-      bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
+      bcc: bccPeople.join(','),
       subject: `'${project.name}' Submission`,
       message: `
       Dear ${upper(__agentFirstName.toLowerCase())},
