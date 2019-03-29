@@ -968,7 +968,7 @@ hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
 
   // create base data
   await db.collection('user').insertOne(legacyUser);
-  await db.collection('role').insertOne({ userId: legacyUser._id, clientId: legacyUser.client, admin: 'role' });
+  await db.collection('role').insertOne({ userId: legacyUser._id, clientId: legacyUser.client, admin: 'role' ,destroyed:false});
   await db.collection('company').insertOne(company);
   await db.collection('activation').insertOne(activation);
 
