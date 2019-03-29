@@ -526,8 +526,8 @@ app.post(
       destroyed: false,
     });
 
-    await db.collection('user').insertOne(user);
 
+    await db.collection('user').insertOne(user);
     return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) });
   },
 );
@@ -830,12 +830,6 @@ hemera.add(action, async (args) => {
     userActivated: false,
   };
 
-  const role = {
-    client: company._id,
-    userId: legacyUser._id,
-    destroyed: false,
-    name: 'admin',
-  };
 
   // check for existing emails and throw errors
   const [existingUser] = await db
@@ -849,7 +843,6 @@ hemera.add(action, async (args) => {
 
   // create base data
   await db.collection('user').insertOne(legacyUser);
-  await db.collection('role').insertOne(role);
   await db.collection('settings').insertOne(settings);
   await db.collection('billing').insertOne(billing);
   await db.collection('saasUser').insertOne(user);
@@ -975,6 +968,7 @@ hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
 
   // create base data
   await db.collection('user').insertOne(legacyUser);
+  await db.collection('role').insertOne({ userId: legacyUser._id, clientId: legacyUser.client, admin: 'role' });
   await db.collection('company').insertOne(company);
   await db.collection('activation').insertOne(activation);
 
