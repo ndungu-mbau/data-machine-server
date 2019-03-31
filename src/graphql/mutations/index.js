@@ -106,6 +106,12 @@ import {
   root as sentenceRoot,
 } from './questionnaires/pages/groups/questions/sentences';
 
+import {
+  type as submissionGroupsType,
+  queries as submissionGroupsMutations,
+  root as submissionGroupsRoot,
+} from './submission-groups';
+
 const typeMutations = `
 ${clientsType},
 ${teamsType},
@@ -124,6 +130,7 @@ ${constantType},
 ${optionsType},
 ${questionsType},
 ${sentenceType},
+${submissionGroupsType},
 ${rolesType},
 type Mutation {
     honk: String,
@@ -145,6 +152,7 @@ type Mutation {
     ${questionsMutations},
     ${optionsMutations},
     ${sentenceMutations},
+    ${submissionGroupsMutations}
     ${roleMutations}
 }`;
 
@@ -167,6 +175,7 @@ Object.assign(mutationRoot, chartRoot);
 Object.assign(mutationRoot, constantRoot);
 Object.assign(mutationRoot, layoutRoot);
 Object.assign(mutationRoot, dashboardRoot);
+Object.assign(mutationRoot, submissionGroupsRoot);
 Object.assign(mutationRoot, roleRoot);
 
 export { typeMutations, mutationRoot };

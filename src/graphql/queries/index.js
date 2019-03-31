@@ -114,6 +114,12 @@ import {
   root as sentencesRoot,
 } from './questionnaires/pages/groups/questions/sentences';
 
+import {
+  type as submissionGroupsType,
+  queries as submissionGroupsQueries,
+  root as submissionGroupsRoot,
+  nested as submissionGroupsNested,
+} from './submission-groups';
 
 import {
   type as roleType,
@@ -123,7 +129,7 @@ import {
 } from './roles/index';
 
 
-const typeQueries = ` 
+const typeQueries = `
   ${roleType}
   ${clientType},
   ${billingType},
@@ -143,6 +149,7 @@ const typeQueries = `
   ${questionType},
   ${optionsType},
   ${sentencesType},
+  ${submissionGroupsType},
   type Query {
       hello: String,
       ${roleQueries},
@@ -165,6 +172,7 @@ const typeQueries = `
       ${groupQueries}
       ${optionsQueries}
       ${sentencesQueries}
+      ${submissionGroupsQueries}
   }`;
 
 const Query = {
@@ -183,6 +191,7 @@ Object.assign(
   pagesNested,
   groupsNested,
   billingQueriesNested,
+  submissionGroupsNested,
   rolesNested,
 );
 
@@ -208,6 +217,7 @@ Object.assign(
   questionnaireRoot,
   teamRoot,
   billingRoot,
+  submissionGroupsRoot,
 );
 
 const queryRoot = { Query, Nested };
