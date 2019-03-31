@@ -540,7 +540,7 @@ const makeDashboardPdf = async (path, params, cb) => {
   try {
     await getBrowserInstance().then(async (browser) => {
       const page = await browser.newPage();
-      await page.setViewport({ width: 1920, height: 926 });
+      // await page.setViewport({ width: 1920, height: 926 });
       await page.goto(bookingUrl);
       // eslint-disable-next-line no-shadow
       await page.evaluate((MASTER_TOKEN) => {
