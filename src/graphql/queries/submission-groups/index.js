@@ -5,12 +5,6 @@ const type = `
     destroyed: Boolean,
     submissions: [String]
   }
-
-  input filter {
-    destroyed: Boolean,
-    offset: String,
-    limit:String
-  }
 `;
 
 const queries = `
@@ -27,13 +21,7 @@ const root = {
   submissionGroups,
 };
 
-const nested = {
-  submissionGroupSubmissions: ({ id }, _, { db, ObjectId }) => db
-    .collection('submission-group-submissions')
-    .find({ submissionGroup: new ObjectId(id) })
-    .toArray()
-    .reduce((acc, curr) => acc.append(curr.submission), []),
-};
+const nested = {};
 
 export {
   type,
