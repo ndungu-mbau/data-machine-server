@@ -324,7 +324,10 @@ app.post(
             password: undefined,
             token: jwt.sign(userData, config[NODE_ENV].managementHashingSecret),
           }));
+        } else {
+          console.log("**** passwords did not match")
         }
+        console.log("**** user was not found on db")
       }
 
       return res
@@ -529,6 +532,42 @@ app.post(
 
 
 const { getBrowserInstance } = require('./browserInstance');
+
+const makeDashboardPdf = async (path, params, cb) => {
+  const { MASTER_TOKEN, NODE_ENV } = process.env;
+  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:1234' : 'https://data-machine.braiven.io'}/dashboard.html#!/${params.q}/dashboard/${params.a}`;
+  console.log(bookingUrl);
+  try {
+    await getBrowserInstance().then(async (browser) => {
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1920, height: 926 });
+      await page.goto(bookingUrl);
+      // eslint-disable-next-line no-shadow
+      await page.evaluate((MASTER_TOKEN) => {
+        // eslint-disable-next-line no-undef
+        localStorage.setItem('auth2', MASTER_TOKEN);
+      }, MASTER_TOKEN);
+      await page.goto(bookingUrl, {
+        // timeout: 5000,
+        waitUntil: ['load', 'networkidle2'],
+      });
+      console.log('===>', 'saving the pdf', path);
+      await page.pdf({
+        path,
+        format: 'A4',
+        margin: {
+          top: '100px',
+          bottom: '100px',
+        },
+      });
+      // call callback when we are sure
+      cb();
+    });
+  } catch (err) {
+    console.error('DOC_GEN_FAIL', err.message, { path, params });
+    // return makePdf(path, params, cb)
+  }
+};
 
 const makePdf = async (path, params, cb) => {
   const { MASTER_TOKEN, NODE_ENV } = process.env;
@@ -1631,12 +1670,21 @@ app.get(
   },
 );
 
+app.get(
+  '/printableDash/:q/:d',
+  bodyParser.urlencoded({ extended: false }),
+  bodyParser.json(),
+  async (req, res) => {
+    const path = `./dist/${req.params.d}.pdf`;
+
+    await makeDashboardPdf(path, req.params, async () => {
+      res.setHeader('content-type', 'some/type');
+      fs.createReadStream(`./dist/${req.params.d}.pdf`).pipe(res);
+    });
+  },
+);
+
 
 app.use(errors());
 
 export default app;
-
-// hemera.add({
-//   topic: 'printer',
-//   cmd: 'printSubmission',
-// }, async args => makeDoc(args));
