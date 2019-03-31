@@ -39,6 +39,19 @@ describe('my suite', () => {
             }
         )
     });
+    it("graph should be subscribe to a new user created", done => {
+        hemera.add(
+            {
+                pubsub$: true,
+                topic: 'ACTION_EMMISION',
+                cmd: 'USER_CREATED'
+            },
+            function (req) {
+                req.data._id.should.exist
+            }
+        )
+        done()
+    })
 });
 
 
