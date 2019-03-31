@@ -109,8 +109,8 @@ import {
 import {
   type as submissionGroupsType,
   queries as submissionGroupsMutations,
-  root as submissionGroupsRoot
-} from './submission-groups'
+  root as submissionGroupsRoot,
+} from './submission-groups';
 
 const typeMutations = `
 ${clientsType},
@@ -175,7 +175,7 @@ Object.assign(mutationRoot, chartRoot);
 Object.assign(mutationRoot, constantRoot);
 Object.assign(mutationRoot, layoutRoot);
 Object.assign(mutationRoot, dashboardRoot);
-Object.assign(mutationRoot, submissionGroupsRoot)
+Object.assign(mutationRoot, submissionGroupsRoot);
 Object.assign(mutationRoot, roleRoot);
 
 export { typeMutations, mutationRoot };

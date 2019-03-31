@@ -4,8 +4,8 @@ import {
   destroy,
   restore,
   addSubmission,
-  removeSubmission
-} from './entity'
+  removeSubmission,
+} from './entity';
 
 const type = `
   input newSubmissionGroup {
@@ -34,12 +34,12 @@ const root = {
     destroy,
     restore,
     addSubmission,
-    removeSubmission
+    removeSubmission,
   }),
 };
 
-export default {
+export {
   type,
   queries,
-  root
-}
+  root,
+};

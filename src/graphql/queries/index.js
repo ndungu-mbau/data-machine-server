@@ -118,7 +118,7 @@ import {
   type as submissionGroupsType,
   queries as submissionGroupsQueries,
   root as submissionGroupsRoot,
-  nested as submissionGroupsNested
+  nested as submissionGroupsNested,
 } from './submission-groups';
 
 import {
@@ -182,42 +182,42 @@ const Query = {
 const Nested = {};
 
 Object.assign(
-  Nested
-  , clientQueriesNested
-  , teamUsersNested
-  , projectQueriesNested
-  , userNested
-  , questionnaireNested
-  , pagesNested
-  , groupsNested
-  , billingQueriesNested
-  , submissionGroupsNested
-  , rolesNested
-)
+  Nested,
+  clientQueriesNested,
+  teamUsersNested,
+  projectQueriesNested,
+  userNested,
+  questionnaireNested,
+  pagesNested,
+  groupsNested,
+  billingQueriesNested,
+  submissionGroupsNested,
+  rolesNested,
+);
 
 
 Object.assign(
-  Query
-  , rolesRoot
-  , projectRoot
-  , userRoot
-  , pageRoot
-  , groupRoot
-  , questionRoot
-  , optionsRoot
-  , clientRoot
-  , sentencesRoot
-  , dashboardsRoot
-  , layoutsRoot
-  , cpRoot
-  , cpdRoot
-  , chartsRoot
-  , constantsRoot
-  , aliasesRoot
-  , questionnaireRoot
-  , teamRoot
-  , billingRoot
-  , submissionGroupsRoot
+  Query,
+  rolesRoot,
+  projectRoot,
+  userRoot,
+  pageRoot,
+  groupRoot,
+  questionRoot,
+  optionsRoot,
+  clientRoot,
+  sentencesRoot,
+  dashboardsRoot,
+  layoutsRoot,
+  cpRoot,
+  cpdRoot,
+  chartsRoot,
+  constantsRoot,
+  aliasesRoot,
+  questionnaireRoot,
+  teamRoot,
+  billingRoot,
+  submissionGroupsRoot,
 );
 
 const queryRoot = { Query, Nested };
