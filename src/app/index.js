@@ -1612,7 +1612,16 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
 
       console.log('running compoundedProps eval on computed', { formular: form.formular, resultFormular });
 
-      copyRecord[form.name] = math.eval(resultFormular);
+
+      let calcRes;
+      try {
+        const mathRes = math.eval(resultFormular);
+        calcRes = Math.round(Number(mathRes) * 100) / 100;
+      } catch (err) {
+        calcRes = err;
+      }
+
+      copyRecord[form.name] = calcRes;
     });
     Object.assign(copyRecord, row);
     return copyRecord;
@@ -1626,8 +1635,15 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
 
       console.log('running compoundedProps eval on computed', { formular: c.formular, resultFormular });
 
-      const compiled = math.eval(resultFormular);
-      compounded[c.name] = compiled;
+      let calcRes;
+      try {
+        const mathRes = math.eval(resultFormular);
+        calcRes = Math.round(Number(mathRes) * 100) / 100;
+      } catch (err) {
+        calcRes = err;
+      }
+
+      compounded[c.name] = calcRes;
       return;
     }
 
