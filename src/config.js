@@ -1,7 +1,6 @@
 
 const { DB_URL: url = 'mongodb://localhost:27017/databank_dev' } = process.env;
 
-
 const config = {
   production: {
     db: {

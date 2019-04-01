@@ -966,9 +966,24 @@ hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
     ),
   });
 
+  const role = {
+    _id: new ObjectId(),
+    clientId: company._id,
+    role: 'admin',
+    destroyed: false,
+  };
+
+  const user_role = {
+    _id: new ObjectId(),
+    role: role._id,
+    userId: legacyUser._id,
+    destroyed: false,
+  };
+
   // create base data
   await db.collection('user').insertOne(legacyUser);
-  await db.collection('role').insertOne({ userId: legacyUser._id, clientId: legacyUser.client, admin: 'role', destroyed: false });
+  await db.collection('role').insertOne(role);
+  await db.collection('user_roles').insertOne(user_role);
   await db.collection('company').insertOne(company);
   await db.collection('activation').insertOne(activation);
 
