@@ -113,7 +113,7 @@ const nested = {
     roles: async ({ id }, args, { db }) => {
       const data = await db
         .collection('role')
-        .find({ client: id, destroyed: false })
+        .find({ clientId: id, destroyed: false })
         .toArray();
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
