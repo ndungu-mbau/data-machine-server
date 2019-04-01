@@ -35,41 +35,40 @@ function makeShortPassword() {
 const create = async (args, { db, ObjectId, log }) => {
   const entry = args[collection];
 
-  const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
-  const coolNumber = phoneUtil.format(number, PNF.E164);
-
   // check if there is an entry with that phoneNumber
   const existingUser = await db.collection(collection).findOne({ phoneNumber: entry.phoneNumber });
   if (existingUser) {
     // eslint-disable-next-line no-underscore-dangle
     existingUser.id = existingUser._id;
     // eslint-disable-next-line no-console
-    console.log('User already exists,upserting', coolNumber);
-    // return existingUser;
+    log.info('User already exists,upserting', entry.phoneNumber);
   }
+
   // ask for the country and use that here - then ask to confirm
-
-
+  // ------------------------------------------------------------------------------------------
   const tempPassword = makeShortPassword();
+  if (args.user.sendWelcomeSms === true) {
+    const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
+    const coolNumber = phoneUtil.format(number, PNF.E164);
 
-  const action = {
-    topic: 'exec',
-    cmd: 'sms_nalm_treasury_pwc_1',
-    data: {
-      password: entry.password ? entry.password : tempPassword,
-      phone: entry.phoneNumber,
-    },
-  };
+    const action = {
+      topic: 'exec',
+      cmd: 'sms_nalm_treasury_pwc_1',
+      data: {
+        password: entry.password ? entry.password : tempPassword,
+        phone: entry.phoneNumber,
+      },
+    };
 
-  // eslint-disable-next-line no-console
-  log.info(action);
+    // eslint-disable-next-line no-console
+    console.log(action);
 
-  hemera.act(action, (err) => {
-    if (err) {
-      log.info('Error sending sms to ', entry.phoneNumber, coolNumber, err);
-    }
-  });
-
+    hemera.act(action, (err) => {
+      if (err) {
+        log.info('Error sending sms to ', entry.phoneNumber, coolNumber, err);
+      }
+    });
+  }
   Object.assign(entry, {
     _id: new ObjectId(),
     password: entry.password ? sha1(entry.password) : sha1(tempPassword),

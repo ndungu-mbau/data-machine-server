@@ -307,7 +307,7 @@ app.post(
   }),
   async (req, res) => {
     const { username, password } = req.body;
-    const allowedAdmins = ['sirbranson67@gmail.com', 'kuriagitome@gmail.com'];
+    const allowedAdmins = ['gitomehbranson@gmail.com', 'kuriagitome@gmail.com'];
 
     log.info('authenticating management', username);
     if (allowedAdmins.includes(username)) {
@@ -330,6 +330,9 @@ app.post(
             token: jwt.sign(userData, config[NODE_ENV].managementHashingSecret),
           }));
         }
+        log.info('**** passwords did not match');
+
+        log.info('**** user was not found on db');
       }
 
       return res
@@ -372,7 +375,7 @@ app.post(
 
       if (userData.password === sha1(password)) {
         userLoggedIn({
-          to: 'sirbranson67@gmail.com',
+          to: 'gitomehbranson@gmail.com',
           data: {
             email,
           },
@@ -535,8 +538,44 @@ app.post(
 
 const { getBrowserInstance } = require('./browserInstance');
 
+const makeDashboardPdf = async (path, params, cb) => {
+  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:1234' : 'https://data-machine.braiven.io'}/dashboard.html#!/${params.q}/dashboard/${params.a}`;
+  log.info(bookingUrl);
+  try {
+    await getBrowserInstance().then(async (browser) => {
+      const page = await browser.newPage();
+      // await page.setViewport({ width: 1920, height: 926 });
+      await page.goto(bookingUrl);
+      // eslint-disable-next-line no-shadow
+      await page.evaluate((MASTER_TOKEN) => {
+        // eslint-disable-next-line no-undef
+        localStorage.setItem('auth2', MASTER_TOKEN);
+      }, MASTER_TOKEN);
+      await page.goto(bookingUrl, {
+        // timeout: 5000,
+        waitUntil: ['load', 'networkidle2'],
+      });
+      log.info('===>', 'saving the pdf', path);
+      await page.pdf({
+        path,
+        format: 'A4',
+        margin: {
+          top: '100px',
+          bottom: '100px',
+        },
+      });
+      // call callback when we are sure
+      cb();
+    });
+  } catch (err) {
+    log.error('DOC_GEN_FAIL', err.message, { path, params });
+    // return makePdf(path, params, cb)
+  }
+};
+
 const makePdf = async (path, params, cb) => {
-  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3000' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
+  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3002' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
+  log.info(bookingUrl);
   try {
     await getBrowserInstance().then(async (browser) => {
       const page = await browser.newPage();
@@ -670,13 +709,128 @@ app.post('/submision', async (req, res) => {
     }
   });
 
+  const { DISABLE_PDF_GENERATION } = process.env;
+
+  // eslint-disable-next-line radix
+  if (parseInt(DISABLE_PDF_GENERATION)) {
+    log.info('*** DISABLE_PDF_GENERATION pdf generation is disabled, ');
+
+    // eslint-disable-next-line consistent-return
+    return;
+  }
+
+  // eslint-disable-next-line no-underscore-dangle
   const path = `./dist/${submited._id}.pdf`;
 
   return makePdf(path, {
     q: cleanCopy.questionnaireId,
+    // eslint-disable-next-line no-underscore-dangle
     a: entry._id,
   }, async () => {
-    const { name: projectName } = await db.collection('project').findOne({
+    // --------fetch project details to make a nice project body --------------------
+    // send only for nalm things
+    if (submission.projectId === '5beab5708c9a406732c117a2') {
+      // eslint-disable-next-line no-shadow
+      const {
+        __agentFirstName = '',
+      } = entry;
+
+      const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+
+      // eslint-disable-next-line no-underscore-dangle
+      const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
+
+      try {
+        const mailResponse = await sendDocumentEmails({
+          from: `"National Treasury via Braiven Datakit " <${EMAIL_BASE}>`,
+          // eslint-disable-next-line no-underscore-dangle
+          to: cleanCopy.__agentEmail,
+          cc: ccPeople.join(','),
+          bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
+          subject: `'${project.name}' Submission`,
+          message: `
+          Dear ${upper(__agentFirstName.toLowerCase())},
+          <br>
+          <br>
+          The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
+          <br>
+          <br>
+          Regards, The National Treasury
+        `,
+          attachments: [{
+            // eslint-disable-next-line no-underscore-dangle
+            filename: `${submited._id}.pdf`,
+            content: fs.createReadStream(path),
+            contentType: 'application/pdf',
+          }],
+        });
+
+        await db.collection('submision-emails').insertOne(mailResponse);
+      } catch (err) {
+        await db.collection('submision-email-failures').insertOne(err);
+      }
+    } else {
+      const {
+        __agentFirstName = '',
+      } = entry;
+
+      const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+
+      // eslint-disable-next-line no-underscore-dangle
+      try {
+        const mailResponse = await sendDocumentEmails({
+          from: `"Braiven Datakit " <${EMAIL_BASE}>`,
+          // eslint-disable-next-line no-underscore-dangle
+          to: cleanCopy.__agentEmail,
+          bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
+          subject: `'${project.name}' Submission`,
+          message: `
+          Dear ${upper(__agentFirstName.toLowerCase())},
+          <br>
+          <br>
+          The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
+          <br>
+          <br>
+          Regards,
+        `,
+          attachments: [{
+            // eslint-disable-next-line no-underscore-dangle
+            filename: `${submited._id}.pdf`,
+            content: fs.createReadStream(path),
+            contentType: 'application/pdf',
+          }],
+        });
+
+        await db.collection('submision-emails').insertOne(mailResponse);
+      } catch (err) {
+        await db.collection('submision-email-failures').insertOne(err);
+      }
+    }
+  });
+});
+
+app.post('/resend_submission_action/:submissionId', async (req, res) => {
+  log.info('regenerating document for ', req.params.submissionId);
+  const entry = await db.collection('submision').findOne({
+    _id: new ObjectID(req.params.submissionId),
+  });
+
+  log.info({ entry });
+
+  if (!entry) {
+    return res.status(404).send({ message: 'could not find the submission' });
+  }
+
+  log.info('found the document', req.params.submissionId);
+
+  const path = `./dist/${entry._id}.pdf`;
+
+  return makePdf(path, {
+    q: entry.questionnaireId,
+    a: req.params.submissionId,
+  }, async () => {
+    // -----fetch project details to make a nice project body ---------
+    const project = await db.collection('project').findOne({
       _id: new ObjectID(entry.projectId),
     });
 
@@ -686,15 +840,35 @@ app.post('/submision', async (req, res) => {
 
     const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
 
+    let ccPeople;
+    let bccPeople;
+    let to;
+
     // eslint-disable-next-line no-underscore-dangle
-    const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
-    sendDocumentEmails({
+    const { DISABLE_PDF_GENERATION } = process.env;
+
+    // eslint-disable-next-line radix
+    if (parseInt(Number(DISABLE_PDF_GENERATION))) {
+      log.info('*** DISABLE_PDF_GENERATION pdf generation is disabled, ');
+    }
+
+    if (!req.body.real) {
+      to = 'gitomehbranson@gmail.com';
+      ccPeople = [];
+      bccPeople = [];
+    } else {
+      to = entry.__agentEmail;
+      ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
+      bccPeople = ['gitomehbranson@gmail.com', 'skuria@braiven.io'];
+    }
+
+    const emailSendRes = await sendDocumentEmails({
       from: `"National Treasury via Braiven Datakit " <${EMAIL_BASE}>`,
       // eslint-disable-next-line no-underscore-dangle
-      to: cleanCopy.__agentEmail,
+      to,
       cc: ccPeople.join(','),
-      bcc: ['sirbranson67@gmail.com', 'skuria@braiven.io'],
-      subject: `'${projectName}' Submission`,
+      bcc: bccPeople.join(','),
+      subject: `'${project.name}' Submission`,
       message: `
       Dear ${upper(__agentFirstName.toLowerCase())},
       <br>
@@ -706,10 +880,14 @@ app.post('/submision', async (req, res) => {
     `,
       attachments: [{
         // eslint-disable-next-line no-underscore-dangle
-        filename: `${submited._id}.pdf`,
+        filename: `${entry._id}.pdf`,
         content: fs.createReadStream(path),
         contentType: 'application/pdf',
       }],
+    });
+
+    return res.status(200).send({
+      emailSendRes,
     });
   });
 });
@@ -872,12 +1050,17 @@ hemera.add(action, async (args) => {
     }),
   });
 
-  // userCreatedAccount({
-  //   to: 'sirbranson67@gmail.com',
-  //   data: {
-  //     email,
-  //   },
-  // });
+  userCreatedAccount({
+    to: 'gitomehbranson@gmail.com',
+    data: {
+      email,
+    },
+  });
+  // send out a sample project created email
+  // send out a process guide email
+  // send out a download our app email
+
+  // start tracking this user for the next 30 days
 
   return {
     user: user.id,
@@ -1015,7 +1198,7 @@ hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
   });
 
   return userCreatedAccount({
-    to: 'sirbranson67@gmail.com',
+    to: 'gitomehbranson@gmail.com',
     data: {
       email,
     },
@@ -1184,7 +1367,7 @@ hemera.add({
   });
 
   userCreatedAccount({
-    to: 'sirbranson67@gmail.com',
+    to: 'gitomehbranson@gmail.com',
     data: {
       email,
     },
@@ -1428,12 +1611,21 @@ app.get(
   },
 );
 
+app.get(
+  '/printableDash/:q/:d',
+  bodyParser.urlencoded({ extended: false }),
+  bodyParser.json(),
+  async (req, res) => {
+    const path = `./dist/${req.params.d}.pdf`;
+
+    await makeDashboardPdf(path, req.params, async () => {
+      res.setHeader('content-type', 'some/type');
+      fs.createReadStream(`./dist/${req.params.d}.pdf`).pipe(res);
+    });
+  },
+);
+
 
 app.use(errors());
 
 export default app;
-
-// hemera.add({
-//   topic: 'printer',
-//   cmd: 'printSubmission',
-// }, async args => makeDoc(args));
