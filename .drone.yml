@@ -15,6 +15,11 @@ pipeline:
       - yarn --version
       - yarn config set cache-folder .yarn-cache
       - yarn install --pure-lockfile
+  lint:
+    image: node:8.6.0
+    group: testing
+    commands:
+      - yarn run lint
   build-container:
     image: plugins/docker
     repo: registry.braiven.io/data-machine-server
