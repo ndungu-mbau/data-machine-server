@@ -324,10 +324,10 @@ app.post(
             password: undefined,
             token: jwt.sign(userData, config[NODE_ENV].managementHashingSecret),
           }));
-        } else {
-          console.log("**** passwords did not match")
         }
-        console.log("**** user was not found on db")
+        console.log('**** passwords did not match');
+
+        console.log('**** user was not found on db');
       }
 
       return res
@@ -656,7 +656,7 @@ app.post('/submision', async (req, res) => {
           key
         ] = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/${
           submission.questionnaireId
-          }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+        }_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
 
         console.log('=====>', cleanCopy[key]);
       }
@@ -710,78 +710,117 @@ app.post('/submision', async (req, res) => {
     }
   });
 
-  const { DISABLE_PDF_GENERATION } = process.env
+  const { DISABLE_PDF_GENERATION } = process.env;
 
+  // eslint-disable-next-line radix
   if (parseInt(DISABLE_PDF_GENERATION)) {
-    console.log("*** DISABLE_PDF_GENERATION pdf generation is disabled, ")
+    console.log('*** DISABLE_PDF_GENERATION pdf generation is disabled, ');
     return;
   }
 
+  // eslint-disable-next-line no-underscore-dangle
   const path = `./dist/${submited._id}.pdf`;
 
   await makePdf(path, {
     q: cleanCopy.questionnaireId,
+    // eslint-disable-next-line no-underscore-dangle
     a: entry._id,
   }, async () => {
     // -------------------------------fetch project details to make a nice project body --------------------
-    const project = await db.collection('project').findOne({
-      _id: new ObjectID(entry.projectId),
-    });
+    // send only for nalm things
+    if (submission.projectId === '5beab5708c9a406732c117a2') {
+      // eslint-disable-next-line no-shadow
+      const {
+        __agentFirstName = '',
+      } = entry;
 
-    const {
-      __agentFirstName = '',
-    } = entry;
+      const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
 
-    const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+      // eslint-disable-next-line no-underscore-dangle
+      const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
 
-    // eslint-disable-next-line no-underscore-dangle
-    const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
-
-    try {
-      const mailResponse = await sendDocumentEmails({
-        from: `"National Treasury via Braiven Datakit " <${process.env.EMAIL_BASE}>`,
-        // eslint-disable-next-line no-underscore-dangle
-        to: cleanCopy.__agentEmail,
-        cc: ccPeople.join(','),
-        bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
-        subject: `'${project.name}' Submission`,
-        message: `
-        Dear ${upper(__agentFirstName.toLowerCase())},
-        <br>
-        <br>
-        The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
-        <br>
-        <br>
-        Regards, The National Treasury
-      `,
-        attachments: [{
+      try {
+        const mailResponse = await sendDocumentEmails({
+          from: `"National Treasury via Braiven Datakit " <${process.env.EMAIL_BASE}>`,
           // eslint-disable-next-line no-underscore-dangle
-          filename: `${submited._id}.pdf`,
-          content: fs.createReadStream(path),
-          contentType: 'application/pdf',
-        }],
-      });
+          to: cleanCopy.__agentEmail,
+          cc: ccPeople.join(','),
+          bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
+          subject: `'${project.name}' Submission`,
+          message: `
+          Dear ${upper(__agentFirstName.toLowerCase())},
+          <br>
+          <br>
+          The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
+          <br>
+          <br>
+          Regards, The National Treasury
+        `,
+          attachments: [{
+            // eslint-disable-next-line no-underscore-dangle
+            filename: `${submited._id}.pdf`,
+            content: fs.createReadStream(path),
+            contentType: 'application/pdf',
+          }],
+        });
 
-      await db.collection('submision-emails').insertOne(mailResponse);
-    } catch (err) {
-      await db.collection('submision-email-failures').insertOne(err);
+        await db.collection('submision-emails').insertOne(mailResponse);
+      } catch (err) {
+        await db.collection('submision-email-failures').insertOne(err);
+      }
+    } else {
+      const {
+        __agentFirstName = '',
+      } = entry;
+
+      const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+
+      // eslint-disable-next-line no-underscore-dangle
+      try {
+        const mailResponse = await sendDocumentEmails({
+          from: `"Braiven Datakit " <${process.env.EMAIL_BASE}>`,
+          // eslint-disable-next-line no-underscore-dangle
+          to: cleanCopy.__agentEmail,
+          bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
+          subject: `'${project.name}' Submission`,
+          message: `
+          Dear ${upper(__agentFirstName.toLowerCase())},
+          <br>
+          <br>
+          The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
+          <br>
+          <br>
+          Regards,
+        `,
+          attachments: [{
+            // eslint-disable-next-line no-underscore-dangle
+            filename: `${submited._id}.pdf`,
+            content: fs.createReadStream(path),
+            contentType: 'application/pdf',
+          }],
+        });
+
+        await db.collection('submision-emails').insertOne(mailResponse);
+      } catch (err) {
+        await db.collection('submision-email-failures').insertOne(err);
+      }
     }
   });
 });
 
 app.post('/resend_submission_action/:submissionId', async (req, res) => {
-  console.log("regenerating document for ", req.params.submissionId)
+  console.log('regenerating document for ', req.params.submissionId);
   const entry = await db.collection('submision').findOne({
     _id: new ObjectID(req.params.submissionId),
   });
 
-  console.log({ entry })
+  console.log({ entry });
 
   if (!entry) {
-    return res.status(404).send({ message: "could not find the submission" })
+    return res.status(404).send({ message: 'could not find the submission' });
   }
 
-  console.log("found the document", req.params.submissionId)
+  console.log('found the document', req.params.submissionId);
 
   const path = `./dist/${entry._id}.pdf`;
 
@@ -805,20 +844,20 @@ app.post('/resend_submission_action/:submissionId', async (req, res) => {
     let to;
 
     // eslint-disable-next-line no-underscore-dangle
-    const { DISABLE_PDF_GENERATION } = process.env
+    const { DISABLE_PDF_GENERATION } = process.env;
 
     if (parseInt(DISABLE_PDF_GENERATION)) {
-      console.log("*** DISABLE_PDF_GENERATION pdf generation is disabled, ")
+      console.log('*** DISABLE_PDF_GENERATION pdf generation is disabled, ');
     }
 
     if (!req.body.real) {
-      to = 'gitomehbranson@gmail.com'
+      to = 'gitomehbranson@gmail.com';
       ccPeople = [];
-      bccPeople = []
+      bccPeople = [];
     } else {
-      to = entry.__agentEmail
+      to = entry.__agentEmail;
       ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
-      bccPeople = ['gitomehbranson@gmail.com', 'skuria@braiven.io']
+      bccPeople = ['gitomehbranson@gmail.com', 'skuria@braiven.io'];
     }
 
     const emailSendRes = await sendDocumentEmails({
@@ -846,10 +885,10 @@ app.post('/resend_submission_action/:submissionId', async (req, res) => {
     });
 
     return res.status(200).send({
-      emailSendRes
-    })
+      emailSendRes,
+    });
   });
-})
+});
 
 const action = {
   topic: 'registratin',
