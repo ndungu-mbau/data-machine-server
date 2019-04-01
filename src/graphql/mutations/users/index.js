@@ -17,7 +17,8 @@ const type = `
     phoneNumber: String,
     mobileMoneyNumber: String,
     password: String,
-    client: String
+    client: String,
+    sendWelcomeSms:Boolean
   }
 
   type userMutations {

@@ -28,41 +28,41 @@ function makeShortPassword() {
 const create = async (args, { db, ObjectId }) => {
   const entry = args[collection];
 
-  const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
-  const coolNumber = phoneUtil.format(number, PNF.E164);
-
   // check if there is an entry with that phoneNumber
   const existingUser = await db.collection(collection).findOne({ phoneNumber: entry.phoneNumber });
   if (existingUser) {
     // eslint-disable-next-line no-underscore-dangle
     existingUser.id = existingUser._id;
     // eslint-disable-next-line no-console
-    console.log('User already exists,upserting', coolNumber);
-    // return existingUser;
+    console.log('User already exists,upserting', entry.phoneNumber);
   }
+
   // ask for the country and use that here - then ask to confirm
+  // ------------------------------------------------------------------------------------------
+  if (args.user.sendWelcomeSms === true) {
+    const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
+    const coolNumber = phoneUtil.format(number, PNF.E164);
 
+    const tempPassword = makeShortPassword();
 
-  const tempPassword = makeShortPassword();
+    const action = {
+      topic: 'exec',
+      cmd: 'sms_nalm_treasury_pwc_1',
+      data: {
+        password: entry.password ? entry.password : tempPassword,
+        phone: entry.phoneNumber,
+      },
+    };
 
-  const action = {
-    topic: 'exec',
-    cmd: 'sms_nalm_treasury_pwc_1',
-    data: {
-      password: entry.password ? entry.password : tempPassword,
-      phone: entry.phoneNumber,
-    },
-  };
+    // eslint-disable-next-line no-console
+    console.log(action);
 
-  // eslint-disable-next-line no-console
-  console.log(action);
-
-  hemera.act(action, (err) => {
-    if (err) {
-      console.log('Error sending sms to ', entry.phoneNumber, coolNumber, err);
-    }
-  });
-
+    hemera.act(action, (err) => {
+      if (err) {
+        console.log('Error sending sms to ', entry.phoneNumber, coolNumber, err);
+      }
+    });
+  }
   Object.assign(entry, {
     _id: new ObjectId(),
     password: entry.password ? sha1(entry.password) : sha1(tempPassword),
@@ -97,7 +97,10 @@ const update = async (args, { db, ObjectId }) => {
       });
   }
   return db.collection(collection)
-    .updateOne({ _id: new ObjectId(entry.id) }, { $set: Object.assign({}, entry, { id: undefined }) });
+    .updateOne(
+      { _id: new ObjectId(entry.id) },
+      { $set: Object.assign({}, entry, { id: undefined }) },
+    );
 };
 
 const destroy = async (args, { db, ObjectId }) => {
