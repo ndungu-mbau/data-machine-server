@@ -1610,7 +1610,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
       // console.log('computed', { formular: form.formular });
       const resultFormular = tempFn(row);
 
-      // console.log('computed', { resultFormular });
+      console.log('running compoundedProps eval on computed', { formular: form.formular, resultFormular });
 
       copyRecord[form.name] = math.eval(resultFormular);
     });
@@ -1623,6 +1623,9 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     if (c.type === 'formular') {
       const tempFn = doT.template(c.formular);
       const resultFormular = tempFn(compounded);
+
+      console.log('running compoundedProps eval on computed', { formular: c.formular, resultFormular });
+
       const compiled = math.eval(resultFormular);
       compounded[c.name] = compiled;
       return;
