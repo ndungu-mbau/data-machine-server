@@ -1631,7 +1631,16 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     const values = computed
       .filter(row => row[c.field])
       .map(row => row[c.field]);
-    const result = math[c.type](values);
+
+    // const result = math[c.type](values);
+    let result;
+    // check for various types to be able to support weird ones like count... thats if we need size
+    if (c.type !== 'count') {
+      result = math[c.type](values);
+    } else {
+      result = submisions.length;
+    }
+
     compounded[c.name] = typeof result === 'object' ? result[0] : result;
   });
   res.send({
