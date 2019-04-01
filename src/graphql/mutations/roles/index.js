@@ -5,11 +5,9 @@ import {
 const type = `
   input newRole{
     id: String,
-    userId:String,
     clientId:String,
     name:String,
-    permissions:[String],
-
+    permissions:[String]
   }
 
   type roleMutations {
@@ -19,7 +17,7 @@ const type = `
 `;
 
 const queries = `
-roleMutations:roleMutations
+  roleMutations:roleMutations
 `;
 
 const root = {

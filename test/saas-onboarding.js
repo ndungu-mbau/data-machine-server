@@ -44,7 +44,7 @@ const registrationData = {
 let token;
 
 // eslint-disable-next-line func-names
-describe('Books', function () {
+describe('Onboarding Test Run', function () {
   this.timeout(5000);
   before((done) => {
     // connect to nats and mongodbi
@@ -321,11 +321,11 @@ describe('Books', function () {
         `,
           variables: JSON.stringify({
             user: {
-              firstName: 'David',
-              middleName: 'Mungai',
-              lastName: 'M',
-              email: 'mungahdaudi@gmail.com',
-              city: 'Nairobi',
+              firstName: 'xxx',
+              middleName: 'xxx',
+              lastName: 'x',
+              email: 'xx@gmail.com',
+              city: 'xx',
               address: '12345',
               phoneNumber: '1234567',
               mobileMoneyNumber: '1234567',
@@ -335,7 +335,10 @@ describe('Books', function () {
           }),
         })
         .end((err, res) => {
-          res.body.data.userMutations.create.id.should.exist;
+          if (res.body.errors) {
+            console.log(JSON.stringify(res.body.errors), null, '\t');
+          }
+          expect(res.body.errors).to.be.undefined;
         });
 
       done();
@@ -357,7 +360,6 @@ describe('Books', function () {
           variables: JSON.stringify({
             role: {
               clientId,
-              userId,
               name: 'insertedtestAdmin',
             },
           }),

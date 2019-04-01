@@ -104,6 +104,13 @@ export const bulkAdd = async ({
           // eslint-disable-next-line no-restricted-syntax
           for (const question of questions) {
             Object.assign(question, {
+              options: !question.options
+                ? []
+                : question.options.map(({ ovalue: value, olabel: label }) => ({ value, label })),
+              sentences: !question.sentences
+                ? []
+                : question.sentences
+                  .map(({ ovalue: value, osentence: sentence }) => ({ value, sentence })),
               _id: new ObjectId(),
               group: group._id.toString(),
               destroyed: false,
