@@ -1152,14 +1152,14 @@ hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
   const role = {
     _id: new ObjectId(),
     clientId: company._id,
-    role: 'admin',
+    name: 'admin',
     destroyed: false,
   };
 
   const user_role = {
     _id: new ObjectId(),
     role: role._id,
-    userId: legacyUser._id,
+    userId: userid,
     destroyed: false,
   };
 

@@ -2,11 +2,11 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-undef */
 const chai = require('chai');
-var assert = chai.assert;
+
+const { assert } = chai;
 const chaiHttp = require('chai-http');
 const { map } = require('async');
 
-const { httpServer: server, config } = require('../dist');
 
 const { expect } = require('chai');
 require('chai').should();
@@ -25,46 +25,20 @@ const { NATS_URL, NODE_ENV, LOG_LEVEL = 'silent' } = process.env;
 
 const Hemera = require('nats-hemera');
 const nats = require('nats').connect({
-  url: NATS_URL
+  url: NATS_URL,
 });
+const { httpServer: server, config } = require('../dist');
 
 const hemera = new Hemera(nats, {
-  logLevel: LOG_LEVEL
+  logLevel: LOG_LEVEL,
 });
 
 const registrationData = {
-  firstName: "sir",
-  middleName: "Branson",
-  lastName: "Gitomeh",
-  username: 'branson',
-  password: 'passw',
-  email: 'sirbranson67@gmail.com',
-  name: 'branson+gitomeh',
-  contact: '+254711657108',
-  address_1: '78024+nairobi',
-  city: ['nairobi', 'nairobi'],
-  state: ['Nairobi', 'Nairobi'],
-  address_2: '78024+nairobi,+NA',
-  zip: '78024',
-  country: 'KE',
-  company_name: 'braiven.io',
-  company_registration_id: 'braiven.io',
-  company_email: 'gitomehbranson@gmail.com',
-  company_contact: 'sabek+systems',
-  'communications.email': 'on',
-  'communications.sms': 'on',
-  card_holder_name: '',
-  card_number: '',
-  billing_card_exp_month: '01',
-  billing_card_exp_year: '2018',
-  cvv: '',
-  address_line_1: '78024+nairobi,+NA',
-  address_line_2: '78024+nairobi',
-  zip_code: '78024',
-  billing_country: 'KE',
-  membership: 'premium',
-  promotions: 'on',
-  accept: 'on'
+  password: 'superSecret',
+  email: 'org1@root.com',
+  contact: '1234',
+  firstName: 'bran',
+  orgName: 'org',
 };
 
 let token;
@@ -72,12 +46,12 @@ let token;
 // eslint-disable-next-line func-names
 describe('Books', function () {
   this.timeout(5000);
-  before(done => {
+  before((done) => {
     // connect to nats and mongodbi
     MongoClient.connect(
       config[NODE_ENV].db.url,
       {
-        useNewUrlParser: true
+        useNewUrlParser: true,
         // server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
       },
       (err, database) => {
@@ -91,7 +65,7 @@ describe('Books', function () {
 
           if (items.length === 0) {
             console.log(
-              `No collections in database ${config[NODE_ENV].db.name}`
+              `No collections in database ${config[NODE_ENV].db.name}`,
             );
             return done();
           }
@@ -99,44 +73,47 @@ describe('Books', function () {
           map(
             items,
             (item, next) => {
-              dbo.dropCollection(item.name, dropErr => {
+              dbo.dropCollection(item.name, (dropErr) => {
                 if (dropErr) throw dropErr;
                 console.log('Dropped ', item.name);
                 next();
               });
             },
-            loopErr => {
+            (loopErr) => {
               if (loopErr) console.error(loopErr.message);
               console.log('All collections dropped \n');
               done();
-            }
+            },
           );
         });
-      }
+      },
     );
   });
-  after(done => {
+  after((done) => {
     db.close();
     done();
   });
   describe('SAAS onboardding', () => {
-    it('should register from saas register', done => {
+    it('should register from saas register', (done) => {
       hemera.act(
         {
-          topic: 'registratin',
-          cmd: 'saas',
-          data: registrationData
+          topic: 'registration',
+          cmd: 'saas-registration',
+          data: registrationData,
         },
-        () => done()
+        () => {
+          // give it a sec to finish creating everything on db
+          setTimeout(done, 1000);
+        },
       );
     });
-    it('should login to a saas user', done => {
+    it('should login to a saas user', (done) => {
       chai
         .request(server)
         .post('/saasAuth/login')
         .send({
           email: registrationData.email,
-          password: registrationData.password
+          password: registrationData.password,
         })
         .end((err, res) => {
           if (err) {
@@ -158,13 +135,13 @@ describe('Books', function () {
           done();
         });
     });
-    it('should login to a mobile user', done => {
+    it('should login to a mobile user', (done) => {
       chai
         .request(server)
         .post('/auth/login')
         .send({
           phone: registrationData.contact,
-          password: registrationData.password
+          password: registrationData.password,
         })
         .end((err, res) => {
           if (res.body.message) {
@@ -184,7 +161,7 @@ describe('Books', function () {
           setTimeout(done, 2000);
         });
     });
-    it('graph for org should be constructed', done => {
+    it('graph for org should be constructed', (done) => {
       chai
         .request(server)
         .post('/graphql')
@@ -272,7 +249,7 @@ describe('Books', function () {
               }
             }
           }`,
-          variables: JSON.stringify({})
+          variables: JSON.stringify({}),
         })
         .end((err, res) => {
           if (res.body.errors) {
@@ -327,7 +304,7 @@ describe('Books', function () {
         });
     });
     // it("graph should fetch all the demo items needed", done => { done() })
-    it("it should  insert a new user", done => {
+    it('it should  insert a new user', (done) => {
       chai
         .request(server)
         .post('/graphql')
@@ -344,26 +321,26 @@ describe('Books', function () {
         `,
           variables: JSON.stringify({
             user: {
-              firstName: "David",
-              middleName: "Mungai",
-              lastName: "M",
-              email: "mungahdaudi@gmail.com",
-              city: "Nairobi",
-              address: "12345",
-              phoneNumber: "1234567",
-              mobileMoneyNumber: "1234567",
-              password: "1234567",
-              client: clientId
-            }
-          })
+              firstName: 'David',
+              middleName: 'Mungai',
+              lastName: 'M',
+              email: 'mungahdaudi@gmail.com',
+              city: 'Nairobi',
+              address: '12345',
+              phoneNumber: '1234567',
+              mobileMoneyNumber: '1234567',
+              password: '1234567',
+              client: clientId,
+            },
+          }),
         })
         .end((err, res) => {
-          res.body.data.userMutations.create.id.should.exist
-        })
+          res.body.data.userMutations.create.id.should.exist;
+        });
 
-      done()
-    })
-    it('should insert a new role', done => {
+      done();
+    });
+    it('should insert a new role', (done) => {
       chai
         .request(server)
         .post('/graphql')
@@ -381,18 +358,19 @@ describe('Books', function () {
             role: {
               clientId,
               userId,
-              name: 'insertedtestAdmin'
-            }
-          })
+              name: 'insertedtestAdmin',
+            },
+          }),
         })
         .end((err, res) => {
+          if (err) { console.log(err); }
           res.body.data.roleMutations.create.id.should.exist;
           roleId = res.body.data.roleMutations.create.id;
         });
 
       done();
     });
-    it('update the roles', done => {
+    it('update the roles', (done) => {
       chai
         .request(server)
         .post('/graphql')
@@ -408,10 +386,10 @@ describe('Books', function () {
           variables: JSON.stringify({
             role: {
               id: roleId,
-              name: 'updateAdmin'
-            }
-          })
-        })
+              name: 'updateAdmin',
+            },
+          }),
+        });
       done();
     });
   });

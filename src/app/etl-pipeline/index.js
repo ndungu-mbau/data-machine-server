@@ -5,6 +5,7 @@ import path from 'path';
 import { ObjectId } from 'mongodb';
 import {
   createPage,
+  createGroup,
   createQuestion,
   createProject,
   createQuestionnaire,
@@ -34,6 +35,7 @@ export const bulkAdd = async ({
       items: {
         name,
         pages,
+        order,
       },
     } = JSON.parse(projectData);
 
@@ -62,6 +64,7 @@ export const bulkAdd = async ({
     const questionnaire = {
       _id: new ObjectId(),
       name,
+      order,
       // eslint-disable-next-line no-underscore-dangle
       project: project._id.toString(),
       destroyed: false,
@@ -95,6 +98,8 @@ export const bulkAdd = async ({
             page: page._id.toString(),
             destroyed: false,
           };
+
+          createGroup(group);
 
           // eslint-disable-next-line no-restricted-syntax
           for (const question of questions) {

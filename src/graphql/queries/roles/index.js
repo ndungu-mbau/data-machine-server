@@ -29,10 +29,10 @@ const role = async (x, { id }, { db, ObjectId }) => {
 
 const nested = {
   role: {
-    async company({ client }, args, { db }) {
+    async company({ clientId }, args, { db }) {
       const clientData = await db
         .collection('company')
-        .findOne({ _id: client });
+        .findOne({ _id: clientId });
 
       return Object.assign(clientData, {
         // eslint-disable-next-line comma-dangle

@@ -95,12 +95,24 @@ const nested = {
       return teamsInfo;
     },
     roles: async ({ id }, args, { db }) => {
-      const data = await db
-        .collection('role')
+      // eslint-disable-next-line camelcase
+      const user_roles = await db
+        .collection('user_roles')
         .find({ userId: id, destroyed: false })
         .toArray();
 
-      return data.map(entry => Object.assign({}, entry, {
+      const completeRoles = [];
+      // eslint-disable-next-line camelcase
+      const fetchedRoles = await Promise.all(user_roles.map(user_role => db
+        .collection('role')
+        .find({ _id: user_role.role, destroyed: false })
+        .toArray()));
+
+      // console.log(fetchedRoles, completeRoles);
+
+      fetchedRoles.map(roleMap => completeRoles.push(...roleMap));
+
+      return completeRoles.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
     },
