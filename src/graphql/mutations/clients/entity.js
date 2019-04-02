@@ -1,6 +1,7 @@
 import emit from '../../../app/actions/index';
 /* eslint-disable no-underscore-dangle */
 const collection = 'client';
+const { sendInvitationEmail } = require('../../../app/emails/mailer');
 
 const create = async (args, { db, ObjectId }) => {
   const entry = args[collection];
@@ -58,6 +59,45 @@ const restore = async (args, { db, ObjectId }) => {
     .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: false } });
 };
 
+const inviteUser = async (args, { db, user, ObjectId }) => {
+  const invitation = {
+    _id: new ObjectId(),
+    user: args.invitation.email,
+    name: args.invitation.name,
+    client: args.invitation.client,
+    role: args.invitation.role,
+    invitedBy: user._id,
+    destroyed: false,
+  };
+
+  await db.collection('invitation')
+    .insertOne(invitation);
+
+  const client = await db.collection('company')
+    .findOne({ _id: new ObjectId(args.invitation.client) });
+
+  const mailData = {
+    invitation: {
+      id: invitation._id,
+      name: args.invitation.name,
+    },
+    inviter: {
+      name: user.firstName,
+      email: user.email,
+      company: {
+        name: client.company_name,
+      },
+    },
+  };
+
+  sendInvitationEmail({
+    to: args.invitation.email,
+    data: mailData,
+  });
+
+  return invitation._id;
+};
+
 export {
-  create, update, destroy, restore,
+  create, update, destroy, restore, inviteUser,
 };

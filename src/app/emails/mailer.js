@@ -174,6 +174,46 @@ const sendDocumentEmails = ({
   });
 };
 
+const sendInvitationEmail = async ({
+  to,
+  data: {
+    invitation: {
+      id,
+      name: newUserName,
+    },
+    inviter: {
+      name,
+      email,
+      company: {
+        name: companyName,
+      },
+    },
+  },
+}) => {
+  const tempFn = doT.template(
+    await readFile('src/app/emails/user_invited.html', 'utf8'),
+  );
+  const message = tempFn({
+    invitation: {
+      id,
+      name,
+    },
+    inviter: {
+      name: newUserName,
+      email,
+      company: {
+        name: companyName,
+      },
+    },
+  });
+
+  sendMail({
+    to,
+    subject: `Invitation to join ${companyName}`,
+    message,
+  });
+};
+
 export {
   registrationThanks,
   accountActivationEmail,
@@ -182,4 +222,5 @@ export {
   userCreatedAccount,
   appUserLoggedIn,
   sendDocumentEmails,
+  sendInvitationEmail,
 };
