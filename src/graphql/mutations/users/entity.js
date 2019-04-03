@@ -37,13 +37,13 @@ const create = async (args, { db, ObjectId }) => {
     console.log('User already exists,upserting', entry.phoneNumber);
   }
 
+  const tempPassword = makeShortPassword();
+
   // ask for the country and use that here - then ask to confirm
   // ------------------------------------------------------------------------------------------
   if (args.user.sendWelcomeSms === true) {
     const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
     const coolNumber = phoneUtil.format(number, PNF.E164);
-
-    const tempPassword = makeShortPassword();
 
     const action = {
       topic: 'exec',
