@@ -16,6 +16,7 @@ const type = `
     address: String,
     phoneNumber: String,
     mobileMoneyNumber: String,
+    other: String,
     password: String,
     client: String,
     sendWelcomeSms:Boolean
