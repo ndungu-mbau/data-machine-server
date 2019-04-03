@@ -85,12 +85,39 @@ const update = async (args, { db, ObjectId }) => {
     entry.password = sha1(entry.password);
   }
 
+  const tempPassword = makeShortPassword();
+
+  if (args.user.sendWelcomeSms === true) {
+    console.log("sending sms to ====>", entry.phoneNumber)
+    const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
+    const coolNumber = phoneUtil.format(number, PNF.E164);
+
+    const action = {
+      topic: 'exec',
+      cmd: 'sms_nalm_treasury_pwc_1',
+      data: {
+        password: entry.password ? entry.password : tempPassword,
+        phone: entry.phoneNumber,
+      },
+    };
+
+    // eslint-disable-next-line no-console
+    console.log(action);
+
+    hemera.act(action, (err) => {
+      if (err) {
+        console.log('Error sending sms to ', entry.phoneNumber, coolNumber, err);
+      }
+    });
+  }
+
   if (entry.address || entry.contact || entry.phoneNumber) {
     db.collection('saasUser')
       .updateOne({ _id: new ObjectId(entry.id) }, {
         $set: Object.assign({}, entry, {
           id: undefined,
           phoneNumber: entry.phoneNumber,
+          password: entry.password ? sha1(entry.password) : sha1(tempPassword),
           address_1: entry.address,
           city: entry.city,
         }),
@@ -99,7 +126,15 @@ const update = async (args, { db, ObjectId }) => {
   return db.collection(collection)
     .updateOne(
       { _id: new ObjectId(entry.id) },
-      { $set: Object.assign({}, entry, { id: undefined }) },
+      {
+        $set: Object.assign({}, entry, {
+          id: undefined,
+          phoneNumber: entry.phoneNumber,
+          password: entry.password ? sha1(entry.password) : sha1(tempPassword),
+          address_1: entry.address,
+          city: entry.city,
+        }),
+      },
     );
 };
 
