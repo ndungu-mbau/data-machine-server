@@ -19,7 +19,8 @@ const type = `
     users:[user],
     billing:billing,
     stats:stats,
-    roles:[role]
+    roles:[role],
+    invitations:[invitation]
   }
 `;
 
@@ -116,6 +117,16 @@ const nested = {
         .find({ clientId: id, destroyed: false })
         .toArray();
       return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
+    },
+    invitations: async ({ id }, args, { db }) => {
+      const data = await db
+        .collection('invitation')
+        .find({ client: id.toString(), destroyed: false })
+        .toArray();
+      return data.map(entry => Object.assign({}, entry, {
+        time: entry._id.getTimestamp(),
         id: entry._id,
       }));
     },

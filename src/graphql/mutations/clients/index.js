@@ -19,7 +19,8 @@ const type = `
     email: String!,
     client: String!,
     role: String
-    name:String!
+    name: String!,
+    time: String
   }
 
   type clientMutations {

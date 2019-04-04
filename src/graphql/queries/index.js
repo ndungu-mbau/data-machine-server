@@ -27,6 +27,13 @@ import {
 } from './billing';
 
 import {
+  type as invitationType,
+  queries as invitationQueries,
+  nested as invitationQueriesNested,
+  root as invitationRoot,
+} from './invitation';
+
+import {
   type as teamType,
   queries as teamQueries,
   nested as teamUsersNested,
@@ -150,11 +157,13 @@ const typeQueries = `
   ${optionsType},
   ${sentencesType},
   ${submissionGroupsType},
+  ${invitationType}
   type Query {
       hello: String,
       ${roleQueries},
       ${clientQueries},
       ${billingQueries},
+      ${invitationQueries}
       ${teamQueries},
       ${dashboardsQueries},
       ${layoutsQueries},
@@ -193,6 +202,7 @@ Object.assign(
   billingQueriesNested,
   submissionGroupsNested,
   rolesNested,
+  invitationQueriesNested,
 );
 
 
