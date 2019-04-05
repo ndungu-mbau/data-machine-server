@@ -30,7 +30,6 @@ import {
   type as invitationType,
   queries as invitationQueries,
   nested as invitationQueriesNested,
-  root as invitationRoot,
 } from './invitation';
 
 import {

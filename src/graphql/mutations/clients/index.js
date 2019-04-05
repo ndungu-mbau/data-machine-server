@@ -4,6 +4,7 @@ import {
   destroy,
   restore,
   inviteUser,
+  cancelInvitation,
 } from './entity';
 
 const type = `
@@ -28,7 +29,8 @@ const type = `
     update (client:newclient):client,
     destroy (client:newclient):client,
     restore (client:newclient):client,
-    inviteUser (invitation: create_invitation):String
+    inviteUser (invitation: create_invitation):String,
+    cancelInvitation (invitation: String):Boolean
   }
 `;
 
@@ -44,6 +46,7 @@ const root = {
     destroy,
     restore,
     inviteUser,
+    cancelInvitation,
   }),
 };
 

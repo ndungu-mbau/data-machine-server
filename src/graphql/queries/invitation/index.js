@@ -32,7 +32,6 @@ const nested = {
       const data = await db.collection('role').findOne({
         _id: new ObjectId(role), destroyed: false,
       });
-      console.log(role, data);
       return Object.assign({}, data, {
         id: data._id,
       });

@@ -98,6 +98,11 @@ const inviteUser = async (args, { db, user, ObjectId }) => {
   return invitation._id;
 };
 
+const cancelInvitation = async (args, { db, ObjectId }) => {
+  await db.collection('invitation')
+    .removeOne({ _id: new ObjectId(args.invitation) });
+};
+
 export {
-  create, update, destroy, restore, inviteUser,
+  create, update, destroy, restore, inviteUser, cancelInvitation,
 };
