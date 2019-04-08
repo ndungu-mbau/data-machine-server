@@ -10,6 +10,7 @@ const type = `
     address: String,
     phoneNumber: String,
     mobileMoneyNumber: String,
+    other: String,
     teams:[team],
     client:client,
     roles:[role]

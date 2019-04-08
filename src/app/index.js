@@ -700,9 +700,9 @@ app.post('/submision', async (req, res) => {
 
   hemera.act(action, (err) => {
     if (err) {
-      console.log('ERROR RUNNING SCRIPT');
+      log.info('ERROR RUNNING SCRIPT');
     } else {
-      console.log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
+      log.info(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
     }
   });
 
@@ -1530,33 +1530,60 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
 
   const computed = submisions.map((row) => {
     const copyRecord = {};
-    computedProps.map((form) => {
+    computedProps.forEach((form) => {
       const tempFn = doT.template(form.formular || '');
       const resultFormular = tempFn(row);
 
-      copyRecord[form.name] = math.eval(resultFormular);
-      return copyRecord;
+      log.info('running compoundedProps eval on computed', { formular: form.formular, resultFormular });
+
+      let calcRes;
+      try {
+        const mathRes = math.eval(resultFormular);
+        calcRes = Math.round(Number(mathRes) * 100) / 100;
+      } catch (err) {
+        calcRes = err;
+      }
+
+      copyRecord[form.name] = calcRes;
     });
     Object.assign(copyRecord, row);
     return copyRecord;
   });
 
   const compounded = {};
-  compoundedProps.map((c) => {
+  compoundedProps.forEach((c) => {
     if (c.type === 'formular') {
       const tempFn = doT.template(c.formular);
       const resultFormular = tempFn(compounded);
-      const compiled = math.eval(resultFormular);
-      compounded[c.name] = compiled;
+
+      log.info('running compoundedProps eval on computed', { formular: c.formular, resultFormular });
+
+      let calcRes;
+      try {
+        const mathRes = math.eval(resultFormular);
+        calcRes = Math.round(Number(mathRes) * 100) / 100;
+      } catch (err) {
+        calcRes = err;
+      }
+
+      compounded[c.name] = calcRes;
+      return;
     }
 
     const values = computed
       .filter(row => row[c.field])
       .map(row => row[c.field]);
-    const result = math[c.type](values);
+
+    // const result = math[c.type](values);
+    let result;
+    // check for various types to be able to support weird ones like count... thats if we need size
+    if (c.type !== 'count') {
+      result = math[c.type](values);
+    } else {
+      result = submisions.length;
+    }
 
     compounded[c.name] = typeof result === 'object' ? result[0] : result;
-    return compounded[c.name];
   });
   return res.send({
     computed,
