@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 const collection = 'cp';
 
 const create = async (args, { db, ObjectId }) => {

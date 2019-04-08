@@ -11,6 +11,12 @@ import {
 } from './clients';
 
 import {
+  type as rolesType,
+  queries as roleMutations,
+  root as roleRoot,
+} from './roles';
+
+import {
   type as teamsType,
   queries as teamsMutations,
   root as teamsRoot,
@@ -58,7 +64,6 @@ import {
   root as cpdRoot,
 } from './questionnaires/dashboards/cpd';
 
-
 import {
   type as chartType,
   queries as chartMutations,
@@ -101,6 +106,12 @@ import {
   root as sentenceRoot,
 } from './questionnaires/pages/groups/questions/sentences';
 
+import {
+  type as submissionGroupsType,
+  queries as submissionGroupsMutations,
+  root as submissionGroupsRoot,
+} from './submission-groups';
+
 const typeMutations = `
 ${clientsType},
 ${teamsType},
@@ -119,6 +130,8 @@ ${constantType},
 ${optionsType},
 ${questionsType},
 ${sentenceType},
+${submissionGroupsType},
+${rolesType},
 type Mutation {
     honk: String,
     ${clientsMutations}
@@ -138,7 +151,9 @@ type Mutation {
     ${groupMutations},
     ${questionsMutations},
     ${optionsMutations},
-    ${sentenceMutations}
+    ${sentenceMutations},
+    ${submissionGroupsMutations}
+    ${roleMutations}
 }`;
 
 const mutationRoot = { honk: () => 'Hello world students!' };
@@ -160,5 +175,7 @@ Object.assign(mutationRoot, chartRoot);
 Object.assign(mutationRoot, constantRoot);
 Object.assign(mutationRoot, layoutRoot);
 Object.assign(mutationRoot, dashboardRoot);
+Object.assign(mutationRoot, submissionGroupsRoot);
+Object.assign(mutationRoot, roleRoot);
 
 export { typeMutations, mutationRoot };

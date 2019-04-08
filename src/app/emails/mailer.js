@@ -1,193 +1,226 @@
 import nodemailer from 'nodemailer';
-import doT from 'dot'
-import { promisify } from 'util'
-import fs from 'fs'
+import doT from 'dot';
+import { promisify } from 'util';
+import fs from 'fs';
 
-const readFile = promisify(fs.readFile)
+const { NODE_ENV } = process.env;
+
+const readFile = promisify(fs.readFile);
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: parseInt(process.env.EMAIL_SECURE),
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-    },
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  // eslint-disable-next-line radix
+  secure: parseInt(process.env.EMAIL_SECURE),
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
+  },
 });
 
-// setup e-mail data, even with unicode symbols
 const mailOptions = {
-    from: `"Datakit Support " <${process.env.EMAIL_BASE}>`, // sender address (who sends)
+  from: `"Datakit Support " <${process.env.EMAIL_BASE}>`,
 };
 
-export const sendMail = ({ from, to, subject, message, attachments, cc, bcc }) =>
-    new Promise((resolve, reject) => {
-        mailOptions.to = to;
-        mailOptions.subject = subject;
-        mailOptions.html = message;
+export const sendMail = ({
+  from,
+  to,
+  subject,
+  message,
+  attachments,
+  cc,
+  bcc,
+}) => new Promise((resolve, reject) => {
+  if (NODE_ENV === 'test') {
+    resolve();
+  }
 
-        Object.assign(mailOptions, {
-            cc,
-            bcc,
-        })
+  mailOptions.to = to;
+  mailOptions.subject = subject;
+  mailOptions.html = message;
 
-        if (attachments) {
-            mailOptions.attachments = attachments;
-        }
+  Object.assign(mailOptions, {
+    cc,
+    bcc,
+  });
 
-        if (from) {
-            mailOptions.from = from;
-        }
+  if (attachments) {
+    mailOptions.attachments = attachments;
+  }
 
-        console.log({ mailOptions })
+  if (from) {
+    mailOptions.from = from;
+  }
 
-        // send mail with defined transport object
-        transporter.sendMail(mailOptions, async (error, info) => {
-            if (error) {
-                return reject(error);
-            }
+  // send mail with defined transport object
+  transporter.sendMail(mailOptions, async (error, info) => {
+    // console.log({ error, info });
+    // async save the email send to our collection
 
-            resolve(info);
-        });
-    });
+    if (error) {
+      return reject(error);
+    }
 
+    return resolve(info);
+  });
+});
 
 const registrationThanks = async ({
-    to,
-    subject = `Thank you for registering!`,
-    data
+  to,
+  subject = 'Thank you for registering!',
+  data,
 }) => {
-    const tempFn = doT.template((await readFile('src/app/emails/registration-thanks.html', 'utf8')));
-    var message = tempFn(data);
-    // console.log(resusltEmail)
-
-    return sendMail({
-        to,
-        subject,
-        message
-    })
-}
+  const tempFn = doT.template(
+    await readFile('src/app/emails/registration-thanks.html', 'utf8'),
+  );
+  const message = tempFn(data);
+  sendMail({
+    to,
+    subject,
+    message,
+  });
+};
 
 const accountActivationEmail = async ({
   to,
-  subject = `Activate your account`,
-  data
+  subject = 'Activate your account',
+  data,
 }) => {
-  const tempFn = doT.template((await readFile('src/app/emails/activate-account.html', 'utf8')));
-  var message = tempFn(data);
+  const tempFn = doT.template(
+    await readFile('src/app/emails/activate-account.html', 'utf8'),
+  );
+  const message = tempFn(data);
 
-  return sendMail({
-      to,
-      subject,
-      message
-  })
-}
+  sendMail({
+    to,
+    subject,
+    message,
+  });
+};
 
 const passwordResetEmail = async ({
-    to,
-    subject = `Reset your datakit password`,
-    data
+  to,
+  subject = 'Reset your datakit password',
+  data,
 }) => {
-    const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
-    var message = tempFn(data);
+  const tempFn = doT.template(
+    await readFile('src/app/emails/password-reset.html', 'utf8'),
+  );
+  const message = tempFn(data);
 
-    return sendMail({
-        to,
-        subject,
-        message
-    })
-}
-
-const userLoggedIn = async ({
+  sendMail({
     to,
-    subject = `User logged in`,
-    data
-}) => {
-    // const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
-    // var message = tempFn(data);
+    subject,
+    message,
+  });
+};
 
-    return sendMail({
-        to,
-        subject,
-        message: data.email + " just logged in"
-    })
-}
+const userLoggedIn = async ({ to, subject = 'User logged in', data }) => {
+  sendMail({
+    to,
+    subject,
+    message: `${data.email} just logged in`,
+  });
+};
 
 const appUserLoggedIn = async ({
-    to,
-    subject = `User logged in to on the app`,
-    data
+  to,
+  subject = 'User logged in to on the app',
+  data,
 }) => {
-    // const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
-    // var message = tempFn(data);
-
-    sendMail({
-        to,
-        subject,
-        message: data.phoneNumber + " just logged in" + `<br><br><br><pre>${JSON.stringify(data.userData, null, '\t')}</pre>`
-    }).catch(console.log)
-}
+  sendMail({
+    to,
+    subject,
+    message: `${
+      data.phoneNumber
+    } just logged in <br><br><br><pre>${JSON.stringify(
+      data.userData,
+      null,
+      '\t',
+    )}</pre>`,
+  });
+};
 
 const userCreatedAccount = async ({
-    to,
-    subject = `User created account`,
-    data
+  to,
+  subject = 'User created account',
+  data,
 }) => {
-    // const tempFn = doT.template((await readFile('src/app/emails/password-reset.html', 'utf8')));
-    // var message = tempFn(data);
-
-    sendMail({
-        to,
-        subject,
-        message: data.email + " just registered"
-    }).catch(console.log)
-}
-
-// registrationThanks({
-//     to: "sirbranson67@gmail.com", 
-// data: {
-//     firstName:'Branson',
-//     lastName:'Gitomeh',
-//     company:{
-//         name:'braiven.io'
-//     }
-// }
-// })
-
-// passwordReset({
-//     to: "sirbranson67@gmail.com",
-//     data: {
-//         firstName:'Branson'
-//     }
-// })
-
-
+  sendMail({
+    to,
+    subject,
+    message: `${data.email} just registered`,
+  });
+};
 
 const sendDocumentEmails = ({
-    to,
-    cc,
-    from,
-    bcc,
-    subject = `Your document is now ready`,
-    message,
-    attachments
-}) => sendMail({
+  to,
+  cc,
+  from,
+  bcc,
+  subject = 'Your document is now ready',
+  message,
+  attachments,
+}) => {
+  sendMail({
     to,
     from,
     cc,
     bcc,
     subject,
     message,
-    attachments
-})
+    attachments,
+  });
+};
+
+const sendInvitationEmail = async ({
+  to,
+  data: {
+    invitation: {
+      id,
+      name: newUserName,
+    },
+    inviter: {
+      name,
+      email,
+      company: {
+        name: companyName,
+      },
+    },
+  },
+}) => {
+  const tempFn = doT.template(
+    await readFile('src/app/emails/user_invited.html', 'utf8'),
+  );
+  const message = tempFn({
+    invitation: {
+      id,
+      name,
+    },
+    inviter: {
+      name: newUserName,
+      email,
+      company: {
+        name: companyName,
+      },
+    },
+  });
+
+  sendMail({
+    to,
+    subject: `Invitation to join ${companyName}`,
+    message,
+  });
+};
 
 export {
-    registrationThanks,
-    accountActivationEmail,
-    passwordResetEmail,
-    userLoggedIn,
-    userCreatedAccount,
-    appUserLoggedIn,
-    sendDocumentEmails
-}
+  registrationThanks,
+  accountActivationEmail,
+  passwordResetEmail,
+  userLoggedIn,
+  userCreatedAccount,
+  appUserLoggedIn,
+  sendDocumentEmails,
+  sendInvitationEmail,
+};

@@ -13,15 +13,6 @@ import {
 } from './users';
 
 import {
-  nested as pagesNested
-} from './questionnaires/pages';
-
-import {
-  nested as groupsNested
-} from './questionnaires/pages/groups';
-
-
-import {
   type as clientType,
   queries as clientQueries,
   nested as clientQueriesNested,
@@ -34,6 +25,12 @@ import {
   nested as billingQueriesNested,
   root as billingRoot,
 } from './billing';
+
+import {
+  type as invitationType,
+  queries as invitationQueries,
+  nested as invitationQueriesNested,
+} from './invitation';
 
 import {
   type as teamType,
@@ -53,6 +50,7 @@ import {
   type as pageType,
   queries as pageQueries,
   root as pageRoot,
+  nested as pagesNested,
 } from './questionnaires/pages';
 
 import {
@@ -101,6 +99,7 @@ import {
   type as groupType,
   queries as groupQueries,
   root as groupRoot,
+  nested as groupsNested,
 } from './questionnaires/pages/groups';
 
 import {
@@ -121,7 +120,23 @@ import {
   root as sentencesRoot,
 } from './questionnaires/pages/groups/questions/sentences';
 
+import {
+  type as submissionGroupsType,
+  queries as submissionGroupsQueries,
+  root as submissionGroupsRoot,
+  nested as submissionGroupsNested,
+} from './submission-groups';
+
+import {
+  type as roleType,
+  queries as roleQueries,
+  root as rolesRoot,
+  nested as rolesNested,
+} from './roles/index';
+
+
 const typeQueries = `
+  ${roleType}
   ${clientType},
   ${billingType},
   ${teamType},
@@ -140,10 +155,14 @@ const typeQueries = `
   ${questionType},
   ${optionsType},
   ${sentencesType},
+  ${submissionGroupsType},
+  ${invitationType}
   type Query {
       hello: String,
+      ${roleQueries},
       ${clientQueries},
       ${billingQueries},
+      ${invitationQueries}
       ${teamQueries},
       ${dashboardsQueries},
       ${layoutsQueries},
@@ -161,49 +180,55 @@ const typeQueries = `
       ${groupQueries}
       ${optionsQueries}
       ${sentencesQueries}
+      ${submissionGroupsQueries}
   }`;
 
 const Query = {
-  hello: () => 'Hello too!'
+  hello: () => 'Hello too!',
 };
 
-const Nested = {}
+const Nested = {};
 
 Object.assign(
-  Nested
-  , clientQueriesNested
-  , teamUsersNested
-  , projectQueriesNested
-  , userNested
-  , questionnaireNested
-  , pagesNested
-  , groupsNested
-  , billingQueriesNested
-)
-
-
-Object.assign(
-  Query
-  , projectRoot
-  , userRoot
-  , pageRoot
-  , groupRoot
-  , questionRoot
-  , optionsRoot
-  , clientRoot
-  , sentencesRoot
-  , dashboardsRoot
-  , layoutsRoot
-  , cpRoot
-  , cpdRoot
-  , chartsRoot
-  , constantsRoot
-  , aliasesRoot
-  , questionnaireRoot
-  , teamRoot
-  , billingRoot
+  Nested,
+  clientQueriesNested,
+  teamUsersNested,
+  projectQueriesNested,
+  userNested,
+  questionnaireNested,
+  pagesNested,
+  groupsNested,
+  billingQueriesNested,
+  submissionGroupsNested,
+  rolesNested,
+  invitationQueriesNested,
 );
 
-const queryRoot = { Query, Nested }
+
+Object.assign(
+  Query,
+  rolesRoot,
+  projectRoot,
+  userRoot,
+  pageRoot,
+  groupRoot,
+  questionRoot,
+  optionsRoot,
+  clientRoot,
+  sentencesRoot,
+  dashboardsRoot,
+  layoutsRoot,
+  cpRoot,
+  cpdRoot,
+  chartsRoot,
+  constantsRoot,
+  aliasesRoot,
+  questionnaireRoot,
+  teamRoot,
+  billingRoot,
+  submissionGroupsRoot,
+);
+
+const queryRoot = { Query, Nested };
 
 export { typeQueries, queryRoot };

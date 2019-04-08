@@ -3,6 +3,8 @@ import {
   update,
   destroy,
   restore,
+  inviteUser,
+  cancelInvitation,
 } from './entity';
 
 const type = `
@@ -14,11 +16,21 @@ const type = `
     reg_id: String
   }
 
+  input create_invitation {
+    email: String!,
+    client: String!,
+    role: String
+    name: String!,
+    time: String
+  }
+
   type clientMutations {
     create (client:newclient!):client,
     update (client:newclient):client,
     destroy (client:newclient):client,
-    restore (client:newclient):client
+    restore (client:newclient):client,
+    inviteUser (invitation: create_invitation):String,
+    cancelInvitation (invitation: String):Boolean
   }
 `;
 
@@ -33,6 +45,8 @@ const root = {
     update,
     destroy,
     restore,
+    inviteUser,
+    cancelInvitation,
   }),
 };
 

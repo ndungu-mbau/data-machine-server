@@ -6,7 +6,7 @@ import {
   addUser,
   removeUser,
   addProject,
-  removeProject
+  removeProject,
 } from './entity';
 
 const type = `
@@ -43,7 +43,7 @@ const root = {
     addUser,
     removeUser,
     addProject,
-    removeProject
+    removeProject,
   }),
 };
 

@@ -1,4 +1,8 @@
+/* eslint-disable no-underscore-dangle */
 import sha1 from 'sha1';
+
+import emit from '../../../app/actions/index';
+import actions from '../../../app/actions/action_map';
 
 const PNF = require('google-libphonenumber').PhoneNumberFormat;
 
@@ -20,12 +24,15 @@ function makeShortPassword() {
   let text = '';
   const possible = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-  for (let i = 0; i < 4; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)); }
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < 4; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
 
   return text;
 }
 
-const create = async (args, { db, ObjectId }) => {
+const create = async (args, { db, ObjectId, log }) => {
   const entry = args[collection];
 
   // check if there is an entry with that phoneNumber
@@ -34,7 +41,7 @@ const create = async (args, { db, ObjectId }) => {
     // eslint-disable-next-line no-underscore-dangle
     existingUser.id = existingUser._id;
     // eslint-disable-next-line no-console
-    console.log('User already exists,upserting', entry.phoneNumber);
+    log.info('User already exists,upserting', entry.phoneNumber);
   }
 
   const tempPassword = makeShortPassword();
@@ -55,11 +62,11 @@ const create = async (args, { db, ObjectId }) => {
     };
 
     // eslint-disable-next-line no-console
-    console.log(action);
+    log.info('sending nalm welcome sms', action);
 
     hemera.act(action, (err) => {
       if (err) {
-        console.log('Error sending sms to ', entry.phoneNumber, coolNumber, err);
+        log.info('Error sending sms to ', entry.phoneNumber, coolNumber, err);
       }
     });
   }
@@ -69,17 +76,19 @@ const create = async (args, { db, ObjectId }) => {
     client: new ObjectId(entry.client),
     destroyed: false,
   });
-  await db.collection(collection).update(
+  await db.collection(collection).updateOne(
     { phoneNumber: entry.phoneNumber },
-    entry,
+    { $set: entry },
     { upsert: true, safe: false },
   );
+
+  emit({ action: actions.USER_CREATED, data: entry });
   // eslint-disable-next-line no-underscore-dangle
   entry.id = entry._id;
   return entry;
 };
 
-const update = async (args, { db, ObjectId }) => {
+const update = async (args, { db, ObjectId, log }) => {
   const entry = args[collection];
   if (entry.password) {
     entry.password = sha1(entry.password);
@@ -88,7 +97,7 @@ const update = async (args, { db, ObjectId }) => {
   const tempPassword = makeShortPassword();
 
   if (args.user.sendWelcomeSms === true) {
-    console.log("sending sms to ====>", entry.phoneNumber)
+    log.info('sending sms to ====>', entry.phoneNumber);
     const number = phoneUtil.parseAndKeepRawInput(entry.phoneNumber, 'KE');
     const coolNumber = phoneUtil.format(number, PNF.E164);
 
@@ -102,11 +111,9 @@ const update = async (args, { db, ObjectId }) => {
     };
 
     // eslint-disable-next-line no-console
-    console.log(action);
-
     hemera.act(action, (err) => {
       if (err) {
-        console.log('Error sending sms to ', entry.phoneNumber, coolNumber, err);
+        log.error('Error sending sms to ', entry.phoneNumber, coolNumber, err);
       }
     });
   }
