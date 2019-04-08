@@ -651,11 +651,8 @@ app.post('/submision', async (req, res) => {
       if (value.toString().includes('file://')) {
         const [, ext] = value.split('.');
 
-        const url = `https://s3-us-west-2.amazonaws.com/questionnaireuploads/
-        ${submission.questionnaireId}_
-        ${key}_
-        ${submission.completionId}
-        ${ext ? `.${ext}` : ''}`;
+        const urlRoot = 'https://s3-us-west-2.amazonaws.com/questionnaireuploads/';
+        const url = `${urlRoot}${submission.questionnaireId}_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
 
         cleanCopy[
           key
@@ -703,9 +700,9 @@ app.post('/submision', async (req, res) => {
 
   hemera.act(action, (err) => {
     if (err) {
-      log('ERROR RUNNING SCRIPT');
+      console.log('ERROR RUNNING SCRIPT');
     } else {
-      log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
+      console.log(`SUCCESSFULY RUN SCRIPT for ${submited._id}`);
     }
   });
 
