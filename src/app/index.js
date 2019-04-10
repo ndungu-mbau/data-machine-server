@@ -394,7 +394,7 @@ app.post(
 
       return res
         .status(401)
-        .send({ message: 'Passwords do not match, try removering your password' });
+        .send({ message: 'Password provided does not match our records' });
     }
 
     return res
