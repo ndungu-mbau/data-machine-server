@@ -45,16 +45,22 @@ export const sendMail = ({
     bcc,
   });
 
+  const newOptions = { ...mailOptions };
+
   if (attachments) {
-    mailOptions.attachments = attachments;
+    Object.assign(newOptions, {
+      attachments,
+    });
   }
 
   if (from) {
-    mailOptions.from = from;
+    Object.assign(newOptions, {
+      from,
+    });
   }
 
   // send mail with defined transport object
-  transporter.sendMail(mailOptions, async (error, info) => {
+  transporter.sendMail(newOptions, async (error, info) => {
     // console.log({ error, info });
     // async save the email send to our collection
 
