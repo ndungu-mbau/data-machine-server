@@ -245,7 +245,7 @@ app.use('/health', (req, res) => res.send());
 
 app.post(
   '/auth/login',
-  loginAccountLimiter,
+  // loginAccountLimiter,
   celebrate({
     body: Joi.object().keys({
       phone: Joi.string()
@@ -284,11 +284,14 @@ app.post(
           token: jwt.sign(userData, config[NODE_ENV].hashingSecret),
         }));
       }
+      return res
+        .status(401)
+        .send({ message: 'Passwords do not match' });
     }
 
     return res
       .status(401)
-      .send({ message: 'Wrong username and password combination' });
+      .send({ message: 'Account does not exist ' });
   },
 );
 
@@ -388,11 +391,15 @@ app.post(
           ),
         }));
       }
+
+      return res
+        .status(401)
+        .send({ message: 'Passwords do not match, try removering your password' });
     }
 
     return res
       .status(401)
-      .send({ message: 'Wrong username and password combination' });
+      .send({ message: 'Account does not exist' });
   },
 );
 
