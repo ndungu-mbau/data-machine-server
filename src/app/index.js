@@ -1577,7 +1577,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
       return;
     }
 
-    const values = computed
+    let values = computed
       .filter(row => row[c.field])
       .map(row => row[c.field]);
 
@@ -1585,8 +1585,23 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     let result;
     // check for various types to be able to support weird ones like count... thats if we need size
     if (c.type !== 'count') {
+      // chek for a filter and run it if exists
+      if (c.filter !== undefined) {
+        if (c.filter === '=') {
+          values = values.filter(v => v === c.filterValue);
+        }
+        // other filters here
+      }
+
       result = math[c.type](values);
     } else {
+      if (c.filter !== undefined) {
+        if (c.filter === '=') {
+          values = values.filter(v => v === c.filterValue);
+        }
+        // other filters here
+      }
+
       result = submisions.length;
     }
 
