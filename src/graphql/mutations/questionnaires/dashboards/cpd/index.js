@@ -10,6 +10,8 @@ const type = `
     field:String,
     formular:String,
     type:String,
+    filter:String,
+    filterValue:String
   }
 
   type cpdMutations {
