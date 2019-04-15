@@ -36,7 +36,7 @@ const hemera = new Hemera(nats, {
 const registrationData = {
   password: 'superSecret',
   email: 'org1@root.com',
-  contact: '1234',
+  contact: '+2547 123 546 ',
   firstName: 'bran',
   orgName: 'org',
 };
@@ -281,20 +281,6 @@ describe('Onboarding Test Run', function () {
           res.body.data.user.client.projects[0].questionnaire.should.exist;
           res.body.data.user.client.projects[0].questionnaire.id.should.exist;
           res.body.data.user.client.projects[0].questionnaire.pages[0].id.should
-            .exist;
-
-          // project 2
-          res.body.data.user.client.projects[1].should.exist;
-          res.body.data.user.client.projects[1].questionnaire.should.exist;
-          res.body.data.user.client.projects[1].questionnaire.id.should.exist;
-          res.body.data.user.client.projects[1].questionnaire.pages[0].id.should
-            .exist;
-
-          // project 3
-          res.body.data.user.client.projects[2].should.exist;
-          res.body.data.user.client.projects[2].questionnaire.should.exist;
-          res.body.data.user.client.projects[2].questionnaire.id.should.exist;
-          res.body.data.user.client.projects[2].questionnaire.pages[0].id.should
             .exist;
 
           clientId = res.body.data.user.client.id;

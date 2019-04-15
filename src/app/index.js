@@ -1040,7 +1040,7 @@ hemera.add(action, async (args) => {
 
   await bulkAdd({
     db,
-    files: ['job-sheet.json', 'safety-checklist.json', 'construction-daily-report.json'],
+    files: ['example_survey.json'],
     client: company._id.toString(),
   });
 
@@ -1176,7 +1176,7 @@ hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
 
   await bulkAdd({
     db,
-    files: ['job-sheet.json', 'safety-checklist.json', 'construction-daily-report.json'],
+    files: ['example_survey.json'],
     client: company._id.toString(),
     user: user._id.toString(),
   });

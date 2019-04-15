@@ -9,6 +9,7 @@ import {
   createQuestion,
   createProject,
   createQuestionnaire,
+  updateQuestionnaire,
 } from './db';
 
 
@@ -31,6 +32,7 @@ export const bulkAdd = async ({
   files.map(async (filename) => {
     const filepath = path.resolve('.', 'src', 'app', 'etl-pipeline', 'samples', filename);
     const projectData = await fs.readAsync(filepath);
+    const newOrder = [];
     const {
       items: {
         name,
@@ -64,7 +66,6 @@ export const bulkAdd = async ({
     const questionnaire = {
       _id: new ObjectId(),
       name,
-      order,
       // eslint-disable-next-line no-underscore-dangle
       project: project._id.toString(),
       destroyed: false,
@@ -103,14 +104,9 @@ export const bulkAdd = async ({
 
           // eslint-disable-next-line no-restricted-syntax
           for (const question of questions) {
+            const oldId = question.id;
+
             Object.assign(question, {
-              options: !question.options
-                ? []
-                : question.options.map(({ ovalue: value, olabel: label }) => ({ value, label })),
-              sentences: !question.sentences
-                ? []
-                : question.sentences
-                  .map(({ ovalue: value, osentence: sentence }) => ({ value, sentence })),
               _id: new ObjectId(),
               group: group._id.toString(),
               destroyed: false,
@@ -118,6 +114,13 @@ export const bulkAdd = async ({
 
             // eslint-disable-next-line no-underscore-dangle
             createQuestion(question);
+
+            // remake the order using the old position but with the new ids of the new questions
+            newOrder[order.indexOf(oldId)] = question._id.toString();
+
+            console.log("******************",newOrder)
+
+            updateQuestionnaire(questionnaire._id, { order: newOrder });
           }
         }
       }
