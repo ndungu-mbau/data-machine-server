@@ -53,27 +53,27 @@
 						"options": [
 							{
 								"label": "I tool someone else's survey",
-								"ovalue": "else"
+								"value": "else"
 							},
 							{
 								"label": "Banner Advertisement",
-								"ovalue": "banner"
+								"value": "banner"
 							},
 							{
 								"label": "Search Engine",
-								"ovalue": "search"
+								"value": "search"
 							},
 							{
 								"label": "Referal link from another site",
-								"ovalue": "referal"
+								"value": "referal"
 							},
 							{
 								"label": "Magazine/Print Advertisement",
-								"ovalue": "magazine"
+								"value": "magazine"
 							},
 							{
 								"label": "Other Please specify",
-								"ovalue": "other"
+								"value": "other"
 							}
 						],
 						"sentences": [],
@@ -137,31 +137,31 @@
 						"options": [
 							{
 								"label": "28.8 Kbps modem",
-								"ovalue": "28.8"
+								"value": "28.8"
 							},
 							{
 								"label": "56 Kbps modem",
-								"ovalue": "56"
+								"value": "56"
 							},
 							{
 								"label": "ISDN",
-								"ovalue": "ISDN"
+								"value": "ISDN"
 							},
 							{
 								"label": " Cable modem",
-								"ovalue": "cable"
+								"value": "cable"
 							},
 							{
 								"label": "DSL",
-								"ovalue": "DSL"
+								"value": "DSL"
 							},
 							{
 								"label": "T1 or better",
-								"ovalue": "t1"
+								"value": "t1"
 							},
 							{
 								"label": "Do not know",
-								"ovalue": "not_know"
+								"value": "not_know"
 							}
 						],
 						"sentences": [],
@@ -194,11 +194,11 @@
 						"options": [
 							{
 								"label": "United States",
-								"ovalue": "US"
+								"value": "US"
 							},
 							{
 								"label": "Other",
-								"ovalue": "other"
+								"value": "other"
 							}
 						],
 						"sentences": [],
@@ -248,15 +248,15 @@
 						"options": [
 							{
 								"label": "Havnt used it yet",
-								"ovalue": "not_used"
+								"value": "not_used"
 							},
 							{
 								"label": "Yes",
-								"ovalue": "Yes"
+								"value": "Yes"
 							},
 							{
 								"label": "No",
-								"ovalue": "No"
+								"value": "No"
 							}
 						],
 						"sentences": null,
@@ -331,15 +331,15 @@
 						"options": [
 							{
 								"label": "Very Important",
-								"ovalue": "very"
+								"value": "very"
 							},
 							{
 								"label": "Important",
-								"ovalue": "important"
+								"value": "important"
 							},
 							{
 								"label": "Not important",
-								"ovalue": "not"
+								"value": "not"
 							}
 						],
 						"sentences": [

@@ -118,8 +118,6 @@ export const bulkAdd = async ({
             // remake the order using the old position but with the new ids of the new questions
             newOrder[order.indexOf(oldId)] = question._id.toString();
 
-            console.log("******************",newOrder)
-
             updateQuestionnaire(questionnaire._id, { order: newOrder });
           }
         }
