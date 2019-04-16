@@ -11,6 +11,8 @@ MongoClient.connect(config[NODE_ENV].db.url, { useNewUrlParser: true }, (err, cl
 });
 
 const dbWrite = async ({ collection, data }) => db.collection(collection).insertOne(data);
+const dbUpdate = async ({ collection, _id, data }) => db.collection(collection)
+  .updateOne({ _id }, { $set: data });
 
 export const createPage = async page => dbWrite({ collection: 'page', data: page });
 
@@ -21,3 +23,5 @@ export const createQuestion = async question => dbWrite({ collection: 'question'
 export const createProject = async project => dbWrite({ collection: 'project', data: project });
 
 export const createQuestionnaire = async questionnaire => dbWrite({ collection: 'questionnaire', data: questionnaire });
+
+export const updateQuestionnaire = async (_id, data) => dbUpdate({ collection: 'questionnaire', _id, data });

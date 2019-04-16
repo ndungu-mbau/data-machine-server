@@ -1,0 +1,419 @@
+{
+	"items": {
+		"name": "Example Survey",
+		"order": [
+			"5cb4874487c4ef0389bb109c",
+			"5cb4874487c4ef0389bb109d",
+			"5cb4874487c4ef0389bb109e",
+			"5cb4874487c4ef0389bb109f",
+			"5cb4874487c4ef0389bb10a0",
+			"5cb4874487c4ef0389bb10a1",
+			"5cb4874487c4ef0389bb10a2",
+			"5cb4874487c4ef0389bb10a3",
+			"5cb4874487c4ef0389bb10a4",
+			"5cb4874487c4ef0389bb10a5",
+			"5cb4874487c4ef0389bb10a6",
+			"5cb4874487c4ef0389bb10a7",
+			"5cb4874487c4ef0389bb10a8",
+			"5cb4874487c4ef0389bb10a9",
+			"5cb4874487c4ef0389bb10aa",
+			"5cb4874487c4ef0389bb10ab",
+			"5cb4874487c4ef0389bb10ac",
+			"5cb4874487c4ef0389bb10ad",
+			"5cb4874487c4ef0389bb10ae"
+		],
+		"pages": [
+			{
+				"name": "",
+				"groups": [
+					{
+						"name": "",
+						"questions": [
+							{
+								"id": "5cb4874487c4ef0389bb109c",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "How did you learn about braiven datakit?",
+								"tag": null,
+								"position": null,
+								"validation": null,
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb109d",
+								"type": "singleSelect",
+								"contentType": null,
+								"placeholder": null,
+								"tag": "know",
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": null,
+								"options": [
+									{
+										"label": "I tool someone else's survey",
+										"value": "else"
+									},
+									{
+										"label": "Banner Advertisement",
+										"value": "banner"
+									},
+									{
+										"label": "Search Engine",
+										"value": "search"
+									},
+									{
+										"label": "Referal link from another site",
+										"value": "referal"
+									},
+									{
+										"label": "Magazine/Print Advertisement",
+										"value": "magazine"
+									},
+									{
+										"label": "Other Please specify",
+										"value": "other"
+									}
+								],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb109e",
+								"type": "input",
+								"contentType": null,
+								"placeholder": "Other",
+								"tag": "other",
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": {
+									"parent": "know_Other Please specify",
+									"parentValue": "other"
+								},
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb109f",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "<b>* Please provide us with some background information to help us design the app around your needs</b>",
+								"tag": null,
+								"position": null,
+								"validation": null,
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a0",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "What kind of connection do you have to the internet?",
+								"tag": null,
+								"position": null,
+								"validation": null,
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a1",
+								"type": "singleSelect",
+								"contentType": null,
+								"placeholder": null,
+								"tag": "internet",
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": null,
+								"options": [
+									{
+										"label": "28.8 Kbps modem",
+										"value": "28.8"
+									},
+									{
+										"label": "56 Kbps modem",
+										"value": "56"
+									},
+									{
+										"label": "ISDN",
+										"value": "ISDN"
+									},
+									{
+										"label": " Cable modem",
+										"value": "cable"
+									},
+									{
+										"label": "DSL",
+										"value": "DSL"
+									},
+									{
+										"label": "T1 or better",
+										"value": "t1"
+									},
+									{
+										"label": "Do not know",
+										"value": "not_know"
+									}
+								],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a2",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "Where are you located?",
+								"tag": null,
+								"position": null,
+								"validation": null,
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a3",
+								"type": "singleSelect",
+								"contentType": null,
+								"placeholder": null,
+								"tag": "Location",
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": null,
+								"options": [
+									{
+										"label": "United States",
+										"value": "US"
+									},
+									{
+										"label": "Other",
+										"value": "other"
+									}
+								],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a4",
+								"type": "input",
+								"contentType": null,
+								"placeholder": " Other country",
+								"tag": "Other_location",
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": {
+									"parent": "Location_Other",
+									"parentValue": "other"
+								},
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a5",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "<span style=\"color: rgb(34, 34, 34); font-family: &quot;dejavu sans mono&quot;, monospace; font-size: 11px; white-space: pre-wrap;\">Are you satisfied with the overall usability of SurveyMonkey?  If not, tell us how we can improve...</span>",
+								"tag": "test_thing",
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a6",
+								"type": "singleSelect",
+								"contentType": null,
+								"placeholder": null,
+								"tag": "satisfaction",
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": null,
+								"options": [
+									{
+										"label": "Havnt used it yet",
+										"value": "not_used"
+									},
+									{
+										"label": "Yes",
+										"value": "Yes"
+									},
+									{
+										"label": "No",
+										"value": "No"
+									}
+								],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a7",
+								"type": "input",
+								"contentType": null,
+								"placeholder": "How can we improve?",
+								"tag": "improvements",
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": {
+									"parent": "satisfaction_No",
+									"parentValue": "No"
+								},
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a8",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "What other features would you like to see added to Braiven Datakit",
+								"tag": null,
+								"position": null,
+								"validation": null,
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10a9",
+								"type": "input",
+								"contentType": null,
+								"placeholder": "features",
+								"tag": "feature_suggestions",
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10aa",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "<span style=\"color: rgb(34, 34, 34); font-family: &quot;dejavu sans mono&quot;, monospace; font-size: 11px; white-space: pre-wrap;\">The following features may be added to SurveyMonkey in the near future.  Please rate the importance of the following features.</span> ",
+								"tag": null,
+								"position": null,
+								"validation": null,
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10ab",
+								"type": "likert",
+								"contentType": null,
+								"placeholder": null,
+								"tag": null,
+								"position": null,
+								"validation": "{\"presence\":false}",
+								"conditional": null,
+								"options": [
+									{
+										"label": "Very Important",
+										"value": "very"
+									},
+									{
+										"label": "Important",
+										"value": "important"
+									},
+									{
+										"label": "Not important",
+										"value": "not"
+									}
+								],
+								"sentences": [
+									{
+										"sentenceValue": "templates",
+										"sentenceLabel": "Survey templates"
+									},
+									{
+										"sentenceValue": "multi-lingual",
+										"sentenceLabel": "Increased multi-lingual support"
+									},
+									{
+										"sentenceValue": "MultipleUsers",
+										"sentenceLabel": "Multiple Users per Account"
+									},
+									{
+										"sentenceValue": "charts",
+										"sentenceLabel": "Graphical charts of response data"
+									}
+								],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10ac",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "<h3 class=\"page-subtitle  user-generated notranslate\" style=\"margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding: 0px 0px 15px; border: 0px; font-variant-numeric: inherit; font-variant-east-asian: inherit; font-stretch: inherit; font-size: 16px; line-height: inherit; font-family: Arial; overflow-wrap: break-word; color: rgb(0, 0, 0);\"><b>We appreciate your feedback. It is your ideas that have made this site what it is today.&nbsp;</b></h3> ",
+								"tag": null,
+								"position": null,
+								"validation": null,
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10ad",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "Thanks again!,",
+								"tag": null,
+								"position": null,
+								"validation": null,
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							},
+							{
+								"id": "5cb4874487c4ef0389bb10ae",
+								"type": "instruction",
+								"contentType": null,
+								"placeholder": "braiven.io",
+								"tag": null,
+								"position": null,
+								"validation": null,
+								"conditional": null,
+								"options": [],
+								"sentences": [],
+								"group": "5cb4874487c4ef0389bb109b",
+								"needsEdit": false
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
