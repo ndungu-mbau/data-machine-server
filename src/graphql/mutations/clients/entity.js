@@ -71,8 +71,6 @@ const inviteUser = async (args, { db, user, ObjectId }) => {
     destroyed: false,
   };
 
-  console.log('===>', invitation);
-
   await db.collection('invitation')
     .insertOne(invitation);
 

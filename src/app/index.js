@@ -516,9 +516,9 @@ app.post('/saasAuth/activateInvitation/:id', async (req, res) => {
       .insertOne(user_role);
 
     await db
-        .collection('user')
-        .insertOne(legacyUser);
-    res.send()
+      .collection('user')
+      .insertOne(legacyUser);
+    res.send();
   }
 });
 
