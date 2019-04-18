@@ -64,6 +64,23 @@ const nested = {
       const client = await db.collection('company').findOne({ createdBy: id });
 
       if (!client) {
+        // find role with user id in it
+        const roleUser = await db.collection('user_roles').findOne({ userId: id });
+
+        if (roleUser) {
+          const role = await db.collection('role').findOne({ _id: roleUser.role });
+
+          const clientFromRole = await db.collection('company').findOne({ _id: role.clientId });
+
+          return Object.assign(clientFromRole, {
+            id: clientFromRole._id,
+            name: clientFromRole.company_name,
+            reg_id: clientFromRole.company_registration_id,
+            contact_email: clientFromRole.company_email,
+            comms_sms: clientFromRole.communications_sms,
+          });
+        }
+
         return {
           id: 'legacy account',
         };
@@ -104,10 +121,12 @@ const nested = {
 
       const completeRoles = [];
       // eslint-disable-next-line camelcase
-      const fetchedRoles = await Promise.all(user_roles.map(user_role => db
-        .collection('role')
-        .find({ _id: user_role.role, destroyed: false })
-        .toArray()));
+      const fetchedRoles = await Promise.all(
+        user_roles.map(userRole => db
+          .collection('role')
+          .find({ _id: userRole.role, destroyed: false })
+          .toArray()),
+      );
 
       // console.log(fetchedRoles, completeRoles);
 
