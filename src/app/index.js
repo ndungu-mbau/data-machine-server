@@ -422,7 +422,7 @@ app.post(
         id,
         host: NODE_ENV === 'production'
           ? 'https://app.braiven.io'
-          : 'http://localhost:3000',
+          : 'http://localhost:3002',
       },
     });
 
@@ -436,6 +436,91 @@ app.post(
       });
   },
 );
+
+app.post('/saasAuth/checkUser', async (req, res) => {
+  const { invitationId } = req.body;
+
+  const {
+    user: userEmail,
+  } = await db
+    .collection('invitation')
+    .findOne({
+      _id: new ObjectID(invitationId),
+    });
+
+  const user = await db
+    .collection('user')
+    .findOne({
+      email: userEmail,
+    });
+
+  if (!user) {
+    res.status(404).send();
+  } else {
+    res.status(200).send();
+  }
+});
+
+
+app.post('/saasAuth/activateInvitation/:id', async (req, res) => {
+  const { password } = req.body;
+  const { id } = req.params;
+
+  const {
+    user: userEmail,
+    client,
+    name: userFirstName,
+  } = await db
+    .collection('invitation')
+    .findOne({
+      _id: new ObjectID(id),
+    });
+
+  // check if the user exists and add the role to their account as admin
+  const user = await db
+    .collection('user')
+    .findOne({
+      email: userEmail,
+    });
+
+  if (!user) {
+    // create a user
+    const legacyUser = {
+      _id: new ObjectID(),
+      firstName: userFirstName,
+      password: sha1(password),
+      email: userEmail,
+      destroyed: false,
+      userActivated: true,
+    };
+
+    // find the clients admin role
+    const adminRole = await db
+      .collection('role')
+      .findOne({
+        clientId: new ObjectID(client),
+        name: 'admin',
+        destroyed: false,
+      });
+
+    // create a roleUser
+    const user_role = {
+      _id: new ObjectId(),
+      role: adminRole._id,
+      userId: legacyUser._id,
+      destroyed: false,
+    };
+
+    await db
+      .collection('user_roles')
+      .insertOne(user_role);
+
+    await db
+      .collection('user')
+      .insertOne(legacyUser);
+    res.send();
+  }
+});
 
 app.post(
   '/saasAuth/resetPassword/:resetRequestId',

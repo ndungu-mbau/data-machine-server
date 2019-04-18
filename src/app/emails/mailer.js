@@ -194,6 +194,7 @@ const sendInvitationEmail = async ({
         name: companyName,
       },
     },
+    host,
   },
 }) => {
   const tempFn = doT.template(
@@ -211,6 +212,7 @@ const sendInvitationEmail = async ({
         name: companyName,
       },
     },
+    host,
   });
 
   sendMail({

@@ -1,6 +1,7 @@
 import emit from '../../../app/actions/index';
 /* eslint-disable no-underscore-dangle */
 const collection = 'client';
+const { NODE_ENV } = process.env;
 const { sendInvitationEmail } = require('../../../app/emails/mailer');
 
 const create = async (args, { db, ObjectId }) => {
@@ -70,10 +71,10 @@ const inviteUser = async (args, { db, user, ObjectId }) => {
     destroyed: false,
   };
 
-  await db.collection('invitation')
-    .insertOne(invitation);
+  await db.collection('invitation').insertOne(invitation);
 
-  const client = await db.collection('company')
+  const client = await db
+    .collection('company')
     .findOne({ _id: new ObjectId(args.invitation.client) });
 
   const mailData = {
@@ -88,6 +89,7 @@ const inviteUser = async (args, { db, user, ObjectId }) => {
         name: client.company_name,
       },
     },
+    host: NODE_ENV === 'production' ? 'https://app.braiven.io' : 'http://localhost:3002',
   };
 
   sendInvitationEmail({
@@ -99,8 +101,7 @@ const inviteUser = async (args, { db, user, ObjectId }) => {
 };
 
 const cancelInvitation = async (args, { db, ObjectId }) => {
-  await db.collection('invitation')
-    .removeOne({ _id: new ObjectId(args.invitation) });
+  await db.collection('invitation').removeOne({ _id: new ObjectId(args.invitation) });
 };
 
 export {
