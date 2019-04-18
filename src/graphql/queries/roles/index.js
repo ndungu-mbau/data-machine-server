@@ -7,7 +7,8 @@ const type = `
     client:client,
     name:String,
     permissions:[String],
-    company:client
+    company:client,
+    users:[user]
   }
 `;
 
@@ -38,6 +39,19 @@ const nested = {
         // eslint-disable-next-line comma-dangle
         id: clientData._id
       });
+    },
+    async users({ _id }, args, { db }) {
+      const usersInRole = await db
+        .collection('user_roles')
+        .find({ role: _id }).toArray();
+
+      const users = await Promise.all(usersInRole.map(({ userId }) => db
+        .collection('user')
+        .findOne({ _id: userId })));
+
+      return users.filter(x => x).map(user => Object.assign({}, user, {
+        id: user._id,
+      }));
     },
   },
 };
