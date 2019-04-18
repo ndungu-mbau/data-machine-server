@@ -100,7 +100,7 @@ const nested = {
       const roleUsers = await db.collection('user_roles').find({ userId: id }).toArray();
 
       if (roleUsers.length !== 0) {
-        return roleUser.map(async (roleUser) => {
+        return roleUsers.map(async (roleUser) => {
           const role = await db.collection('role').findOne({ _id: roleUser.role });
 
           const clientFromRole = await db.collection('company').findOne({ _id: role.clientId });
