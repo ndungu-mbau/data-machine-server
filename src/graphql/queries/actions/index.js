@@ -44,7 +44,9 @@ const nested = {
     async actions({ name, client, project }, args, { db }) {
       const actions = await db
         .collection('action')
-        .find({ client, project, event: name })
+        .find({
+          client, project, event: name, destroyed: false,
+        })
         .toArray();
 
       const final = actions.map(x => Object.assign({}, x, {
