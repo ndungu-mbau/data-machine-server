@@ -11,6 +11,12 @@ import {
 } from './clients';
 
 import {
+  type as actionsType,
+  queries as actionsMutations,
+  root as actionsRoot,
+} from './actions';
+
+import {
   type as rolesType,
   queries as roleMutations,
   root as roleRoot,
@@ -114,6 +120,7 @@ import {
 
 const typeMutations = `
 ${clientsType},
+${actionsType}
 ${teamsType},
 ${projectType},
 ${dashboardType},
@@ -135,6 +142,7 @@ ${rolesType},
 type Mutation {
     honk: String,
     ${clientsMutations}
+    ${actionsMutations}
     ${teamsMutations}
     ${projectMutations}
     ${dashboardMutations}
@@ -177,5 +185,6 @@ Object.assign(mutationRoot, layoutRoot);
 Object.assign(mutationRoot, dashboardRoot);
 Object.assign(mutationRoot, submissionGroupsRoot);
 Object.assign(mutationRoot, roleRoot);
+Object.assign(mutationRoot, actionsRoot);
 
 export { typeMutations, mutationRoot };

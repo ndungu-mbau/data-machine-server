@@ -3,6 +3,7 @@ import {
   update,
   destroy,
   restore,
+  updateOrder,
 } from './entity';
 
 const type = `
@@ -17,7 +18,10 @@ const type = `
     message:String,
     requestType:String,
     headers:String,
-    url:String
+    url:String,
+    client:String,
+    project:String,
+    event:String
   }
 
   type actionMutations {
@@ -25,6 +29,7 @@ const type = `
     update (action:newAction):action,
     destroy (action:newAction):action,
     restore (action:newAction):action,
+    updateOrder (name:String,project:String,client:String,order:[String]):action,
   }
 `;
 
@@ -33,11 +38,12 @@ const queries = `
 `;
 
 const root = {
-  projectMutations: () => ({
+  actionMutations: () => ({
     create,
     update,
     destroy,
     restore,
+    updateOrder,
   }),
 };
 

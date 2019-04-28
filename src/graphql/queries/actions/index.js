@@ -14,10 +14,17 @@ const type = `
     headers:String,
     url:String
   }
+
+  type event {
+    id:String,
+    name:String,
+    order:[String],
+    actions:[action]
+  }
 `;
 
 const queries = `
-  action(id:String!):action,
+  action(client:String,project:String):event,
   actions(filter:filter!):[action]
 `;
 
@@ -33,6 +40,21 @@ const action = async (x, { id }, { db, ObjectId }) => {
 };
 
 const nested = {
+  event: {
+    async actions({ name, client, project }, args, { db }) {
+      const actions = await db
+        .collection('action')
+        .find({ client, project, event: name })
+        .toArray();
+
+      const final = actions.map(x => Object.assign({}, x, {
+        // eslint-disable-next-line comma-dangle
+        id: x._id
+      }));
+
+      return final;
+    },
+  },
   action: {
     // async company({ clientId }, args, { db }) {
     //   const clientData = await db
