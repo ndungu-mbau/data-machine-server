@@ -6,6 +6,7 @@ const type = `
     questionnaire:questionnaire,
     client:client
     teams:[team]
+    events:[event]
   }
 
   input filter {
@@ -63,6 +64,16 @@ const nested = {
 
       data.id = data._id;
       return data;
+    },
+    events: async ({ id }, args, { db }) => {
+      const actionOrders = await db
+        .collection('events')
+        .find({ project: id.toString() })
+        .toArray();
+
+      return actionOrders.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
     },
   },
 };

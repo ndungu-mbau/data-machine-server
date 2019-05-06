@@ -12,7 +12,8 @@ const type = `
     message:String,
     requestType:String,
     headers:String,
-    url:String
+    url:String,
+    project:String
   }
 
   type event {

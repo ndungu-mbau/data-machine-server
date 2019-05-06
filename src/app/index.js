@@ -41,10 +41,8 @@ const createAccountLimiter = rateLimit({
 const loginAccountLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour window
   max: 5, // start blocking after 5 requests
-  message:
-    'Too login attempts this IP, please try again after an hour',
+  message: 'Too login attempts this IP, please try again after an hour',
 });
-
 
 const PNF = require('google-libphonenumber').PhoneNumberFormat;
 
@@ -71,7 +69,10 @@ const hemera = new Hemera(nats, {
 AWS.config.loadFromPath('aws_config.json');
 
 const {
-  NODE_ENV = 'development', EMAIL_BASE, MASTER_TOKEN, DISABLE_JOBS = false,
+  NODE_ENV = 'development',
+  EMAIL_BASE,
+  MASTER_TOKEN,
+  DISABLE_JOBS = false,
 } = process.env;
 
 const multer = Multer({
@@ -101,20 +102,27 @@ MongoClient.connect(
     // eslint-disable-next-line array-callback-return
     jobs.forEach(({
       name, schedule, work, options, emediate,
-      // eslint-disable-next-line consistent-return
+    // eslint-disable-next-line consistent-return
     }) => {
+      // eslint-disable-next-line consistent-return
       if (emediate === true) {
         return work({ db, log });
       }
 
       if (NODE_ENV !== 'development' && !DISABLE_JOBS) {
-        const task = cron.schedule(schedule, () => {
-          try {
-            work({ db, log });
-          } catch (taskStartError) {
-            log.info(`Job ${name} failed with error ${taskStartError.message}`);
-          }
-        }, options);
+        const task = cron.schedule(
+          schedule,
+          () => {
+            try {
+              work({ db, log });
+            } catch (taskStartError) {
+              log.info(
+                `Job ${name} failed with error ${taskStartError.message}`,
+              );
+            }
+          },
+          options,
+        );
         return task.start();
       }
     });
@@ -134,11 +142,9 @@ const auth = (req, res, next) => {
   }
 };
 
-app.use(
-  cors(),
-  bodyParser.urlencoded({ extended: false }),
-  bodyParser.json(),
-);
+app.options('*', cors());
+
+app.use(bodyParser.urlencoded({ extended: false }), bodyParser.json());
 
 if (NODE_ENV !== 'test') {
   app.use(morgan('combined'));
@@ -234,7 +240,6 @@ const getDayBreakDown = ({ start, end }) => {
       .subtract(count, 'day')
       .startOf('day');
 
-
     dayCountDays[count] = moment(t);
   }
 
@@ -279,19 +284,17 @@ app.post(
             phoneNumber: phone,
           },
         });
-        return res.send(Object.assign(userData, {
-          password: undefined,
-          token: jwt.sign(userData, config[NODE_ENV].hashingSecret),
-        }));
+        return res.send(
+          Object.assign(userData, {
+            password: undefined,
+            token: jwt.sign(userData, config[NODE_ENV].hashingSecret),
+          }),
+        );
       }
-      return res
-        .status(401)
-        .send({ message: 'Passwords do not match' });
+      return res.status(401).send({ message: 'Passwords do not match' });
     }
 
-    return res
-      .status(401)
-      .send({ message: 'Account does not exist ' });
+    return res.status(401).send({ message: 'Account does not exist ' });
   },
 );
 
@@ -315,9 +318,7 @@ app.post(
     log.info('authenticating management', username);
     if (allowedAdmins.includes(username)) {
       log.info('authing a legit manager', username);
-      const userData = await db
-        .collection('user')
-        .findOne({ email: username });
+      const userData = await db.collection('user').findOne({ email: username });
 
       if (userData) {
         if (userData.password === sha1(password)) {
@@ -328,10 +329,15 @@ app.post(
               phoneNumber: username,
             },
           });
-          return res.send(Object.assign(userData, {
-            password: undefined,
-            token: jwt.sign(userData, config[NODE_ENV].managementHashingSecret),
-          }));
+          return res.send(
+            Object.assign(userData, {
+              password: undefined,
+              token: jwt.sign(
+                userData,
+                config[NODE_ENV].managementHashingSecret,
+              ),
+            }),
+          );
         }
         log.info('**** passwords did not match');
 
@@ -352,13 +358,11 @@ app.post(
   loginAccountLimiter,
   celebrate({
     body: Joi.object().keys({
-      email: Joi
-        .string()
+      email: Joi.string()
         .email()
         .required()
         .error(new Error('Please provide an valid email')),
-      password: Joi
-        .string()
+      password: Joi.string()
         .required()
         .error(new Error('Please provide a password')),
     }),
@@ -366,9 +370,7 @@ app.post(
   async (req, res) => {
     const { email, password } = req.body;
 
-    const userData = await db
-      .collection('user')
-      .findOne({ email });
+    const userData = await db.collection('user').findOne({ email });
 
     if (userData) {
       const saasUserData = await db
@@ -383,13 +385,12 @@ app.post(
             email,
           },
         });
-        return res.send(Object.assign(userData, {
-          password: undefined,
-          token: jwt.sign(
-            saasUserData,
-            config[NODE_ENV].hashingSecret,
-          ),
-        }));
+        return res.send(
+          Object.assign(userData, {
+            password: undefined,
+            token: jwt.sign(saasUserData, config[NODE_ENV].hashingSecret),
+          }),
+        );
       }
 
       return res
@@ -397,9 +398,7 @@ app.post(
         .send({ message: 'Password provided does not match our records' });
     }
 
-    return res
-      .status(401)
-      .send({ message: 'Account does not exist' });
+    return res.status(401).send({ message: 'Account does not exist' });
   },
 );
 
@@ -407,8 +406,7 @@ app.post(
   '/saasAuth/requestResetPassword',
   celebrate({
     body: Joi.object().keys({
-      email: Joi
-        .string()
+      email: Joi.string()
         .email()
         .required(),
     }),
@@ -420,39 +418,32 @@ app.post(
       to: email,
       data: {
         id,
-        host: NODE_ENV === 'production'
-          ? 'https://app.braiven.io'
-          : 'http://localhost:3002',
+        host:
+          NODE_ENV === 'production'
+            ? 'https://app.braiven.io'
+            : 'http://localhost:3002',
       },
     });
 
     res.send();
-    await db
-      .collection('loginRequest')
-      .insertOne({
-        _id: id,
-        email,
-        time: new Date(),
-      });
+    await db.collection('loginRequest').insertOne({
+      _id: id,
+      email,
+      time: new Date(),
+    });
   },
 );
 
 app.post('/saasAuth/checkUser', async (req, res) => {
   const { invitationId } = req.body;
 
-  const {
-    user: userEmail,
-  } = await db
-    .collection('invitation')
-    .findOne({
-      _id: new ObjectID(invitationId),
-    });
+  const { user: userEmail } = await db.collection('invitation').findOne({
+    _id: new ObjectID(invitationId),
+  });
 
-  const user = await db
-    .collection('user')
-    .findOne({
-      email: userEmail,
-    });
+  const user = await db.collection('user').findOne({
+    email: userEmail,
+  });
 
   if (!user) {
     res.status(404).send();
@@ -461,27 +452,20 @@ app.post('/saasAuth/checkUser', async (req, res) => {
   }
 });
 
-
 app.post('/saasAuth/activateInvitation/:id', async (req, res) => {
   const { password } = req.body;
   const { id } = req.params;
 
-  const {
-    user: userEmail,
-    client,
-    name: userFirstName,
-  } = await db
+  const { user: userEmail, client, name: userFirstName } = await db
     .collection('invitation')
     .findOne({
       _id: new ObjectID(id),
     });
 
   // check if the user exists and add the role to their account as admin
-  const user = await db
-    .collection('user')
-    .findOne({
-      email: userEmail,
-    });
+  const user = await db.collection('user').findOne({
+    email: userEmail,
+  });
 
   if (!user) {
     // create a user
@@ -495,13 +479,11 @@ app.post('/saasAuth/activateInvitation/:id', async (req, res) => {
     };
 
     // find the clients admin role
-    const adminRole = await db
-      .collection('role')
-      .findOne({
-        clientId: new ObjectID(client),
-        name: 'admin',
-        destroyed: false,
-      });
+    const adminRole = await db.collection('role').findOne({
+      clientId: new ObjectID(client),
+      name: 'admin',
+      destroyed: false,
+    });
 
     // create a roleUser
     const user_role = {
@@ -511,13 +493,9 @@ app.post('/saasAuth/activateInvitation/:id', async (req, res) => {
       destroyed: false,
     };
 
-    await db
-      .collection('user_roles')
-      .insertOne(user_role);
+    await db.collection('user_roles').insertOne(user_role);
 
-    await db
-      .collection('user')
-      .insertOne(legacyUser);
+    await db.collection('user').insertOne(legacyUser);
     res.send();
   }
 });
@@ -526,12 +504,8 @@ app.post(
   '/saasAuth/resetPassword/:resetRequestId',
   celebrate({
     body: Joi.object().keys({
-      password: Joi
-        .string()
-        .required(),
-      confirm: Joi
-        .string()
-        .required(),
+      password: Joi.string().required(),
+      confirm: Joi.string().required(),
     }),
   }),
   async (req, res) => {
@@ -539,8 +513,7 @@ app.post(
     const { resetRequestId } = req.params;
 
     if (confirm !== password) {
-      res.status(401)
-        .send({ message: 'Password entries do not match' });
+      res.status(401).send({ message: 'Password entries do not match' });
     }
 
     const requestData = await db
@@ -548,8 +521,7 @@ app.post(
       .findOne({ _id: ObjectID(resetRequestId) });
 
     if (!requestData) {
-      res.status(401)
-        .send({ message: 'Invalid password reset id' });
+      res.status(401).send({ message: 'Invalid password reset id' });
     }
 
     const userData = await db
@@ -559,13 +531,17 @@ app.post(
     if (userData) {
       await db
         .collection('user')
-        .updateOne({ email: requestData.email }, { $set: { password: sha1(password) } });
+        .updateOne(
+          { email: requestData.email },
+          { $set: { password: sha1(password) } },
+        );
       return res.send();
     }
 
-    return res
-      .status(401)
-      .send({ message: 'We do not have the an account with the email you are trying to register to' });
+    return res.status(401).send({
+      message:
+        'We do not have the an account with the email you are trying to register to',
+    });
   },
 );
 
@@ -621,17 +597,19 @@ app.post(
       destroyed: false,
     });
 
-
     await db.collection('user').insertOne(user);
     return res.send({ token: jwt.sign(user, config[NODE_ENV].hashingSecret) });
   },
 );
 
-
 const { getBrowserInstance } = require('./browserInstance');
 
 const makeDashboardPdf = async (path, params, cb) => {
-  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:1234' : 'https://data-machine.braiven.io'}/dashboard.html#!/${params.q}/dashboard/${params.a}`;
+  const bookingUrl = `${
+    NODE_ENV !== 'production'
+      ? 'http://localhost:1234'
+      : 'https://data-machine.braiven.io'
+  }/dashboard.html#!/${params.q}/dashboard/${params.a}`;
   log.info(bookingUrl);
   try {
     await getBrowserInstance().then(async (browser) => {
@@ -666,7 +644,11 @@ const makeDashboardPdf = async (path, params, cb) => {
 };
 
 const makePdf = async (path, params, cb) => {
-  const bookingUrl = `${NODE_ENV !== 'production' ? 'http://localhost:3002' : 'https://app.braiven.io'}/printable/questionnnaire/${params.q}/answer/${params.a}`;
+  const bookingUrl = `${
+    NODE_ENV !== 'production'
+      ? 'http://localhost:3002'
+      : 'https://app.braiven.io'
+  }/printable/questionnnaire/${params.q}/answer/${params.a}`;
   log.info(bookingUrl);
   try {
     await getBrowserInstance().then(async (browser) => {
@@ -736,7 +718,6 @@ app.post('/submision', async (req, res) => {
     }
   });
 
-
   // eslint-disable-next-line array-callback-return
   Object.entries(submission).map(([key, value]) => {
     if (value) {
@@ -744,11 +725,11 @@ app.post('/submision', async (req, res) => {
         const [, ext] = value.split('.');
 
         const urlRoot = 'https://s3-us-west-2.amazonaws.com/questionnaireuploads/';
-        const url = `${urlRoot}${submission.questionnaireId}_${key}_${submission.completionId}${ext ? `.${ext}` : ''}`;
+        const url = `${urlRoot}${submission.questionnaireId}_${key}_${
+          submission.completionId
+        }${ext ? `.${ext}` : ''}`;
 
-        cleanCopy[
-          key
-        ] = url;
+        cleanCopy[key] = url;
       }
     }
   });
@@ -811,91 +792,102 @@ app.post('/submision', async (req, res) => {
   // eslint-disable-next-line no-underscore-dangle
   const path = `./dist/${submited._id}.pdf`;
 
-  return makePdf(path, {
-    q: cleanCopy.questionnaireId,
-    // eslint-disable-next-line no-underscore-dangle
-    a: entry._id,
-  }, async () => {
-    // --------fetch project details to make a nice project body --------------------
-    // send only for nalm things
-    if (submission.projectId === '5beab5708c9a406732c117a2') {
-      // eslint-disable-next-line no-shadow
-      const {
-        __agentFirstName = '',
-      } = entry;
-
-      const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
-
+  return makePdf(
+    path,
+    {
+      q: cleanCopy.questionnaireId,
       // eslint-disable-next-line no-underscore-dangle
-      const ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
+      a: entry._id,
+    },
+    async () => {
+      // --------fetch project details to make a nice project body --------------------
+      // send only for nalm things
+      if (submission.projectId === '5beab5708c9a406732c117a2') {
+        // eslint-disable-next-line no-shadow
+        const { __agentFirstName = '' } = entry;
 
-      try {
-        const mailResponse = await sendDocumentEmails({
-          from: `"National Treasury via Braiven Datakit " <${EMAIL_BASE}>`,
-          // eslint-disable-next-line no-underscore-dangle
-          to: cleanCopy.__agentEmail,
-          cc: ccPeople.join(','),
-          bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
-          subject: `'${project.name}' Submission`,
-          message: `
+        const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+
+        // eslint-disable-next-line no-underscore-dangle
+        const ccPeople = [
+          'anthony.njeeh@pwc.com',
+          'nalm.nationaltreasury@gmail.com',
+        ];
+
+        try {
+          const mailResponse = await sendDocumentEmails({
+            from: `"National Treasury via Braiven Datakit " <${EMAIL_BASE}>`,
+            // eslint-disable-next-line no-underscore-dangle
+            to: cleanCopy.__agentEmail,
+            cc: ccPeople.join(','),
+            bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
+            subject: `'${project.name}' Submission`,
+            message: `
           Dear ${upper(__agentFirstName.toLowerCase())},
           <br>
           <br>
-          The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
+          The submission for ${upper(
+    project.name.toLowerCase(),
+  )} is now ready for download as a pdf.
           <br>
           <br>
           Regards, The National Treasury
         `,
-          attachments: [{
+            attachments: [
+              {
+                // eslint-disable-next-line no-underscore-dangle
+                filename: `${submited._id}.pdf`,
+                content: fs.createReadStream(path),
+                contentType: 'application/pdf',
+              },
+            ],
+          });
+
+          await db.collection('submision-emails').insertOne(mailResponse);
+        } catch (err) {
+          await db.collection('submision-email-failures').insertOne(err);
+        }
+      } else {
+        const { __agentFirstName = '' } = entry;
+
+        const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+
+        // eslint-disable-next-line no-underscore-dangle
+        try {
+          const mailResponse = await sendDocumentEmails({
+            from: `"Braiven Datakit " <${EMAIL_BASE}>`,
             // eslint-disable-next-line no-underscore-dangle
-            filename: `${submited._id}.pdf`,
-            content: fs.createReadStream(path),
-            contentType: 'application/pdf',
-          }],
-        });
-
-        await db.collection('submision-emails').insertOne(mailResponse);
-      } catch (err) {
-        await db.collection('submision-email-failures').insertOne(err);
-      }
-    } else {
-      const {
-        __agentFirstName = '',
-      } = entry;
-
-      const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
-
-      // eslint-disable-next-line no-underscore-dangle
-      try {
-        const mailResponse = await sendDocumentEmails({
-          from: `"Braiven Datakit " <${EMAIL_BASE}>`,
-          // eslint-disable-next-line no-underscore-dangle
-          to: cleanCopy.__agentEmail,
-          bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
-          subject: `'${project.name}' Submission`,
-          message: `
+            to: cleanCopy.__agentEmail,
+            bcc: ['gitomehbranson@gmail.com', 'skuria@braiven.io'],
+            subject: `'${project.name}' Submission`,
+            message: `
           Dear ${upper(__agentFirstName.toLowerCase())},
           <br>
           <br>
-          The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
+          The submission for ${upper(
+    project.name.toLowerCase(),
+  )} is now ready for download as a pdf.
           <br>
           <br>
           Regards,
         `,
-          attachments: [{
-            // eslint-disable-next-line no-underscore-dangle
-            filename: `${submited._id}.pdf`,
-            content: fs.createReadStream(path),
-            contentType: 'application/pdf',
-          }],
-        });
+            attachments: [
+              {
+                // eslint-disable-next-line no-underscore-dangle
+                filename: `${submited._id}.pdf`,
+                content: fs.createReadStream(path),
+                contentType: 'application/pdf',
+              },
+            ],
+          });
 
-        await db.collection('submision-emails').insertOne(mailResponse);
-      } catch (err) {
-        await db.collection('submision-email-failures').insertOne(err);
+          await db.collection('submision-emails').insertOne(mailResponse);
+        } catch (err) {
+          await db.collection('submision-email-failures').insertOne(err);
+        }
       }
-    }
-  });
+    },
+  );
 });
 
 app.post('/resend_submission_action/:submissionId', async (req, res) => {
@@ -914,71 +906,77 @@ app.post('/resend_submission_action/:submissionId', async (req, res) => {
 
   const path = `./dist/${entry._id}.pdf`;
 
-  return makePdf(path, {
-    q: entry.questionnaireId,
-    a: req.params.submissionId,
-  }, async () => {
-    // -----fetch project details to make a nice project body ---------
-    const project = await db.collection('project').findOne({
-      _id: new ObjectID(entry.projectId),
-    });
+  return makePdf(
+    path,
+    {
+      q: entry.questionnaireId,
+      a: req.params.submissionId,
+    },
+    async () => {
+      // -----fetch project details to make a nice project body ---------
+      const project = await db.collection('project').findOne({
+        _id: new ObjectID(entry.projectId),
+      });
 
-    const {
-      __agentFirstName = '',
-    } = entry;
+      const { __agentFirstName = '' } = entry;
 
-    const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
+      const upper = lower => lower.replace(/^\w/, c => c.toUpperCase());
 
-    let ccPeople;
-    let bccPeople;
-    let to;
+      let ccPeople;
+      let bccPeople;
+      let to;
 
-    // eslint-disable-next-line no-underscore-dangle
-    const { DISABLE_PDF_GENERATION } = process.env;
-
-    // eslint-disable-next-line radix
-    if (parseInt(Number(DISABLE_PDF_GENERATION))) {
-      log.info('*** DISABLE_PDF_GENERATION pdf generation is disabled, ');
-    }
-
-    if (!req.body.real) {
-      to = 'gitomehbranson@gmail.com';
-      ccPeople = [];
-      bccPeople = [];
-    } else {
-      to = entry.__agentEmail;
-      ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
-      bccPeople = ['gitomehbranson@gmail.com', 'skuria@braiven.io'];
-    }
-
-    const emailSendRes = await sendDocumentEmails({
-      from: `"National Treasury via Braiven Datakit " <${EMAIL_BASE}>`,
       // eslint-disable-next-line no-underscore-dangle
-      to,
-      cc: ccPeople.join(','),
-      bcc: bccPeople.join(','),
-      subject: `'${project.name}' Submission`,
-      message: `
+      const { DISABLE_PDF_GENERATION } = process.env;
+
+      // eslint-disable-next-line radix
+      if (parseInt(Number(DISABLE_PDF_GENERATION))) {
+        log.info('*** DISABLE_PDF_GENERATION pdf generation is disabled, ');
+      }
+
+      if (!req.body.real) {
+        to = 'gitomehbranson@gmail.com';
+        ccPeople = [];
+        bccPeople = [];
+      } else {
+        to = entry.__agentEmail;
+        ccPeople = ['anthony.njeeh@pwc.com', 'nalm.nationaltreasury@gmail.com'];
+        bccPeople = ['gitomehbranson@gmail.com', 'skuria@braiven.io'];
+      }
+
+      const emailSendRes = await sendDocumentEmails({
+        from: `"National Treasury via Braiven Datakit " <${EMAIL_BASE}>`,
+        // eslint-disable-next-line no-underscore-dangle
+        to,
+        cc: ccPeople.join(','),
+        bcc: bccPeople.join(','),
+        subject: `'${project.name}' Submission`,
+        message: `
       Dear ${upper(__agentFirstName.toLowerCase())},
       <br>
       <br>
-      The submission for ${upper(project.name.toLowerCase())} is now ready for download as a pdf.
+      The submission for ${upper(
+    project.name.toLowerCase(),
+  )} is now ready for download as a pdf.
       <br>
       <br>
       Regards, The National Treasury
     `,
-      attachments: [{
-        // eslint-disable-next-line no-underscore-dangle
-        filename: `${entry._id}.pdf`,
-        content: fs.createReadStream(path),
-        contentType: 'application/pdf',
-      }],
-    });
+        attachments: [
+          {
+            // eslint-disable-next-line no-underscore-dangle
+            filename: `${entry._id}.pdf`,
+            content: fs.createReadStream(path),
+            contentType: 'application/pdf',
+          },
+        ],
+      });
 
-    return res.status(200).send({
-      emailSendRes,
-    });
-  });
+      return res.status(200).send({
+        emailSendRes,
+      });
+    },
+  );
 });
 
 const action = {
@@ -1021,7 +1019,6 @@ hemera.add(action, async (args) => {
     communications_sms,
     contact,
   } = args.data;
-
 
   const userid = new ObjectID();
   const company = {
@@ -1097,7 +1094,6 @@ hemera.add(action, async (args) => {
     userActivated: false,
   };
 
-
   // check for existing emails and throw errors
   const [existingUser] = await db
     .collection('user')
@@ -1117,11 +1113,9 @@ hemera.add(action, async (args) => {
   await db.collection('company').insertOne(company);
   // await db.collection('client').insertOne(client);
 
-
   emit({ action: actions.SAAS_USER_CREATED, data: legacyUser });
 
   emit({ action: actions.CLIENT_CREATED, data: company });
-
 
   await bulkAdd({
     db,
@@ -1156,10 +1150,7 @@ hemera.add(action, async (args) => {
     company: company.id,
     billing: billing.id,
     settings: settings.id,
-    token: jwt.sign(
-      user,
-      config[NODE_ENV].hashingSecret,
-    ),
+    token: jwt.sign(user, config[NODE_ENV].hashingSecret),
   };
 });
 
@@ -1168,267 +1159,270 @@ const registrationAction = {
   cmd: 'saas-registration',
 };
 
-hemera.add(registrationAction, args => new Promise(async (resolve, reject) => {
-  const {
-    password,
-    email,
-    contact,
-    firstName,
-    orgName,
-  } = args.data;
+hemera.add(
+  registrationAction,
+  args => new Promise(async (resolve, reject) => {
+    const {
+      password, email, contact, firstName, orgName,
+    } = args.data;
 
+    const userid = new ObjectID();
 
-  const userid = new ObjectID();
-
-  const user = {
-    _id: userid,
-    email,
-    phoneNumber: contact,
-    firstName,
-    destroyed: false,
-  };
-
-  const company = {
-    _id: new ObjectID(),
-    company_name: orgName,
-    contact,
-    createdBy: userid,
-    destroyed: false,
-  };
-
-  const settings = {
-    _id: user._id,
-    user: user._id,
-    destroyed: false,
-  };
-
-  const legacyUser = {
-    _id: user._id,
-    firstName: user.firstName,
-    phoneNumber: user.phoneNumber,
-    password: sha1(password),
-    email: user.email,
-    destroyed: false,
-    client: company._id,
-  };
-
-  const activation = {
-    _id: new ObjectId(),
-    user: userid,
-    destroyed: false,
-  };
-
-  // check for existing emails and throw errors
-  const [existingUser] = await db
-    .collection('user')
-    .find({ email: user.email })
-    .toArray();
-
-  if (existingUser) {
-    return reject(new Error('User with this email already exists'));
-  }
-
-  // before starting the db saving things, first reply as thins might take sometime
-  resolve({
-    user: user.id,
-    settings: settings.id,
-    token: jwt.sign(
-      user,
-      config[NODE_ENV].hashingSecret,
-    ),
-  });
-
-  const role = {
-    _id: new ObjectId(),
-    clientId: company._id,
-    name: 'admin',
-    destroyed: false,
-  };
-
-  const user_role = {
-    _id: new ObjectId(),
-    role: role._id,
-    userId: userid,
-    destroyed: false,
-  };
-
-  // create base data
-  await db.collection('user').insertOne(legacyUser);
-  await db.collection('role').insertOne(role);
-  await db.collection('user_roles').insertOne(user_role);
-  await db.collection('company').insertOne(company);
-  await db.collection('activation').insertOne(activation);
-
-  await bulkAdd({
-    db,
-    files: ['example_survey.json'],
-    client: company._id.toString(),
-    user: user._id.toString(),
-  });
-
-  // send out a welcome email
-  registrationThanks({
-    to: user.email,
-    data: Object.assign({}, legacyUser, {
-      company: {
-        name: user.firstName,
-      },
-    }),
-  });
-
-  accountActivationEmail({
-    to: user.email,
-    data: Object.assign({}, legacyUser, {
-      id: legacyUser._id,
-      host: NODE_ENV === 'production'
-        ? 'https://app.braiven.io'
-        : 'http://localhost:3000',
-    }),
-  });
-
-  return userCreatedAccount({
-    to: 'gitomehbranson@gmail.com',
-    data: {
+    const user = {
+      _id: userid,
       email,
-    },
-  });
-  // send out a sample project created email
-  // send out a process guide email
-  // send out a download our app email
-}));
+      phoneNumber: contact,
+      firstName,
+      destroyed: false,
+    };
 
-hemera.add({
-  topic: 'registration',
-  cmd: 'activate-account-check',
-}, async (args) => {
-  const { id } = args;
+    const company = {
+      _id: new ObjectID(),
+      company_name: orgName,
+      contact,
+      createdBy: userid,
+      destroyed: false,
+    };
 
-  const [activation] = await db.collection('activation').find({ user: new ObjectId(id), destroyed: false }).toArray();
+    const settings = {
+      _id: user._id,
+      user: user._id,
+      destroyed: false,
+    };
 
-  if (!activation) {
-    throw new Error('Invalid activation details');
-  }
+    const legacyUser = {
+      _id: user._id,
+      firstName: user.firstName,
+      phoneNumber: user.phoneNumber,
+      password: sha1(password),
+      email: user.email,
+      destroyed: false,
+      client: company._id,
+    };
 
-  return true;
-});
+    const activation = {
+      _id: new ObjectId(),
+      user: userid,
+      destroyed: false,
+    };
 
-hemera.add({
-  topic: 'registration',
-  cmd: 'activate-account',
-}, async (args) => {
-  const {
-    id,
-    password,
+    // check for existing emails and throw errors
+    const [existingUser] = await db
+      .collection('user')
+      .find({ email: user.email })
+      .toArray();
 
-    membership,
-    promotions,
-    accept,
+    if (existingUser) {
+      return reject(new Error('User with this email already exists'));
+    }
 
-    card_holder_name,
-    card_number,
-    billing_card_exp_month,
-    billing_card_exp_year,
-    cvv,
-    address_line_1,
-    address_line_2,
-    zip_code,
-    billing_country,
+    // before starting the db saving things, first reply as thins might take sometime
+    resolve({
+      user: user.id,
+      settings: settings.id,
+      token: jwt.sign(user, config[NODE_ENV].hashingSecret),
+    });
 
-    email,
-    firstName,
-    middleName,
-    lastName,
-    address_1,
-    city,
-    state,
-    country,
+    const role = {
+      _id: new ObjectId(),
+      clientId: company._id,
+      name: 'admin',
+      destroyed: false,
+    };
 
-    company_name,
-    company_registration_id,
-    company_email,
-    company_contact,
-    communications_email,
-    communications_sms,
-    contact,
-  } = args.data;
+    const user_role = {
+      _id: new ObjectId(),
+      role: role._id,
+      userId: userid,
+      destroyed: false,
+    };
 
+    // create base data
+    await db.collection('user').insertOne(legacyUser);
+    await db.collection('role').insertOne(role);
+    await db.collection('user_roles').insertOne(user_role);
+    await db.collection('company').insertOne(company);
+    await db.collection('activation').insertOne(activation);
 
-  const userid = new ObjectID(id);
+    await bulkAdd({
+      db,
+      files: ['example_survey.json'],
+      client: company._id.toString(),
+      user: user._id.toString(),
+    });
 
-  const company = {
-    _id: new ObjectID(),
-    company_name,
-    company_registration_id,
-    company_email,
-    company_contact,
-    communications_email,
-    communications_sms,
-    contact,
-    createdBy: userid,
-    destroyed: false,
-  };
+    // send out a welcome email
+    registrationThanks({
+      to: user.email,
+      data: Object.assign({}, legacyUser, {
+        company: {
+          name: user.firstName,
+        },
+      }),
+    });
 
-  // const client = {
-  //   _id: new ObjectID(),
-  //   name: company_name,
-  //   contact,
-  //   createdBy: userid,
-  //   destroyed: false,
-  // };
+    accountActivationEmail({
+      to: user.email,
+      data: Object.assign({}, legacyUser, {
+        id: legacyUser._id,
+        host:
+            NODE_ENV === 'production'
+              ? 'https://app.braiven.io'
+              : 'http://localhost:3000',
+      }),
+    });
 
-  const user = {
-    _id: userid,
-    email,
-    phoneNumber: contact,
-    firstName,
-    middleName,
-    lastName,
-    address_1,
-    city,
-    state,
-    country,
-    client: company.id,
-    destroyed: false,
-  };
+    return userCreatedAccount({
+      to: 'gitomehbranson@gmail.com',
+      data: {
+        email,
+      },
+    });
+    // send out a sample project created email
+    // send out a process guide email
+    // send out a download our app email
+  }),
+);
 
-  const settings = {
-    _id: user._id,
-    user: user._id,
-    membership,
-    promotions,
-    accept,
-    destroyed: false,
-  };
+hemera.add(
+  {
+    topic: 'registration',
+    cmd: 'activate-account-check',
+  },
+  async (args) => {
+    const { id } = args;
 
-  const billing = {
-    _id: new ObjectID(),
-    company: company._id,
-    user: user._id,
-    card_holder_name,
-    card_number,
-    billing_card_exp_month,
-    billing_card_exp_year,
-    cvv,
-    address_line_1,
-    address_line_2,
-    zip_code,
-    billing_country,
-  };
+    const [activation] = await db
+      .collection('activation')
+      .find({ user: new ObjectId(id), destroyed: false })
+      .toArray();
 
-  const legacyUser = {
-    _id: user._id,
-    firstName: user.firstName,
-    middleName: user.middleName,
-    lastName: user.lastName,
-    phoneNumber: company.contact,
-    password: sha1(password),
-    email: user.email,
-    destroyed: false,
-    client: company._id,
-  };
+    if (!activation) {
+      throw new Error('Invalid activation details');
+    }
 
-  // check for existing emails and throw errors
-  /* const [existingUser] = await db
+    return true;
+  },
+);
+
+hemera.add(
+  {
+    topic: 'registration',
+    cmd: 'activate-account',
+  },
+  async (args) => {
+    const {
+      id,
+      password,
+
+      membership,
+      promotions,
+      accept,
+
+      card_holder_name,
+      card_number,
+      billing_card_exp_month,
+      billing_card_exp_year,
+      cvv,
+      address_line_1,
+      address_line_2,
+      zip_code,
+      billing_country,
+
+      email,
+      firstName,
+      middleName,
+      lastName,
+      address_1,
+      city,
+      state,
+      country,
+
+      company_name,
+      company_registration_id,
+      company_email,
+      company_contact,
+      communications_email,
+      communications_sms,
+      contact,
+    } = args.data;
+
+    const userid = new ObjectID(id);
+
+    const company = {
+      _id: new ObjectID(),
+      company_name,
+      company_registration_id,
+      company_email,
+      company_contact,
+      communications_email,
+      communications_sms,
+      contact,
+      createdBy: userid,
+      destroyed: false,
+    };
+
+    // const client = {
+    //   _id: new ObjectID(),
+    //   name: company_name,
+    //   contact,
+    //   createdBy: userid,
+    //   destroyed: false,
+    // };
+
+    const user = {
+      _id: userid,
+      email,
+      phoneNumber: contact,
+      firstName,
+      middleName,
+      lastName,
+      address_1,
+      city,
+      state,
+      country,
+      client: company.id,
+      destroyed: false,
+    };
+
+    const settings = {
+      _id: user._id,
+      user: user._id,
+      membership,
+      promotions,
+      accept,
+      destroyed: false,
+    };
+
+    const billing = {
+      _id: new ObjectID(),
+      company: company._id,
+      user: user._id,
+      card_holder_name,
+      card_number,
+      billing_card_exp_month,
+      billing_card_exp_year,
+      cvv,
+      address_line_1,
+      address_line_2,
+      zip_code,
+      billing_country,
+    };
+
+    const legacyUser = {
+      _id: user._id,
+      firstName: user.firstName,
+      middleName: user.middleName,
+      lastName: user.lastName,
+      phoneNumber: company.contact,
+      password: sha1(password),
+      email: user.email,
+      destroyed: false,
+      client: company._id,
+    };
+
+    // check for existing emails and throw errors
+    /* const [existingUser] = await db
     .collection('user')
     .find({ email: user.email })
     .toArray();
@@ -1437,16 +1431,21 @@ hemera.add({
     throw new Error('User with this email already exists');
   } */
 
-  // create base data
-  await db.collection('user').updateOne({ _id: userid }, { $set: legacyUser });
-  await db.collection('settings').updateOne({ id: settings._id }, { $set: settings });
-  await db.collection('company').updateOne({ _id: company_contact._id }, { $set: company });
+    // create base data
+    await db
+      .collection('user')
+      .updateOne({ _id: userid }, { $set: legacyUser });
+    await db
+      .collection('settings')
+      .updateOne({ id: settings._id }, { $set: settings });
+    await db
+      .collection('company')
+      .updateOne({ _id: company_contact._id }, { $set: company });
 
-  await db.collection('billing').insertOne(billing);
-  await db.collection('saasUser').insertOne(user);
+    await db.collection('billing').insertOne(billing);
+    await db.collection('saasUser').insertOne(user);
 
-
-  /* registrationThanks({
+    /* registrationThanks({
     to: user.email,
     data: Object.assign({}, legacyUser, {
       company: {
@@ -1461,23 +1460,21 @@ hemera.add({
       email,
     },
   }); */
-  // send out a sample project created email
-  // send out a process guide email
-  // send out a download our app email
+    // send out a sample project created email
+    // send out a process guide email
+    // send out a download our app email
 
-  // start tracking this user for the next 30 days
+    // start tracking this user for the next 30 days
 
-  return {
-    user: user.id,
-    company: company.id,
-    billing: billing.id,
-    settings: settings.id,
-    token: jwt.sign(
-      user,
-      config[NODE_ENV].hashingSecret,
-    ),
-  };
-});
+    return {
+      user: user.id,
+      company: company.id,
+      billing: billing.id,
+      settings: settings.id,
+      token: jwt.sign(user, config[NODE_ENV].hashingSecret),
+    };
+  },
+);
 
 app.get('/submision/:id', async (req, res) => {
   const submission = req.params;
@@ -1513,28 +1510,31 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
   const { phoneNumber } = req.user;
 
   const promises = [];
-  Object.keys(weeks).map(async weekKey => Object.keys(weeks[weekKey].daysInWeek)
-    .map(async (day) => {
-      promises.push(new Promise(async (resolve) => {
-        const { start, end } = weeks[weekKey].daysInWeek[day];
-        const submisions = await db
-          .collection('submision')
-          .find({
-            createdAt: {
-              $gte: start.toDate(),
-              $lte: end.toDate(),
-            },
-            __agentPhoneNumber: phoneNumber,
-          })
-          .count();
+  Object.keys(weeks)
+    .map(async weekKey => Object.keys(weeks[weekKey].daysInWeek)
+      .map(async (day) => {
+        promises.push(
+          new Promise(async (resolve) => {
+            const { start, end } = weeks[weekKey].daysInWeek[day];
+            const submisions = await db
+              .collection('submision')
+              .find({
+                createdAt: {
+                  $gte: start.toDate(),
+                  $lte: end.toDate(),
+                },
+                __agentPhoneNumber: phoneNumber,
+              })
+              .count();
 
-        resolve({
-          submisions,
-          weekKey,
-          day,
-        });
+            resolve({
+              submisions,
+              weekKey,
+              day,
+            });
+          }),
+        );
       }));
-    }));
 
   const residue = await Promise.all(promises);
 
@@ -1553,7 +1553,9 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
 
   const info = {};
 
-  for (const x in Object.values(days)) { /* eslint-disable-line no-restricted-syntax */
+  // eslint-disable-next-line no-restricted-syntax
+  for (const x in Object.values(days)) {
+    /* eslint-disable-line no-restricted-syntax */
     if (Object.prototype.hasOwnProperty.call(Object.values(days), x)) {
       let day = Object.values(days)[x];
       const endTime = day.endOf('day').toDate();
@@ -1566,16 +1568,23 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
 
       const data = await db /* eslint-disable-line no-await-in-loop */
         .collection('submision')
-        .find(Object.assign({}, req.body, {
-          completedAt,
-        })).toArray();
+        .find(
+          Object.assign({}, req.body, {
+            completedAt,
+          }),
+        )
+        .toArray();
 
       day = {
         start: startTime,
         end: endTime,
         count: data.length,
         // attatch data thats used on the admin ui
-        data: data.map(({ _id, GPS_longitude: long, GPS_latitude: lat }) => ({ _id, long, lat })),
+        data: data.map(({ _id, GPS_longitude: long, GPS_latitude: lat }) => ({
+          _id,
+          long,
+          lat,
+        })),
       };
       info[x] = day;
     }
@@ -1597,16 +1606,18 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     .find({ questionnaire: questionnaireId, destroyed: false })
     .toArray();
 
-  const data = await Promise.all(dashboards.map(async dashboard => [
-    await db
-      .collection('cpd')
-      .find({ dashboard: dashboard._id.toString(), destroyed: false })
-      .toArray(),
-    await db
-      .collection('cp')
-      .find({ dashboard: dashboard._id.toString(), destroyed: false })
-      .toArray(),
-  ]));
+  const data = await Promise.all(
+    dashboards.map(async dashboard => [
+      await db
+        .collection('cpd')
+        .find({ dashboard: dashboard._id.toString(), destroyed: false })
+        .toArray(),
+      await db
+        .collection('cp')
+        .find({ dashboard: dashboard._id.toString(), destroyed: false })
+        .toArray(),
+    ]),
+  );
 
   // extract all the cps'd and cpds
   data.map((dashboard) => {
@@ -1620,13 +1631,36 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     .find({ questionnaireId })
     .toArray();
 
+  // fetch all involved emails at once, put them on a map and map them out
+  const involvedUsers = await db
+    .collection('user')
+    .find({
+      phoneNumber: { $in: submisions.map(sub => sub.__agentPhoneNumber) },
+    })
+    .toArray();
+
+  const userMap = {};
+
+  // eslint-disable-next-line array-callback-return
+  involvedUsers.map((user) => { userMap[user.phoneNumber] = user; });
+
+
+  submisions.map((row) => {
+    // eslint-disable-next-line no-param-reassign
+    row.__agentMetaData = userMap[row.__agentPhoneNumber].other;
+    return submisions;
+  });
+
   const computed = submisions.map((row) => {
     const copyRecord = {};
     computedProps.forEach((form) => {
       const tempFn = doT.template(form.formular || '');
       const resultFormular = tempFn(row);
 
-      log.info('running compoundedProps eval on computed', { formular: form.formular, resultFormular });
+      log.info('running compoundedProps eval on computed', {
+        formular: form.formular,
+        resultFormular,
+      });
 
       let calcRes;
       try {
@@ -1648,7 +1682,10 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
       const tempFn = doT.template(c.formular);
       const resultFormular = tempFn(compounded);
 
-      log.info('running compoundedProps eval on computed', { formular: c.formular, resultFormular });
+      log.info('running compoundedProps eval on computed', {
+        formular: c.formular,
+        resultFormular,
+      });
 
       let calcRes;
       try {
@@ -1662,9 +1699,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
       return;
     }
 
-    let values = computed
-      .filter(row => row[c.field])
-      .map(row => row[c.field]);
+    let values = computed.filter(row => row[c.field]).map(row => row[c.field]);
 
     // const result = math[c.type](values);
     let result;
@@ -1755,7 +1790,6 @@ app.get(
     });
   },
 );
-
 
 app.use(errors());
 
