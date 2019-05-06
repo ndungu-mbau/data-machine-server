@@ -105,6 +105,7 @@ MongoClient.connect(
     // eslint-disable-next-line consistent-return
     }) => {
       // eslint-disable-next-line consistent-return
+      // eslint-disable-next-line consistent-return
       if (emediate === true) {
         return work({ db, log });
       }
@@ -1510,31 +1511,30 @@ app.get('/submision/breakDown/:days', auth, async (req, res) => {
   const { phoneNumber } = req.user;
 
   const promises = [];
-  Object.keys(weeks)
-    .map(async weekKey => Object.keys(weeks[weekKey].daysInWeek)
-      .map(async (day) => {
-        promises.push(
-          new Promise(async (resolve) => {
-            const { start, end } = weeks[weekKey].daysInWeek[day];
-            const submisions = await db
-              .collection('submision')
-              .find({
-                createdAt: {
-                  $gte: start.toDate(),
-                  $lte: end.toDate(),
-                },
-                __agentPhoneNumber: phoneNumber,
-              })
-              .count();
+  // eslint-disable-next-line max-len
+  Object.keys(weeks).map(async weekKey => Object.keys(weeks[weekKey].daysInWeek).map(async (day) => {
+    promises.push(
+      new Promise(async (resolve) => {
+        const { start, end } = weeks[weekKey].daysInWeek[day];
+        const submisions = await db
+          .collection('submision')
+          .find({
+            createdAt: {
+              $gte: start.toDate(),
+              $lte: end.toDate(),
+            },
+            __agentPhoneNumber: phoneNumber,
+          })
+          .count();
 
-            resolve({
-              submisions,
-              weekKey,
-              day,
-            });
-          }),
-        );
-      }));
+        resolve({
+          submisions,
+          weekKey,
+          day,
+        });
+      }),
+    );
+  }));
 
   const residue = await Promise.all(promises);
 
@@ -1642,12 +1642,15 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
   const userMap = {};
 
   // eslint-disable-next-line array-callback-return
-  involvedUsers.map((user) => { userMap[user.phoneNumber] = user; });
-
+  involvedUsers.map((user) => {
+    userMap[user.phoneNumber] = user;
+  });
 
   submisions.map((row) => {
-    // eslint-disable-next-line no-param-reassign
-    row.__agentMetaData = userMap[row.__agentPhoneNumber].other;
+    if (userMap[row.__agentPhoneNumber]) {
+      // eslint-disable-next-line no-param-reassign
+      row.__agentMetaData = userMap[row.__agentPhoneNumber].other;
+    }
     return submisions;
   });
 
