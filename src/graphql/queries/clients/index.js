@@ -21,6 +21,7 @@ const type = `
     stats:stats,
     roles:[role],
     invitations:[invitation]
+    events:[event]
   }
 `;
 
@@ -56,6 +57,16 @@ const nested = {
         .find({ client: id.toString(), destroyed: false })
         .toArray();
       return data.map(entry => Object.assign({}, entry, {
+        id: entry._id,
+      }));
+    },
+    events: async ({ id }, args, { db }) => {
+      const actionOrders = await db
+        .collection('events')
+        .find({ client: id.toString() })
+        .toArray();
+
+      return actionOrders.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
     },

@@ -54,7 +54,7 @@
 								"conditional": null,
 								"options": [
 									{
-										"label": "I tool someone else's survey",
+										"label": "I took someone else's survey",
 										"value": "else"
 									},
 									{
@@ -195,8 +195,8 @@
 								"conditional": null,
 								"options": [
 									{
-										"label": "United States",
-										"value": "US"
+										"label": "Kenya",
+										"value": "KE"
 									},
 									{
 										"label": "Other",
@@ -228,7 +228,7 @@
 								"id": "5cb4874487c4ef0389bb10a5",
 								"type": "instruction",
 								"contentType": null,
-								"placeholder": "<span style=\"color: rgb(34, 34, 34); font-family: &quot;dejavu sans mono&quot;, monospace; font-size: 11px; white-space: pre-wrap;\">Are you satisfied with the overall usability of SurveyMonkey?  If not, tell us how we can improve...</span>",
+								"placeholder": "<span style=\"color: rgb(34, 34, 34); font-family: &quot;dejavu sans mono&quot;, monospace; font-size: 11px; white-space: pre-wrap;\">Are you satisfied with the overall usability of Braiven Datakit?  If not, tell us how we can improve...</span>",
 								"tag": "test_thing",
 								"position": null,
 								"validation": "{\"presence\":false}",
@@ -314,7 +314,7 @@
 								"id": "5cb4874487c4ef0389bb10aa",
 								"type": "instruction",
 								"contentType": null,
-								"placeholder": "<span style=\"color: rgb(34, 34, 34); font-family: &quot;dejavu sans mono&quot;, monospace; font-size: 11px; white-space: pre-wrap;\">The following features may be added to SurveyMonkey in the near future.  Please rate the importance of the following features.</span> ",
+								"placeholder": "<span style=\"color: rgb(34, 34, 34); font-family: &quot;dejavu sans mono&quot;, monospace; font-size: 11px; white-space: pre-wrap;\">The following features may be added to Braiven Datakit in the near future.  Please rate the importance of the following features.</span> ",
 								"tag": null,
 								"position": null,
 								"validation": null,

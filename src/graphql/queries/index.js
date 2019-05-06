@@ -20,6 +20,13 @@ import {
 } from './clients';
 
 import {
+  type as actionType,
+  queries as actionQueries,
+  nested as actionQueriesNested,
+  root as actionRoot,
+} from './actions';
+
+import {
   type as billingType,
   queries as billingQueries,
   nested as billingQueriesNested,
@@ -157,9 +164,11 @@ const typeQueries = `
   ${sentencesType},
   ${submissionGroupsType},
   ${invitationType}
+  ${actionType}
   type Query {
       hello: String,
       ${roleQueries},
+      ${actionQueries}
       ${clientQueries},
       ${billingQueries},
       ${invitationQueries}
@@ -202,6 +211,7 @@ Object.assign(
   submissionGroupsNested,
   rolesNested,
   invitationQueriesNested,
+  actionQueriesNested,
 );
 
 
@@ -227,6 +237,7 @@ Object.assign(
   teamRoot,
   billingRoot,
   submissionGroupsRoot,
+  actionRoot,
 );
 
 const queryRoot = { Query, Nested };
