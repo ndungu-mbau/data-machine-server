@@ -102,10 +102,8 @@ MongoClient.connect(
     // eslint-disable-next-line array-callback-return
     jobs.forEach(({
       name, schedule, work, options, emediate,
-    // eslint-disable-next-line consistent-return
+      // eslint-disable-next-line consistent-return
     }) => {
-      // eslint-disable-next-line consistent-return
-      // eslint-disable-next-line consistent-return
       if (emediate === true) {
         return work({ db, log });
       }
@@ -145,7 +143,7 @@ const auth = (req, res, next) => {
 
 app.options('*', cors());
 
-app.use(bodyParser.urlencoded({ extended: false }), bodyParser.json());
+app.use(cors(), bodyParser.urlencoded({ extended: false }), bodyParser.json());
 
 if (NODE_ENV !== 'test') {
   app.use(morgan('combined'));
