@@ -4,6 +4,7 @@ const config = {
   production: {
     db: {
       url,
+      name: 'databank-restore',
     },
     hashingSecret:
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE1MzQwMzU2NDF9.B20KQXUv3hP873OEbb0lTbb63HrkDjsHNQkRHAHkGJE',
