@@ -4,7 +4,7 @@
   "dependencies": {
     "@babel/core": "^7.2.2",
     "apollo-server-express": "^2.0.4",
-    "async": "^2.6.1",
+    "async": "^2.6.2",
     "aws-sdk": "^2.316.0",
     "babel-polyfill": "^6.26.0",
     "bluebird": "^3.5.4",
