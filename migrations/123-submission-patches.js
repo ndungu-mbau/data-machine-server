@@ -14,7 +14,7 @@ module.exports = {
 
     const cursor = Submisions.find({});
     const count = await cursor.count();
-    const index = 1;
+    let index = 1;
 
     // console.log(cursor);
 
@@ -53,7 +53,7 @@ module.exports = {
 
       // add the following fields
       const newInfo = {
-        __agentMetaData: agentInfo.other,
+        __agentMetaData: agentInfo ? agentInfo.other : '',
         __clientName: clientInfo ? clientInfo.name : companyInfo.company_name,
         // eslint-disable-next-line no-underscore-dangle
         client: projectInfo.client,
@@ -64,6 +64,8 @@ module.exports = {
 
       // eslint-disable-next-line no-underscore-dangle
       await Submisions.updateOne({ _id: submision._id }, { $set: newInfo });
+
+      index += 1;
     }
 
     done();
