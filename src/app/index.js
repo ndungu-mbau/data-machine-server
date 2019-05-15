@@ -104,6 +104,7 @@ MongoClient.connect(
       name, schedule, work, options, emediate,
       // eslint-disable-next-line consistent-return
     }) => {
+      // eslint-disable-next-line consistent-return
       if (emediate === true) {
         return work({ db, log });
       }
@@ -682,6 +683,10 @@ const makePdf = async (path, params, cb) => {
 app.post('/submision', async (req, res) => {
   const submission = req.body;
 
+  const Clients = db.collection('client');
+  const Company = db.collection('company');
+  const Users = db.collection('user');
+
   const [existingSubmission] = await db
     .collection('submision')
     .find({ completionId: submission.completionId })
@@ -733,13 +738,38 @@ app.post('/submision', async (req, res) => {
     }
   });
 
-  const entry = Object.assign({}, cleanCopy, {
-    _id: new ObjectID(),
-    createdAt: new Date(),
-    destroyed: false,
-    // eslint-disable-next-line no-underscore-dangle
-    userId: req.user ? req.user._id : undefined,
+  // fetch data to patch to the submitted info
+  const agentInfo = await Users.findOne({
+    phoneNumber: cleanCopy.__agentPhoneNumber,
   });
+
+  const clientInfo = await Clients.findOne({
+    _id: new ObjectId(cleanCopy.client),
+  });
+
+  const companyInfo = await Company.findOne({
+    _id: new ObjectId(cleanCopy.client),
+  });
+
+  const newInfo = {
+    __agentMetaData: agentInfo.other,
+    __clientName: clientInfo ? clientInfo.name : companyInfo.company_name,
+    userId: new ObjectId(agentInfo._id),
+  };
+
+  // save this info to the database as one large object
+  const entry = Object.assign(
+    {},
+    cleanCopy,
+    {
+      _id: new ObjectID(),
+      createdAt: new Date(),
+      destroyed: false,
+      // eslint-disable-next-line no-underscore-dangle
+      userId: req.user ? req.user._id : undefined,
+    },
+    newInfo,
+  );
 
   await db.collection('submision').insertOne(entry);
 
@@ -1265,9 +1295,9 @@ hemera.add(
       data: Object.assign({}, legacyUser, {
         id: legacyUser._id,
         host:
-            NODE_ENV === 'production'
-              ? 'https://app.braiven.io'
-              : 'http://localhost:3000',
+          NODE_ENV === 'production'
+            ? 'https://app.braiven.io'
+            : 'http://localhost:3000',
       }),
     });
 

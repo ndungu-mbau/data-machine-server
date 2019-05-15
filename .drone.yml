@@ -44,7 +44,7 @@ pipeline:
       branch:
       - develop
 
-  production-reploy:
+  production-deploy:
     image: peloton/drone-rancher
     url: https://ops.braiven.io/v2-beta
     access_key: 2B452DA2BD3F853C6DDF
