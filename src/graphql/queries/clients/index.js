@@ -27,7 +27,8 @@ const type = `
 
 const queries = `
   client(id:String):client,
-  clients(filter:filter):[client]
+  clients(filter:filter):[client],
+  companies(filter:filter):[client]
 `;
 
 const client = async (_, { id }, { db, ObjectId }) => {
@@ -46,6 +47,18 @@ const clients = async (_, args, { db }) => {
 
   return data.map(entry => Object.assign({}, entry, {
     id: entry._id,
+  }));
+};
+
+const companies = async (_, args, { db }) => {
+  const data = await db
+    .collection('company')
+    .find({ destroyed: false })
+    .toArray();
+
+  return data.map(entry => Object.assign({}, entry, {
+    id: entry._id,
+    name: entry.company_name,
   }));
 };
 
@@ -147,6 +160,7 @@ const nested = {
 const root = {
   client,
   clients,
+  companies,
 };
 
 export {
