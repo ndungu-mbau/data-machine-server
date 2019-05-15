@@ -8,6 +8,7 @@ module.exports = {
   async up(db, done) {
     const Submisions = db.collection('submision');
     const Clients = db.collection('client');
+    const Projects = db.collection('project');
     const Company = db.collection('company');
     const Users = db.collection('user');
 
@@ -27,19 +28,21 @@ module.exports = {
       console.log('processing with', {
         client: submision.client,
         phone: submision.__agentPhoneNumber,
+        project: submision.projectId,
       });
 
       const agentInfo = await Users.findOne({
-        // eslint-disable-next-line no-underscore-dangle
         phoneNumber: submision.__agentPhoneNumber,
       });
 
-      // eslint-disable-next-line no-await-in-loop
-      const clientInfo = await Clients.findOne({
-        _id: new ObjectId(submision.client),
+      const projectInfo = await Projects.findOne({
+        _id: new ObjectId(submision.projectId),
       });
 
-      // eslint-disable-next-line no-await-in-loop
+      const clientInfo = await Clients.findOne({
+        _id: new ObjectId(projectInfo.client),
+      });
+
       const companyInfo = await Company.findOne({
         _id: new ObjectId(submision.client),
       });
@@ -53,6 +56,7 @@ module.exports = {
         __agentMetaData: agentInfo.other,
         __clientName: clientInfo ? clientInfo.name : companyInfo.company_name,
         // eslint-disable-next-line no-underscore-dangle
+        client: projectInfo.client,
         userId: new ObjectId(agentInfo._id),
       };
 
