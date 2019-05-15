@@ -44,7 +44,7 @@ module.exports = {
       });
 
       const companyInfo = await Company.findOne({
-        _id: new ObjectId(submision.client),
+        _id: new ObjectId(projectInfo.client),
       });
 
       // console.log(submision.__agentPhoneNumber, submision.client);
