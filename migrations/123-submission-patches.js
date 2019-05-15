@@ -29,12 +29,12 @@ module.exports = {
       });
 
       // eslint-disable-next-line no-await-in-loop
-      const clientInfo = await Clients.findOne({
+      const clientInfo = !submision.client ? {} : await Clients.findOne({
         _id: new ObjectId(submision.client),
       });
 
       // eslint-disable-next-line no-await-in-loop
-      const companyInfo = await Company.findOne({
+      const companyInfo = !submision.client ? {} : await Company.findOne({
         _id: new ObjectId(submision.client),
       });
 
