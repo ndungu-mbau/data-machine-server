@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable no-await-in-loop */
 
 
@@ -23,18 +24,23 @@ module.exports = {
       // eslint-disable-next-line no-underscore-dangle
       console.log(index, '/', count, ' : ', submision._id);
 
+      console.log('processing with', {
+        client: submision.client,
+        phone: submision.__agentPhoneNumber,
+      });
+
       const agentInfo = await Users.findOne({
         // eslint-disable-next-line no-underscore-dangle
         phoneNumber: submision.__agentPhoneNumber,
       });
 
       // eslint-disable-next-line no-await-in-loop
-      const clientInfo = !submision.client ? {} : await Clients.findOne({
+      const clientInfo = await Clients.findOne({
         _id: new ObjectId(submision.client),
       });
 
       // eslint-disable-next-line no-await-in-loop
-      const companyInfo = !submision.client ? {} : await Company.findOne({
+      const companyInfo = await Company.findOne({
         _id: new ObjectId(submision.client),
       });
 
