@@ -57,7 +57,7 @@ module.exports = {
         __clientName: clientInfo ? clientInfo.name : companyInfo.company_name,
         // eslint-disable-next-line no-underscore-dangle
         client: projectInfo.client,
-        userId: new ObjectId(agentInfo._id),
+        userId: agentInfo ? new ObjectId(agentInfo._id) : null,
       };
 
       // console.log({ newInfo });
