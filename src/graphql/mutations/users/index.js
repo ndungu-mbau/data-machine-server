@@ -19,7 +19,8 @@ const type = `
     other: String,
     password: String,
     client: String,
-    sendWelcomeSms:Boolean
+    sendWelcomeSms:Boolean,
+    generatePass:Boolean
   }
 
   type userMutations {

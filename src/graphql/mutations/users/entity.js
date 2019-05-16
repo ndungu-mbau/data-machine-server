@@ -90,11 +90,16 @@ const create = async (args, { db, ObjectId, log }) => {
 
 const update = async (args, { db, ObjectId, log }) => {
   const entry = args[collection];
-  if (entry.password) {
-    entry.password = sha1(entry.password);
-  }
 
-  const tempPassword = makeShortPassword();
+
+  const shortPass = args.user.generatePass ? makeShortPassword() : undefined;
+  const passKeep = entry.password || shortPass;
+
+  console.log(args.user.generatePass, shortPass);
+
+  if (entry.password || shortPass) {
+    entry.password = entry.password ? sha1(entry.password) : sha1(shortPass);
+  }
 
   if (args.user.sendWelcomeSms === true) {
     log.info('sending sms to ====>', entry.phoneNumber);
@@ -105,10 +110,12 @@ const update = async (args, { db, ObjectId, log }) => {
       topic: 'exec',
       cmd: 'sms_nalm_treasury_pwc_1',
       data: {
-        password: entry.password ? entry.password : tempPassword,
+        password: passKeep,
         phone: entry.phoneNumber,
       },
     };
+
+    log.info('dispatching ', action);
 
     // eslint-disable-next-line no-console
     hemera.act(action, (err) => {
@@ -124,10 +131,10 @@ const update = async (args, { db, ObjectId, log }) => {
         $set: Object.assign({}, entry, {
           id: undefined,
           phoneNumber: entry.phoneNumber,
-          password: entry.password ? sha1(entry.password) : sha1(tempPassword),
+
           address_1: entry.address,
           city: entry.city,
-        }),
+        }, entry.password ? { password: entry.password } : null),
       });
   }
   return db.collection(collection)
@@ -137,10 +144,10 @@ const update = async (args, { db, ObjectId, log }) => {
         $set: Object.assign({}, entry, {
           id: undefined,
           phoneNumber: entry.phoneNumber,
-          password: entry.password ? sha1(entry.password) : sha1(tempPassword),
+
           address_1: entry.address,
           city: entry.city,
-        }),
+        }, entry.password ? { password: entry.password } : null),
       },
     );
 };
