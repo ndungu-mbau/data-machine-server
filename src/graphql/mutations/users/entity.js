@@ -91,11 +91,14 @@ const create = async (args, { db, ObjectId, log }) => {
 const update = async (args, { db, ObjectId, log }) => {
   const entry = args[collection];
 
-  const shortPass = makeShortPassword();
-  const passKeep = entry.password;
 
-  if (entry.password) {
-    entry.password = sha1(entry.password) || sha1(shortPass);
+  const shortPass = args.user.generatePass ? makeShortPassword() : undefined;
+  const passKeep = entry.password || shortPass;
+
+  console.log(args.user.generatePass, shortPass);
+
+  if (entry.password || shortPass) {
+    entry.password = entry.password ? sha1(entry.password) : sha1(shortPass);
   }
 
   if (args.user.sendWelcomeSms === true) {
@@ -128,10 +131,10 @@ const update = async (args, { db, ObjectId, log }) => {
         $set: Object.assign({}, entry, {
           id: undefined,
           phoneNumber: entry.phoneNumber,
-          password: entry.password,
+
           address_1: entry.address,
           city: entry.city,
-        }),
+        }, entry.password ? { password: entry.password } : null),
       });
   }
   return db.collection(collection)
@@ -141,10 +144,10 @@ const update = async (args, { db, ObjectId, log }) => {
         $set: Object.assign({}, entry, {
           id: undefined,
           phoneNumber: entry.phoneNumber,
-          password: entry.password,
+
           address_1: entry.address,
           city: entry.city,
-        }),
+        }, entry.password ? { password: entry.password } : null),
       },
     );
 };
