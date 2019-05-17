@@ -686,6 +686,8 @@ app.post('/submision', async (req, res) => {
   const Clients = db.collection('client');
   const Company = db.collection('company');
   const Users = db.collection('user');
+  const Projects = db.collection('project');
+
 
   const [existingSubmission] = await db
     .collection('submision')
@@ -739,23 +741,37 @@ app.post('/submision', async (req, res) => {
   });
 
   // fetch data to patch to the submitted info
+  // ---------------------
   const agentInfo = await Users.findOne({
     phoneNumber: cleanCopy.__agentPhoneNumber,
   });
 
+  const projectInfo = await Projects.findOne({
+    _id: new ObjectId(cleanCopy.projectId),
+  });
+
   const clientInfo = await Clients.findOne({
-    _id: new ObjectId(cleanCopy.client),
+    _id: new ObjectId(projectInfo.client),
   });
 
   const companyInfo = await Company.findOne({
-    _id: new ObjectId(cleanCopy.client),
+    _id: new ObjectId(projectInfo.client),
   });
 
+  // console.log(submision.__agentPhoneNumber, submision.client);
+
+  // console.log(clientInfo, agentInfo, companyInfo);
+
+  // add the following fields
   const newInfo = {
-    __agentMetaData: agentInfo.other,
+    __agentMetaData: agentInfo ? agentInfo.other : '',
     __clientName: clientInfo ? clientInfo.name : companyInfo.company_name,
-    userId: new ObjectId(agentInfo._id),
+    // eslint-disable-next-line no-underscore-dangle
+    client: projectInfo.client,
+    __projectName: projectInfo.name,
+    userId: agentInfo ? new ObjectId(agentInfo._id) : null,
   };
+  // ---------------------
 
   // save this info to the database as one large object
   const entry = Object.assign(
