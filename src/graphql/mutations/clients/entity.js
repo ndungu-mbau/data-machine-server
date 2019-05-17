@@ -48,6 +48,10 @@ const update = async (args, { db, ObjectId }) => {
 
 const destroy = async (args, { db, ObjectId }) => {
   const entry = args[collection];
+  await db
+  .collection('company')
+  .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } });
+
   return db
     .collection(collection)
     .updateOne({ _id: new ObjectId(entry.id) }, { $set: { destroyed: true } });
