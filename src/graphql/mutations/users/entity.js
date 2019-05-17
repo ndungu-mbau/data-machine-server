@@ -95,8 +95,6 @@ const update = async (args, { db, ObjectId, log }) => {
   const shortPass = args.user.generatePass ? makeShortPassword() : undefined;
   const passKeep = entry.password || shortPass;
 
-  console.log(args.user.generatePass, shortPass);
-
   if (entry.password || shortPass) {
     entry.password = entry.password ? sha1(entry.password) : sha1(shortPass);
   }
