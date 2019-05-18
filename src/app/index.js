@@ -496,6 +496,37 @@ app.post('/saasAuth/activateInvitation/:id', async (req, res) => {
     await db.collection('user_roles').insertOne(user_role);
 
     await db.collection('user').insertOne(legacyUser);
+
+    db.collection('invitation')
+      .updateOne({
+        user: userEmail,
+        client,
+      }, { $set: { destroyed: true } });
+    res.send();
+  } else {
+    // find the clients admin role
+    const adminRole = await db.collection('role').findOne({
+      clientId: new ObjectID(client),
+      name: 'admin',
+      destroyed: false,
+    });
+
+    // create a roleUser
+    const user_role = {
+      _id: new ObjectId(),
+      role: adminRole._id,
+      userId: user._id,
+      destroyed: false,
+    };
+
+    await db.collection('user_roles').insertOne(user_role);
+
+    db.collection('invitation')
+      .updateOne({
+        user: userEmail,
+        client,
+      }, { $set: { destroyed: true } });
+
     res.send();
   }
 });
