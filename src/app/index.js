@@ -498,10 +498,10 @@ app.post('/saasAuth/activateInvitation/:id', async (req, res) => {
     await db.collection('user').insertOne(legacyUser);
 
     db.collection('invitation')
-    .updateOne({
-      user: userEmail,
-      client,
-    },{$set:{destroyed:true}});
+      .updateOne({
+        user: userEmail,
+        client,
+      }, { $set: { destroyed: true } });
     res.send();
   } else {
     // find the clients admin role
@@ -522,10 +522,10 @@ app.post('/saasAuth/activateInvitation/:id', async (req, res) => {
     await db.collection('user_roles').insertOne(user_role);
 
     db.collection('invitation')
-    .updateOne({
-      user: userEmail,
-      client,
-    },{$set:{destroyed:true}});
+      .updateOne({
+        user: userEmail,
+        client,
+      }, { $set: { destroyed: true } });
 
     res.send();
   }
