@@ -9,6 +9,12 @@ const type = `
     color: String
   }
 
+  input newDataFilter {
+    input: String,
+    sign: String,
+    value: String
+  }
+
   input newchart {
     id: String,
     name: String,
@@ -16,7 +22,8 @@ const type = `
     html: String,
     type: String,
     cols:[newcol],
-    dashboard:String
+    dashboard:String,
+    filters:[newDataFilter]
   }
 
   type chartMutations {

@@ -1,3 +1,5 @@
+/* eslint-disable consistent-return */
+/* eslint-disable array-callback-return */
 /* eslint-disable camelcase */
 /* eslint-disable no-underscore-dangle */
 import express from 'express';
@@ -1670,6 +1672,12 @@ app.post('/submision/breakDayDown/:start/:end', auth, async (req, res) => {
 
 app.get('/submisions/:questionnaireId', async (req, res) => {
   // try {
+  const {
+    showComputed = true,
+    showCompounded = true,
+    filters = [],
+  } = req.query;
+
   const submission = req.params;
   const { questionnaireId } = submission;
 
@@ -1682,23 +1690,24 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     .toArray();
 
   const data = await Promise.all(
-    dashboards.map(async dashboard => [
-      await db
+    dashboards.map(async dashboard => Promise.all([
+      db
         .collection('cpd')
         .find({ dashboard: dashboard._id.toString(), destroyed: false })
         .toArray(),
-      await db
+      db
         .collection('cp')
         .find({ dashboard: dashboard._id.toString(), destroyed: false })
         .toArray(),
-    ]),
+    ])),
   );
 
   // extract all the cps'd and cpds
   data.map((dashboard) => {
     const [cpds, cps] = dashboard;
-    compoundedProps.push(...cpds);
-    return computedProps.push(...cps);
+    if (cpds) compoundedProps.push(...cpds);
+
+    if (cps) computedProps.push(...cps);
   });
 
   const submisions = await db
@@ -1729,7 +1738,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     return submisions;
   });
 
-  const computed = submisions.map((row) => {
+  let computed = submisions.map((row) => {
     const copyRecord = {};
     computedProps.forEach((form) => {
       const tempFn = doT.template(form.formular || '');
@@ -1745,14 +1754,41 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
         const mathRes = math.eval(resultFormular);
         calcRes = Math.round(Number(mathRes) * 100) / 100;
       } catch (err) {
-        calcRes = err;
+        calcRes = null;
       }
 
       copyRecord[form.name] = calcRes;
     });
     Object.assign(copyRecord, row);
+
+    copyRecord._id = copyRecord._id.toString();
     return copyRecord;
   });
+
+  // filter the computed props here if need be
+  // eslint-disable-next-line no-restricted-syntax
+  for (const x in filters) {
+    // eslint-disable-next-line no-prototype-builtins
+    if (filters.hasOwnProperty(x)) {
+      const filter = filters[x];
+      computed = computed.filter((sub) => {
+        if (filter.sign === 'eq') {
+          console.log(sub, filter.input, sub[filter.input], filter.value);
+          // eslint-disable-next-line eqeqeq
+          return sub[filter.input] == filter.value;
+        }
+
+        if (filter.sign === 'not eq') {
+          console.log(sub, filter.input, sub[filter.input], filter.value);
+          // eslint-disable-next-line eqeqeq
+          return sub[filter.input] != filter.value;
+        }
+      });
+      return;
+    }
+  }
+
+  console.log({ computed: computed.length });
 
   const compounded = {};
   compoundedProps.forEach((c) => {
@@ -1770,7 +1806,8 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
         const mathRes = math.eval(resultFormular);
         calcRes = Math.round(Number(mathRes) * 100) / 100;
       } catch (err) {
-        calcRes = err;
+        // set this to 0
+        calcRes = 0;
       }
 
       compounded[c.name] = calcRes;
@@ -1805,10 +1842,15 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
 
     compounded[c.name] = typeof result === 'object' ? result[0] : result;
   });
-  return res.send({
-    computed,
-    compounded,
-  });
+
+  return res.send(Object.assign(
+    {},
+    // eslint-disable-next-line eqeqeq
+    Boolean(showCompounded) == true ? { compounded } : { compounded: [] },
+    // eslint-disable-next-line eqeqeq
+    Boolean(showComputed) == true ? { computed } : { computed: [] },
+    { filters },
+  ));
   // } catch (err) {
   //   res.status(500).send({ err })
   // }

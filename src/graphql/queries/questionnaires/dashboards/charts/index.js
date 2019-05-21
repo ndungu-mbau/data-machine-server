@@ -5,6 +5,12 @@ type col {
   color: String
 }
 
+type dataFilter {
+  input: String,
+  sign: String,
+  value: String
+}
+
 type chart {
   id: String,
   name: String,
@@ -12,7 +18,8 @@ type chart {
   type: String,
   html:String,
   cols:[col],
-  dashboard:String
+  dashboard:String,
+  filters:[dataFilter]
 }
 `;
 
