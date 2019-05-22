@@ -1784,7 +1784,6 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
           return sub[filter.input] != filter.value;
         }
       });
-      return;
     }
   }
 
