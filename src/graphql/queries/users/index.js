@@ -25,7 +25,7 @@ const queries = `
   users(filter:filter):[user]
 `;
 
-const user = async (_, args, { db, ObjectId, user: currentUser }) => {
+const user = async (root, args, { db, ObjectId, user: currentUser }) => {
   const userDetailsForSearch = { _id: new ObjectId(currentUser._id) };
 
   const [userDetails] = await db
@@ -50,7 +50,7 @@ const user = async (_, args, { db, ObjectId, user: currentUser }) => {
   );
 };
 
-const users = async (_, args, { db }) => {
+const users = async (root, args, { db }) => {
   const data = await db
     .collection('user')
     .find({ destroyed: false })
@@ -149,6 +149,7 @@ const nested = {
       }
 
       return _.uniqBy(clients.map((x) => {
+        // eslint-disable-next-line no-param-reassign
         x.id = x.id.toString();
         return x;
       }), 'id');
