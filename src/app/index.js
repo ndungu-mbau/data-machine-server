@@ -642,7 +642,7 @@ const makeDashboardPdf = async (path, params, cb) => {
     NODE_ENV !== 'production'
       ? 'http://localhost:1234'
       : 'https://data-machine.braiven.io'
-  }/dashboard.html#!/${params.q}/dashboard/${params.a}`;
+    }/dashboard.html#!/${params.q}/dashboard/${params.a}`;
   log.info(bookingUrl);
   try {
     await getBrowserInstance().then(async (browser) => {
@@ -681,7 +681,7 @@ const makePdf = async (path, params, cb) => {
     NODE_ENV !== 'production'
       ? 'http://localhost:3002'
       : 'https://app.braiven.io'
-  }/printable/questionnnaire/${params.q}/answer/${params.a}`;
+    }/printable/questionnnaire/${params.q}/answer/${params.a}`;
   log.info(bookingUrl);
   try {
     await getBrowserInstance().then(async (browser) => {
@@ -766,7 +766,7 @@ app.post('/submision', async (req, res) => {
         const urlRoot = 'https://s3-us-west-2.amazonaws.com/questionnaireuploads/';
         const url = `${urlRoot}${submission.questionnaireId}_${key}_${
           submission.completionId
-        }${ext ? `.${ext}` : ''}`;
+          }${ext ? `.${ext}` : ''}`;
 
         cleanCopy[key] = url;
       }
@@ -905,8 +905,8 @@ app.post('/submision', async (req, res) => {
           <br>
           <br>
           The submission for ${upper(
-    project.name.toLowerCase(),
-  )} is now ready for download as a pdf.
+              project.name.toLowerCase(),
+            )} is now ready for download as a pdf.
           <br>
           <br>
           Regards, The National Treasury
@@ -943,8 +943,8 @@ app.post('/submision', async (req, res) => {
           <br>
           <br>
           The submission for ${upper(
-    project.name.toLowerCase(),
-  )} is now ready for download as a pdf.
+              project.name.toLowerCase(),
+            )} is now ready for download as a pdf.
           <br>
           <br>
           Regards,
@@ -1034,8 +1034,8 @@ app.post('/resend_submission_action/:submissionId', async (req, res) => {
       <br>
       <br>
       The submission for ${upper(
-    project.name.toLowerCase(),
-  )} is now ready for download as a pdf.
+          project.name.toLowerCase(),
+        )} is now ready for download as a pdf.
       <br>
       <br>
       Regards, The National Treasury
@@ -1827,6 +1827,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
         // other filters here
       }
 
+      console.log(c.type, values);
       result = math[c.type](values);
     } else {
       if (c.filter !== undefined) {
