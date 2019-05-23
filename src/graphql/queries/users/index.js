@@ -97,6 +97,8 @@ const nested = {
     },
     clients: async ({ id, client: clientId }, args, { db }) => {
       // find role with user id in it
+      const clients = [];
+
       const roleUsers = await db.collection('user_roles').find({ userId: id }).toArray();
 
       if (roleUsers.length !== 0) {
@@ -105,33 +107,35 @@ const nested = {
 
           const clientFromRole = await db.collection('company').findOne({ _id: role.clientId });
 
-          return Object.assign(clientFromRole, {
+          clients.push(Object.assign(clientFromRole, {
             id: clientFromRole._id,
             name: clientFromRole.company_name,
             reg_id: clientFromRole.company_registration_id,
             contact_email: clientFromRole.company_email,
             comms_sms: clientFromRole.communications_sms,
-          });
+          }));
         });
       }
 
       const client = await db.collection('company').findOne({ _id: clientId });
 
-      if (!client) {
-        return [{
-          id: 'legacy account',
-        }];
-      }
-
-      return [
-        Object.assign(client, {
+      if (client) {
+        clients.push(Object.assign(client, {
           id: client._id,
           name: client.company_name,
           reg_id: client.company_registration_id,
           contact_email: client.company_email,
           comms_sms: client.communications_sms,
-        }),
-      ];
+        }));
+      }
+
+      if (!clients.length) {
+        return [{
+          id: 'legacy account',
+        }];
+      }
+
+      return clients;
     },
     teams: async ({ id }, args, { db, ObjectId }) => {
       const relations = await db
