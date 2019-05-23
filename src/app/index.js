@@ -1822,7 +1822,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
       // chek for a filter and run it if exists
       if (c.filter !== undefined) {
         if (c.filter === '=') {
-          values = values.filter(v => v === c.filterValue);
+          values = values.filter(v => v === Number(c.filterValue));
         }
         // other filters here
       }
@@ -1831,7 +1831,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
     } else {
       if (c.filter !== undefined) {
         if (c.filter === '=') {
-          values = values.filter(v => v === c.filterValue);
+          values = values.filter(v => v === Number(c.filterValue));
         }
         // other filters here
       }
