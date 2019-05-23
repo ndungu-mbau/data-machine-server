@@ -1813,7 +1813,7 @@ app.get('/submisions/:questionnaireId', async (req, res) => {
       return;
     }
 
-    let values = computed.filter(row => row[c.field]).map(row => row[c.field]);
+    let values = computed.filter(row => row[c.field]).map(row => row[c.field]).filter(Number);
 
     // const result = math[c.type](values);
     let result;
