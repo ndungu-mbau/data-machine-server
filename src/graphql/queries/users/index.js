@@ -1,4 +1,6 @@
 /* eslint-disable no-underscore-dangle */
+import _ from 'lodash';
+
 const type = `
   type user {
     id: String,
@@ -23,7 +25,7 @@ const queries = `
   users(filter:filter):[user]
 `;
 
-const user = async (_, args, { db, ObjectId, user: currentUser }) => {
+const user = async (root, args, { db, ObjectId, user: currentUser }) => {
   const userDetailsForSearch = { _id: new ObjectId(currentUser._id) };
 
   const [userDetails] = await db
@@ -48,7 +50,7 @@ const user = async (_, args, { db, ObjectId, user: currentUser }) => {
   );
 };
 
-const users = async (_, args, { db }) => {
+const users = async (root, args, { db }) => {
   const data = await db
     .collection('user')
     .find({ destroyed: false })
@@ -102,30 +104,41 @@ const nested = {
       const roleUsers = await db.collection('user_roles').find({ userId: id }).toArray();
 
       if (roleUsers.length !== 0) {
-        return roleUsers.map(async (roleUser) => {
+        roleUsers.map(async (roleUser) => {
           const role = await db.collection('role').findOne({ _id: roleUser.role });
 
           const clientFromRole = await db.collection('company').findOne({ _id: role.clientId });
 
-          clients.push(Object.assign(clientFromRole, {
-            id: clientFromRole._id,
-            name: clientFromRole.company_name,
-            reg_id: clientFromRole.company_registration_id,
-            contact_email: clientFromRole.company_email,
-            comms_sms: clientFromRole.communications_sms,
-          }));
+          if (clientFromRole) {
+            clients.push(Object.assign({}, clientFromRole, {
+              id: clientFromRole._id,
+              name: clientFromRole.company_name,
+              reg_id: clientFromRole.company_registration_id,
+              contact_email: clientFromRole.company_email,
+              comms_sms: clientFromRole.communications_sms,
+            }));
+          }
         });
       }
 
-      const client = await db.collection('company').findOne({ _id: clientId });
+      const company = await db.collection('company').findOne({ _id: clientId });
+      const client = await db.collection('client').findOne({ _id: clientId });
 
       if (client) {
-        clients.push(Object.assign(client, {
+        clients.push(Object.assign({}, client, {
           id: client._id,
           name: client.company_name,
           reg_id: client.company_registration_id,
           contact_email: client.company_email,
           comms_sms: client.communications_sms,
+        }));
+      } else if (company) {
+        clients.push(Object.assign({}, company, {
+          id: company._id,
+          name: company.company_name,
+          reg_id: company.company_registration_id,
+          contact_email: company.company_email,
+          comms_sms: company.communications_sms,
         }));
       }
 
@@ -135,7 +148,11 @@ const nested = {
         }];
       }
 
-      return clients;
+      return _.uniqBy(clients.map((x) => {
+        // eslint-disable-next-line no-param-reassign
+        x.id = x.id.toString();
+        return x;
+      }), 'id');
     },
     teams: async ({ id }, args, { db, ObjectId }) => {
       const relations = await db
