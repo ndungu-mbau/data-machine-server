@@ -1820,7 +1820,7 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
 
     let values = computed.filter(row => row[c.field]).map(row => row[c.field]);
 
-    console.log({ values, computed: computed.length });
+    // console.log({ values, computed: computed.length });
 
     // const result = math[c.type](values);
     let result;
@@ -1829,13 +1829,18 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
       // chek for a filter and run it if exists
       if (c.filter !== undefined) {
         if (c.filter === "=") {
-          values = values.filter(v => v === c.filterValue).filter(Number);
+          values = values.filter(v => v === c.filterValue);
         }
         // other filters here
       }
 
-      console.log(c.type, values);
-      result = math[c.type](values);
+      console.log({
+        type: c.type,
+        types: values.map(type => typeof type)
+      });
+      result = math[c.type](values.filter(x=>{
+        return typeof x === 'number'
+      }));
     } else {
       if (c.filter !== undefined) {
         if (c.filter === "=") {
