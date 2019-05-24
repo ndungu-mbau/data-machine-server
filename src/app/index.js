@@ -1838,9 +1838,7 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
         type: c.type,
         types: values.map(type => typeof type)
       });
-      result = math[c.type](values.filter(x=>{
-        return typeof x === 'number'
-      }));
+      result = math[c.type](values.map(x=>Number(x)));
     } else {
       if (c.filter !== undefined) {
         if (c.filter === "=") {
