@@ -1676,8 +1676,8 @@ app.post("/submision/breakDayDown/:start/:end", auth, async (req, res) => {
 app.get("/submisions/:questionnaireId", async (req, res) => {
   // try {
   const {
-    showComputed = true,
-    showCompounded = true,
+    showComputed = 1,
+    showCompounded = 1,
     filters = []
   } = req.query;
 
@@ -1838,7 +1838,7 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
         type: c.type,
         types: values.map(type => typeof type)
       });
-      result = math[c.type](values.map(x=>Number(x)));
+      result = math[c.type](values.map(x => Number(x)));
     } else {
       if (c.filter !== undefined) {
         if (c.filter === "=") {
@@ -1857,10 +1857,10 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
     Object.assign(
       {},
       // eslint-disable-next-line eqeqeq
-      Boolean(showCompounded) == true ? { compounded } : { compounded: [] },
+      parseInt(showCompounded) ? { compounded } : { compounded: [] },
       // eslint-disable-next-line eqeqeq
-      Boolean(showComputed) == true ? { computed } : { computed: [] },
-      { filters }
+      parseInt(showComputed) ? { computed } : { computed: [] },
+      { filters, showCompounded, showComputed }
     )
   );
   // } catch (err) {
