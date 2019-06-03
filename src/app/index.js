@@ -1823,30 +1823,72 @@ app.get("/submisions/:questionnaireId", async (req, res) => {
     // check for various types to be able to support weird ones like count... thats if we need size
     if (c.type !== "count") {
       // chek for a filter and run it if exists
-      if (c.filter !== undefined) {
-        if (c.filter === "=") {
-          values = values.filter(v => v === c.filterValue);
-        }
-        // other filters here
-      }
+      let filteredData = computed;
+      if (c.filters !== undefined) {
+        for (const x in c.filters) {
+          // eslint-disable-next-line no-prototype-builtins
+          if (c.filters.hasOwnProperty(x)) {
+            const filter = c.filters[x];
+            filteredData = filteredData.filter(sub => {
+              if (filter.sign === "eq") {
+                // console.log(sub, filter.input, sub[filter.input], filter.value);
+                // eslint-disable-next-line eqeqeq
+                return sub[filter.input] == filter.value;
+              }
 
-      console.log({
-        type: c.type,
-        types: values.map(type => typeof type)
-      });
-      result = math[c.type](values.map(x => Number(x)));
+              if (filter.sign === "not eq") {
+                // console.log(sub, filter.input, sub[filter.input], filter.value);
+                // eslint-disable-next-line eqeqeq
+                return sub[filter.input] != filter.value;
+              }
+            });
+          }
+        }
+
+        let filteredValues = filteredData
+          .filter(row => row[c.field])
+          .map(row => row[c.field]);
+
+        result = math[c.type](filteredValues.map(x => Number(x)));
+        // other filters here
+      } else {
+        result = math[c.type](values.map(x => Number(x)));
+      }
     } else {
-      if (c.filter !== undefined) {
-        if (c.filter === "=") {
-          values = values.filter(v => v === c.filterValue);
+      let filteredData = computed;
+      if (c.filters !== undefined) {
+        for (const x in c.filters) {
+          // eslint-disable-next-line no-prototype-builtins
+          if (c.filters.hasOwnProperty(x)) {
+            const filter = c.filters[x];
+            filteredData = filteredData.filter(sub => {
+              if (filter.sign === "eq") {
+                // console.log(sub, filter.input, sub[filter.input], filter.value);
+                // eslint-disable-next-line eqeqeq
+                return sub[filter.input] == filter.value;
+              }
+
+              if (filter.sign === "not eq") {
+                // console.log(sub, filter.input, sub[filter.input], filter.value);
+                // eslint-disable-next-line eqeqeq
+                return sub[filter.input] != filter.value;
+              }
+            });
+          }
         }
+
+        let filteredValues = filteredData
+          .filter(row => row[c.field])
+          .map(row => row[c.field]);
+
+        result = filteredData.length;
         // other filters here
       }
 
-      result = computed.length;
+      result = filteredData.length;
     }
 
-    console.log({ name: c.name, result });
+    console.log({ name: c.name, type: c.type, result });
     compounded[c.name] = typeof result === "object" ? result[0] : result;
   });
 
