@@ -11,6 +11,7 @@ const type = `
     formular:String,
     type:String,
     filter:String,
+    filters:[newDataFilter]
     filterValue:String
   }
 

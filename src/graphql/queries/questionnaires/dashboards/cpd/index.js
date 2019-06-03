@@ -6,6 +6,7 @@ const type = `
     formular: String,
     type: String,
     field: String,
+    filters:[dataFilter]
   }
 `;
 
