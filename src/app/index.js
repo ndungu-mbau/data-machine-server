@@ -696,8 +696,9 @@ const makePdf = async (path, params, cb) => {
         localStorage.setItem("token", MASTER_TOKEN);
       }, MASTER_TOKEN);
       await page.goto(bookingUrl, {
-        timeout: 5000,
-        waitUntil: ["load", "networkidle2"]
+        timeout: 10000,
+        "waitUntil" : "networkidle0"
+        // waitUntil: ["load", "networkidle2"]
       });
       await page.pdf({
         path,
