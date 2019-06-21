@@ -115,7 +115,7 @@ const nested = {
         .toArray();
 
       console.log({ rolesFound: roleUsers.length });
-      
+
       if (roleUsers.length !== 0) {
         roleUsers.map(async roleUser => {
           const role = await db
@@ -173,14 +173,16 @@ const nested = {
         ];
       }
 
-      return _.uniqBy(
-        clients.map(x => {
-          // eslint-disable-next-line no-param-reassign
-          x.id = x.id.toString();
-          return x;
-        }),
-        "id"
-      );
+      // return _.uniqBy(
+      //   clients.map(x => {
+      //     // eslint-disable-next-line no-param-reassign
+      //     x.id = x.id.toString();
+      //     return x;
+      //   }),
+      //   "id"
+      // );
+
+      return clients;
     },
     teams: async ({ id }, args, { db, ObjectId }) => {
       const relations = await db
