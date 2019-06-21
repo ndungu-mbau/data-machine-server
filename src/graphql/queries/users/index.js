@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import _ from "lodash";
+// import _ from "lodash";
 
 const type = `
   type user {
