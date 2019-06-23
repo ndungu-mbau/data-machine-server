@@ -697,7 +697,7 @@ const makePdf = async (path, params, cb) => {
       }, MASTER_TOKEN);
       await page.goto(bookingUrl, {
         timeout: 10000,
-        "waitUntil" : "networkidle0"
+        waitUntil: "networkidle0"
         // waitUntil: ["load", "networkidle2"]
       });
       await page.pdf({
@@ -816,6 +816,8 @@ app.post("/submision", async (req, res) => {
     {
       _id: new ObjectID(),
       createdAt: new Date(),
+      completedAt: new Date(cleanCopy.completedAt),
+      startedAt: new Date(cleanCopy.startedAt),
       destroyed: false,
       // eslint-disable-next-line no-underscore-dangle
       userId: req.user ? req.user._id : undefined
