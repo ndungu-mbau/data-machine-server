@@ -108,11 +108,12 @@ const nested = {
         submissions,
       };
     },
-    users: async ({ id }, args, { db }) => {
+    users: async ({ id }, args, { db,ObjectId }) => {
       const data = await db
         .collection('user')
-        .find({ client: id })
+        .find({ client: ObjectId(id) })
         .toArray();
+
       return data.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));

@@ -70,12 +70,14 @@ const create = async (args, { db, ObjectId, log }) => {
       }
     });
   }
+
   Object.assign(entry, {
     _id: new ObjectId(),
     password: entry.password ? sha1(entry.password) : sha1(tempPassword),
     client: new ObjectId(entry.client),
     destroyed: false,
   });
+  
   await db.collection(collection).updateOne(
     { phoneNumber: entry.phoneNumber },
     { $set: entry },

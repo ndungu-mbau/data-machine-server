@@ -112,8 +112,6 @@ const nested = {
         .find({ userId: id })
         .toArray();
 
-      console.log({ rolesFound: roleUsers.length });
-
       if (roleUsers.length !== 0) {
         await Promise.all(
           roleUsers.map(
@@ -147,8 +145,6 @@ const nested = {
       const company = await db.collection('company').findOne({ _id: clientId });
       const client = await db.collection('client').findOne({ _id: clientId });
 
-      console.log({ client, company });
-
       if (client) {
         clients.push(
           Object.assign({}, client, {
@@ -170,8 +166,6 @@ const nested = {
           }),
         );
       }
-
-      console.log({ clients });
 
       if (!clients.length) {
         return [
