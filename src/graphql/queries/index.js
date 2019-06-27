@@ -214,7 +214,6 @@ Object.assign(
   actionQueriesNested,
 );
 
-
 Object.assign(
   Query,
   rolesRoot,
