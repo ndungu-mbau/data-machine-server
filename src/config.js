@@ -13,7 +13,7 @@ const config = {
   },
   test: {
     db: {
-      name: 'databank',
+      name: 'databank_test',
       url,
     },
     hashingSecret: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
