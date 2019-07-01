@@ -2,6 +2,7 @@ const type = `
   type dashboard {
     id: String,
     name: String,
+    url: String,
     questionnaire:questionnaire!,
 
     layout:layout,

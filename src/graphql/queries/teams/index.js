@@ -8,6 +8,7 @@ const type = `
     description: String,
     users:[user],
     projects:[project]
+    dashboards:[dashboard]
   }
 `;
 
@@ -81,6 +82,20 @@ const nested = {
       return users.map(entry => Object.assign({}, entry, {
         id: entry._id,
       }));
+    },
+    dashboards: async ({ id }, args, { db, ObjectId }) => {
+      // const relations = await db.collection('dashboard_teams').find({ team: id.toString() }).toArray();
+
+      // const dashboards = await db.collection('dashboards').find({ _id: { $in: relations.map(relation => ObjectId(relation.dashboard)) }, destroyed: false }).toArray();
+
+      // return dashboards.map(entry => Object.assign({}, entry, {
+      //   id: entry._id,
+      // }));
+      return [{
+        id:1,
+        name:"Sales Monitoring",
+        url:"https://metabase.braiven.io/public/dashboard/fcc20dcb-544c-44c8-9dd5-ddc0318e8be0"
+      }]
     },
     projects: async ({ id }, args, { db, ObjectId }) => {
       const relations = await db.collection('project_teams').find({ team: id.toString() }).toArray();
