@@ -776,6 +776,35 @@ app.post("/submision", async (req, res) => {
     }
   });
 
+  const fieldsToIgnore = [
+    "startedAt",
+    "completedAt",
+    "userId",
+    "__buildNumber",
+    "__firstInstallTime",
+    "__freeDiskStorage",
+    "__ip",
+    "__lastUpdateTime",
+    "createdAt",
+    "__agentPhoneNumber",
+    "destroyed",
+    "__agentMetaData",
+    "__isEmulator"
+  ];
+
+  Object.keys(submission).map(key => {
+    const number = Number(submission[key]);
+    if (
+      !isNaN(number) &&
+      !fieldsToIgnore.includes(key)
+    ) {
+      cleanCopy[key] = number;
+      cleanCopy[`${key}_original`] = submission[key];
+    } else {
+      cleanCopy[key] = submission[key];
+    }
+  });
+
   // fetch data to patch to the submitted info
   // ---------------------
   const agentInfo = await Users.findOne({
