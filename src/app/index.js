@@ -718,28 +718,27 @@ const makePdf = async (path, params, cb) => {
   }
 };
 
-app.get("/embed_metabase/:id", async (req, res) => {
+app.get('/embed_metabase/:id', async (req, res) => {
   const {
-    METABASE_SITE_URL = "http://metabase.braiven.io",
-    METABASE_SECRET_KEY = "32112677012460d1bcec84f7c868fa6ce0f30e32126373d31ca7462cdade4e7c"
+    METABASE_SITE_URL = 'http://metabase.braiven.io',
+    METABASE_SECRET_KEY = '32112677012460d1bcec84f7c868fa6ce0f30e32126373d31ca7462cdade4e7c',
   } = process.env;
 
   console.log({ params: req.params });
 
-  var payload = {
+  const payload = {
     resource: { dashboard: req.params.id },
     params: {},
-    exp: Math.round(Date.now() / 1000) + 10 * 60 // 10 minute expiration
+    exp: Math.round(Date.now() / 1000) + 10 * 60, // 10 minute expiration
   };
-  var token = jwt.sign(payload, METABASE_SECRET_KEY);
+  const token = jwt.sign(payload, METABASE_SECRET_KEY);
 
-  var iframeUrl =
-    METABASE_SITE_URL +
-    "/embed/dashboard/" +
-    token +
-    "#bordered=true&titled=true";
+  const iframeUrl = `${METABASE_SITE_URL
+  }/embed/dashboard/${
+    token
+  }#bordered=true&titled=true`;
   res.send({
-    url: iframeUrl
+    url: iframeUrl,
   });
 });
 
