@@ -7,6 +7,7 @@ pipeline:
       - ./node_modules
     volumes:
       - /tmp/cache:/cache
+
   install:
     image: node:latest
     commands:
@@ -15,11 +16,13 @@ pipeline:
       - yarn --version
       - yarn config set cache-folder .yarn-cache
       - yarn install --pure-lockfile
+
   lint:
     image: node:8.6.0
     group: testing
     commands:
       - yarn run lint
+
   build-container:
     image: plugins/docker
     repo: registry.braiven.io/data-machine-server
@@ -80,6 +83,7 @@ pipeline:
         
         CI ❌ : #Drone #Depoyed from <a href="https://bitbucket.org/{{repo.owner}}/{{repo.name}}/commits/{{commit.sha}}">Bitbucket</a>
       {{/success}}
+      
   rebuild-cache:
     image: drillster/drone-volume-cache
     rebuild: true
