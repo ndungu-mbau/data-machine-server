@@ -744,26 +744,6 @@ app.post('/submision', async (req, res) => {
   // eslint-disable-next-line array-callback-return
   Object.entries(submission).map(([key, value]) => {
     if (value) {
-      if (value === false) {
-        cleanCopy[key] = 0;
-      }
-
-      if (moment(value, moment.ISO_8601, true).isValid()) {
-        cleanCopy[key] = moment(value).toDate();
-      }
-
-      cleanCopy[
-        key
-          .replace(/\s+/g, '_')
-          .split('.')
-          .join('_')
-      ] = value;
-    }
-  });
-
-  // eslint-disable-next-line array-callback-return
-  Object.entries(submission).map(([key, value]) => {
-    if (value) {
       if (value.toString().includes('file://')) {
         const [, ext] = value.split('.');
 
@@ -804,6 +784,27 @@ app.post('/submision', async (req, res) => {
       cleanCopy[`${key}_original`] = submission[key];
     } else {
       cleanCopy[key] = submission[key];
+    }
+  });
+
+  // eslint-disable-next-line array-callback-return
+  Object.entries(cleanCopy).map(([key, value]) => {
+    if (value) {
+      if (value === false) {
+        cleanCopy[key] = 0;
+      }
+
+      if (moment(value, moment.ISO_8601, true).isValid()) {
+        cleanCopy[key] = moment(value).toDate();
+      }
+
+      delete cleanCopy[key];
+
+      cleanCopy[
+        key
+          .replace(/\s+/g, '_')
+          .replace(/\./g, '_')
+      ] = value;
     }
   });
 
@@ -856,7 +857,11 @@ app.post('/submision', async (req, res) => {
     newInfo,
   );
 
+  // console.log(cleanCopy)
+
   await db.collection('submision').insertOne(entry);
+
+  await db.collection(`${entry.__clientName}.${entry.__projectName}`).insertOne(entry);
 
   const [submited] = await db
     .collection('submision')
