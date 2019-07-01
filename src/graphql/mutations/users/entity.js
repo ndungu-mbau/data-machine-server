@@ -77,7 +77,7 @@ const create = async (args, { db, ObjectId, log }) => {
     client: new ObjectId(entry.client),
     destroyed: false,
   });
-  
+
   await db.collection(collection).updateOne(
     { phoneNumber: entry.phoneNumber },
     { $set: entry },

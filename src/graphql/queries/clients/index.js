@@ -108,7 +108,7 @@ const nested = {
         submissions,
       };
     },
-    users: async ({ id }, args, { db,ObjectId }) => {
+    users: async ({ id }, args, { db, ObjectId }) => {
       const data = await db
         .collection('user')
         .find({ client: ObjectId(id) })

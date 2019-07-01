@@ -45,6 +45,7 @@ module.exports = {
       Object.keys(submision).map(key => {
         const number = Number(submision[key]);
         if (
+          // eslint-disable-next-line no-restricted-globals
           !isNaN(number) &&
           !fieldsToIgnore.includes(key) &&
           typeof submision[key] !== Boolean
